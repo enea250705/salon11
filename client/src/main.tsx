@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { initPwa } from "./lib/pwa-installer";
 
 // Initialize fonts and icons from CDN
 const materialIconsLink = document.createElement("link");
@@ -19,6 +20,9 @@ const metaDesc = document.createElement("meta");
 metaDesc.name = "description";
 metaDesc.content = "Sistema avanzato di gestione personale, pianificazione turni, ferie e documentazione aziendale. Ottimizza la tua forza lavoro con StaffSync.";
 document.head.appendChild(metaDesc);
+
+// Initialize PWA functionality
+initPwa();
 
 // Initialize the React application
 createRoot(document.getElementById("root")!).render(<App />);

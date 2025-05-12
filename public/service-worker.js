@@ -6,7 +6,16 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  // Aggiungi qui altri asset (CSS, JS, immagini)
+  '/offline.html',
+  '/icons/icon-72x72.svg',
+  '/icons/icon-96x96.svg',
+  '/icons/icon-128x128.svg',
+  '/icons/icon-144x144.svg',
+  '/icons/icon-152x152.svg',
+  '/icons/icon-192x192.svg',
+  '/icons/icon-384x384.svg',
+  '/icons/icon-512x512.svg',
+  '/icons/badge-72x72.svg'
 ];
 
 // Installazione del service worker
@@ -48,6 +57,22 @@ self.addEventListener('fetch', event => {
               });
               
             return response;
+          })
+          .catch(error => {
+            // Se la richiesta fallisce (es. offline), mostra la pagina offline
+            if (event.request.mode === 'navigate') {
+              return caches.match('/offline.html');
+            }
+            
+            // Per richieste di immagini, usa un'immagine di fallback
+            if (event.request.destination === 'image') {
+              return caches.match('/icons/icon-192x192.svg');
+            }
+            
+            return new Response('Contenuto non disponibile offline', {
+              status: 503,
+              statusText: 'Servizio non disponibile'
+            });
           });
       })
   );
