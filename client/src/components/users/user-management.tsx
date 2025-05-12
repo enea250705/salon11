@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDate } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -11,7 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { UserForm } from "./user-form";
 import { BulkUsersForm } from "./bulk-users-form";
 import { User } from "@shared/schema";
-import { Loader2, Search, Edit, UserPlus, CheckCircle, XCircle, Upload, Users, MoreVertical, Key } from "lucide-react";
+import { Loader2, Search, Edit, UserPlus, CheckCircle, XCircle, Upload, Users, MoreVertical, Key, Eye, EyeOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedContainer } from "@/components/ui/animated-container";
 import {
@@ -108,6 +109,37 @@ export function UserManagement() {
     setSelectedUser(user);
     setIsEditUserDialogOpen(true);
   };
+  
+  // Handle change password
+  const handleChangePassword = (user: User) => {
+    setSelectedUser(user);
+    setNewPassword("");
+    setIsChangePasswordDialogOpen(true);
+  };
+  
+  // Password change mutation
+  const changePasswordMutation = useMutation({
+    mutationFn: async ({ userId, password }: { userId: number, password: string }) => {
+      const response = await apiRequest("PATCH", `/api/users/${userId}`, { password });
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      setIsChangePasswordDialogOpen(false);
+      toast({
+        title: "Password modificata",
+        description: "La password dell'utente è stata modificata con successo.",
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to change password:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la modifica della password.",
+        variant: "destructive",
+      });
+    }
+  });
   
   // Format last login date
   const formatLastLogin = (lastLogin: string | Date | null | undefined) => {
@@ -314,7 +346,15 @@ export function UserManagement() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 ml-2"
+                            className="h-8 w-8"
+                            onClick={() => handleChangePassword(user)}
+                          >
+                            <Key className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
                             onClick={() => toggleUserStatus(user)}
                           >
                             {user.isActive ? (
@@ -349,6 +389,10 @@ export function UserManagement() {
                           <DropdownMenuItem onClick={() => handleEditUser(user)}>
                             <Edit className="h-4 w-4 mr-2" />
                             Modifica
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleChangePassword(user)}>
+                            <Key className="h-4 w-4 mr-2" />
+                            Cambia Password
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => toggleUserStatus(user)}>
                             {user.isActive ? (
@@ -464,6 +508,81 @@ export function UserManagement() {
                   isEdit={true}
                 />
               )}
+            </DialogContent>
+          </Dialog>
+          
+          {/* Dialog per il cambio password */}
+          <Dialog open={isChangePasswordDialogOpen} onOpenChange={setIsChangePasswordDialogOpen}>
+            <DialogContent className="sm:max-w-md w-[92%] md:w-full">
+              <DialogHeader>
+                <DialogTitle>Cambia Password</DialogTitle>
+                <DialogDescription>
+                  {selectedUser && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      Modifica la password per l'utente: <span className="font-medium">{selectedUser.name}</span>
+                    </p>
+                  )}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">Nuova Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="new-password"
+                      type={showNewPassword ? "text" : "password"}
+                      placeholder="Inserisci la nuova password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                  {newPassword && newPassword.length < 6 && (
+                    <p className="text-xs text-red-500">La password deve contenere almeno 6 caratteri</p>
+                  )}
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsChangePasswordDialogOpen(false)}
+                >
+                  Annulla
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!newPassword || newPassword.length < 6 || changePasswordMutation.isPending}
+                  onClick={() => {
+                    if (selectedUser && newPassword && newPassword.length >= 6) {
+                      changePasswordMutation.mutate({
+                        userId: selectedUser.id,
+                        password: newPassword
+                      });
+                    }
+                  }}
+                >
+                  {changePasswordMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Salvataggio...
+                    </>
+                  ) : (
+                    "Salva"
+                  )}
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </CardContent>
