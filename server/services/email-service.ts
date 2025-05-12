@@ -3,7 +3,7 @@ import { User, TimeOffRequest } from '@shared/schema';
 
 // Modalità di sviluppo (non invia email effettivamente ma le mostra in console)
 // Imposta su false per inviare email reali con SendGrid (richiede SENDGRID_API_KEY)
-const DEV_MODE = true;
+const DEV_MODE = false;
 
 if (!process.env.SENDGRID_API_KEY) {
   console.warn("ATTENZIONE: SENDGRID_API_KEY non è configurata nell'ambiente. Le email non verranno inviate.");
@@ -15,7 +15,7 @@ if (process.env.SENDGRID_API_KEY) {
 }
 
 // Indirizzo email del mittente (deve essere verificato su SendGrid)
-const SENDER_EMAIL = 'admin@ilirionai.it';
+const SENDER_EMAIL = 'info@staffsync.replit.app';
 
 /**
  * Interfaccia per i parametri di invio email

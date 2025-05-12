@@ -1108,9 +1108,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
         
-        // Invia email all'amministratore
-        import('./services/email-service').then(emailService => {
-          emailService.sendTimeOffRequestNotificationToAdmin(admin, requester, request)
+        // Invia email all'amministratore usando nodemailer
+        import('./services/nodemailer-service').then(emailService => {
+          // Crea il contenuto dell'email
+          const typeLabels: Record<string, string> = {
+            'vacation': 'Ferie',
+            'permission': 'Permesso',
+            'sick': 'Malattia'
+          };
+          
+          const typeLabel = typeLabels[request.type] || 'Assenza';
+          const formattedStartDate = new Date(request.startDate).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          const formattedEndDate = new Date(request.endDate).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          
+          const emailParams = {
+            to: admin.email || admin.username,
+            subject: `Nuova richiesta di ${typeLabel.toLowerCase()} da ${requester.name}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                  <h2 style="color: #4a6cf7;">StaffSync</h2>
+                </div>
+                <p>Gentile ${admin.name || admin.username},</p>
+                <p>Ti informiamo che <strong>${requester.name}</strong> ha inviato una nuova richiesta di <strong>${typeLabel.toLowerCase()}</strong>.</p>
+                
+                <div style="background-color: #f9f9f9; border-radius: 5px; padding: 15px; margin: 20px 0;">
+                  <p style="margin-top: 0;"><strong>Dettagli della richiesta:</strong></p>
+                  <ul style="margin-bottom: 0;">
+                    <li><strong>Tipo:</strong> ${typeLabel}</li>
+                    <li><strong>Periodo:</strong> ${formattedStartDate} - ${formattedEndDate}</li>
+                    <li><strong>Durata:</strong> ${request.duration === 'full_day' ? 'Giornata intera' : request.duration === 'morning' ? 'Mattina' : 'Pomeriggio'}</li>
+                    <li><strong>Motivo:</strong> ${request.reason || 'Nessun motivo specificato'}</li>
+                  </ul>
+                </div>
+                
+                <p>Puoi gestire questa richiesta dalla piattaforma StaffSync.</p>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                  <a href="https://staffsync.replit.app/requests" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Gestisci Richieste</a>
+                </div>
+                
+                <p style="margin-top: 30px; font-size: 12px; color: #666; text-align: center;">
+                  Questa è un'email automatica, ti preghiamo di non rispondere.
+                </p>
+              </div>
+            `,
+          };
+          
+          emailService.sendEmail(emailParams)
             .then(success => {
               if (success) {
                 console.log(`✅ Email di notifica inviata all'amministratore ${admin.name} (${admin.email || admin.username})`);
