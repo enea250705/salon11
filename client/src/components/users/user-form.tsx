@@ -24,7 +24,7 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { insertUserSchema, User } from "@shared/schema";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 // Form schema - estendere lo schema esistente con validazione aggiuntiva
 const userFormSchema = z.object({
@@ -124,7 +124,11 @@ export function UserForm({ user, onSubmit, onCancel, isEdit = false }: UserFormP
               <FormItem>
                 <FormLabel>Nome Completo</FormLabel>
                 <FormControl>
-                  <Input placeholder="Nome Cognome" {...field} />
+                  <Input 
+                    placeholder="Nome Cognome" 
+                    {...field} 
+                    className="border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -138,7 +142,12 @@ export function UserForm({ user, onSubmit, onCancel, isEdit = false }: UserFormP
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="email@esempio.it" {...field} />
+                  <Input 
+                    type="email" 
+                    placeholder="email@esempio.it" 
+                    {...field} 
+                    className="border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -266,12 +275,12 @@ export function UserForm({ user, onSubmit, onCancel, isEdit = false }: UserFormP
           </div>
         )}
         
-        <div className="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
+        <div className="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4 border-t mt-4">
           <Button
             type="button"
             variant="outline"
             onClick={onCancel}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto order-2 sm:order-1"
           >
             Annulla
           </Button>
@@ -282,9 +291,19 @@ export function UserForm({ user, onSubmit, onCancel, isEdit = false }: UserFormP
               !form.formState.isValid ||
               (isEdit ? false : !form.getValues("password"))
             }
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto order-1 sm:order-2"
           >
-            {isEdit ? "Aggiorna" : "Crea Utente"}
+            {createUserMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isEdit ? "Aggiornamento..." : "Creazione..."}
+              </>
+            ) : (
+              <>
+                <span className="material-icons text-sm mr-1">{isEdit ? "update" : "person_add"}</span>
+                {isEdit ? "Aggiorna" : "Crea Utente"}
+              </>
+            )}
           </Button>
         </div>
       </form>

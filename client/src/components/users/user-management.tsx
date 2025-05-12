@@ -212,10 +212,13 @@ export function UserManagement() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md w-[92%] md:w-full" aria-describedby="new-user-description">
-                  <DialogHeader>
-                    <DialogTitle>Aggiungi Nuovo Utente</DialogTitle>
-                    <DialogDescription id="new-user-description" className="sr-only">
-                      Form per aggiungere un nuovo utente
+                  <DialogHeader className="pb-3 border-b">
+                    <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                      <UserPlus className="h-5 w-5 text-primary" />
+                      Aggiungi Nuovo Utente
+                    </DialogTitle>
+                    <DialogDescription id="new-user-description" className="text-sm text-gray-500 mt-1">
+                      Compila il form per creare un nuovo account utente
                     </DialogDescription>
                   </DialogHeader>
                   <UserForm 
@@ -520,16 +523,35 @@ export function UserManagement() {
           {/* Dialog per il cambio password */}
           <Dialog open={isChangePasswordDialogOpen} onOpenChange={setIsChangePasswordDialogOpen}>
             <DialogContent className="sm:max-w-md w-[92%] md:w-full">
-              <DialogHeader>
-                <DialogTitle>Cambia Password</DialogTitle>
-                <DialogDescription className="text-sm text-gray-500">
-                  {selectedUser && `Modifica la password per l'utente: ${selectedUser.name}`}
+              <DialogHeader className="pb-3 border-b">
+                <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                  <Key className="h-5 w-5 text-primary" />
+                  Cambia Password
+                </DialogTitle>
+                <DialogDescription className="text-sm text-gray-500 mt-1">
+                  {selectedUser && `Modifica la password per l'utente: ${selectedUser?.name}`}
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="space-y-4 py-4">
+              <div className="space-y-5 py-4">
+                {selectedUser && (
+                  <div className="p-3 rounded-md bg-blue-50 border border-blue-100 flex items-center gap-3">
+                    <div className="bg-blue-100 rounded-full p-2 flex-shrink-0">
+                      <span className="text-primary font-medium text-sm">
+                        {selectedUser.name.substring(0, 2).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-sm">{selectedUser.name}</h4>
+                      <p className="text-xs text-gray-500">{selectedUser.username}</p>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">Nuova Password</Label>
+                  <Label htmlFor="new-password" className="text-sm font-medium">
+                    Nuova Password
+                  </Label>
                   <div className="relative">
                     <Input
                       id="new-password"
@@ -537,29 +559,40 @@ export function UserManagement() {
                       placeholder="Inserisci la nuova password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
+                      className="pr-10 border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary"
                     />
                     <button
                       type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                       onClick={() => setShowNewPassword(!showNewPassword)}
                     >
                       {showNewPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
+                        <EyeOff className="h-4 w-4" />
                       ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
+                        <Eye className="h-4 w-4" />
                       )}
                     </button>
                   </div>
                   {newPassword && newPassword.length < 6 && (
-                    <p className="text-xs text-red-500">La password deve contenere almeno 6 caratteri</p>
+                    <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
+                      <span className="material-icons text-xs">error</span>
+                      La password deve contenere almeno 6 caratteri
+                    </p>
+                  )}
+                  {newPassword && newPassword.length >= 6 && (
+                    <p className="text-xs text-green-500 flex items-center gap-1 mt-1">
+                      <span className="material-icons text-xs">check_circle</span>
+                      Password valida
+                    </p>
                   )}
                 </div>
               </div>
               
-              <DialogFooter>
+              <DialogFooter className="flex-col sm:flex-row gap-2 pt-2 border-t">
                 <Button 
                   variant="outline" 
                   onClick={() => setIsChangePasswordDialogOpen(false)}
+                  className="w-full sm:w-auto order-2 sm:order-1"
                 >
                   Annulla
                 </Button>
@@ -574,6 +607,7 @@ export function UserManagement() {
                       });
                     }
                   }}
+                  className="w-full sm:w-auto order-1 sm:order-2"
                 >
                   {changePasswordMutation.isPending ? (
                     <>
@@ -581,7 +615,10 @@ export function UserManagement() {
                       Salvataggio...
                     </>
                   ) : (
-                    "Salva"
+                    <>
+                      <span className="material-icons text-sm mr-1">save</span>
+                      Salva
+                    </>
                   )}
                 </Button>
               </DialogFooter>
