@@ -1085,26 +1085,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Notify admins about the new request
       const admins = (await storage.getAllUsers()).filter(user => user.role === "admin" && user.isActive);
       
+      // Get the requester user info
+      const requester = await storage.getUser((req.user as any).id);
+      if (!requester) {
+        throw new Error("User not found");
+      }
+      
       for (const admin of admins) {
+        // Crea una notifica nel sistema
         const notification = await storage.createNotification({
           userId: admin.id,
           type: "time_off_request",
-          message: `New time-off request from ${(req.user as any).name}`,
+          message: `Nuova richiesta di ${requestData.type === 'vacation' ? 'ferie' : 'permesso'} da ${requester.name}`,
           isRead: false,
           data: {
             requestId: request.id,
             userId: request.userId,
-            userName: (req.user as any).name,
+            userName: requester.name,
             startDate: request.startDate,
             endDate: request.endDate,
             type: request.type
           }
         });
         
+        // Invia email all'amministratore
+        import('./services/email-service').then(emailService => {
+          emailService.sendTimeOffRequestNotificationToAdmin(admin, requester, request)
+            .then(success => {
+              if (success) {
+                console.log(`✅ Email di notifica inviata all'amministratore ${admin.name} (${admin.email || admin.username})`);
+              } else {
+                console.warn(`⚠️ Non è stato possibile inviare l'email di notifica all'amministratore ${admin.name}`);
+              }
+            })
+            .catch(error => {
+              console.error(`❌ Errore nell'invio dell'email all'amministratore:`, error);
+            });
+        });
+        
         // Send real-time notification
         sendNotification(admin.id, {
           type: "time_off_request",
-          message: `New time-off request from ${(req.user as any).name}`,
+          message: `Nuova richiesta di ${requestData.type === 'vacation' ? 'ferie' : 'permesso'} da ${requester.name}`,
           data: notification
         });
       }
