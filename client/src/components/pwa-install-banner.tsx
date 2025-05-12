@@ -68,7 +68,7 @@ export function PWAInstallBanner() {
           <DownloadCloud className="h-5 w-5" />
         </div>
         <div>
-          <h4 className="font-medium text-sm sm:text-base">Installa StaffSync</h4>
+          <h4 className="font-medium text-sm sm:text-base">Installa Da Vittorino Gestione</h4>
           <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Accedi più velocemente e lavora offline</p>
         </div>
       </div>

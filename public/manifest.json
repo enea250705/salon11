@@ -1,7 +1,7 @@
 {
-  "name": "StaffSync - Gestione Turni",
-  "short_name": "StaffSync",
-  "description": "Applicazione per la gestione dei turni del personale",
+  "name": "Da Vittorino Gestione - Turni Personale",
+  "short_name": "Da Vittorino",
+  "description": "Applicazione per la gestione dei turni del personale di Da Vittorino",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
