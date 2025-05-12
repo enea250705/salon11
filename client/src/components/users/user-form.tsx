@@ -31,7 +31,10 @@ const userFormSchema = z.object({
   name: z.string().min(2, { message: "Il nome deve contenere almeno 2 caratteri" }),
   email: z.string().email({ message: "Email non valida" }),
   username: z.string().min(3, { message: "L'username deve contenere almeno 3 caratteri" }),
-  password: z.string().min(6, { message: "La password deve contenere almeno 6 caratteri" }).optional(),
+  password: z.string()
+    .min(8, { message: "La password deve contenere almeno 8 caratteri" })
+    .regex(/[0-9]/, { message: "La password deve contenere almeno un numero" })
+    .optional(),
   role: z.enum(["admin", "employee"], {
     required_error: "Seleziona un ruolo",
   }),

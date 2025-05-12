@@ -687,8 +687,8 @@ export function UserManagement() {
                     </>
                   ) : (
                     <>
-                      <span className="material-icons text-sm mr-1">save</span>
-                      Salva
+                      <Key className="mr-2 h-4 w-4" />
+                      Cambia Password
                     </>
                   )}
                 </Button>

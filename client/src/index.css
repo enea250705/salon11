@@ -92,6 +92,16 @@
     background-color: #f5f5f5;
   }
   
+  /* Animazioni per form/dialogs */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
   /* Schedule grid styles - Excel-like appearance */
   .schedule-grid {
     @apply w-full border-collapse border border-gray-300 text-xs;
