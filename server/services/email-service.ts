@@ -281,7 +281,8 @@ export async function sendTimeOffRequestNotificationToAdmin(admin: User, request
           <ul style="margin-bottom: 0;">
             <li><strong>Tipo:</strong> ${typeLabel}</li>
             <li><strong>Periodo:</strong> ${formattedStartDate} - ${formattedEndDate}</li>
-            <li><strong>Note:</strong> ${request.notes || 'Nessuna nota'}</li>
+            <li><strong>Durata:</strong> ${request.duration === 'full_day' ? 'Giornata intera' : request.duration === 'morning' ? 'Mattina' : 'Pomeriggio'}</li>
+            <li><strong>Motivo:</strong> ${request.reason || 'Nessun motivo specificato'}</li>
           </ul>
         </div>
         
