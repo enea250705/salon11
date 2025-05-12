@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ import {
 export function UserManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [isNewUserDialogOpen, setIsNewUserDialogOpen] = useState(false);
   const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
   const [isBulkAddDialogOpen, setIsBulkAddDialogOpen] = useState(false);
@@ -226,49 +228,14 @@ export function UserManagement() {
                 </DialogContent>
               </Dialog>
               
-              <Dialog 
-                open={isNewUserDialogOpen} 
-                onOpenChange={(open) => {
-                  // Reset il form quando viene chiuso
-                  if (!open) {
-                    setTimeout(() => {
-                      setIsNewUserDialogOpen(false);
-                    }, 50);
-                  } else {
-                    setIsNewUserDialogOpen(true);
-                  }
-                }}
+              <Button 
+                className="flex items-center gap-1 text-xs sm:text-sm"
+                onClick={() => setLocation("/users/new")}
               >
-                <DialogTrigger asChild>
-                  <Button className="flex items-center gap-1 text-xs sm:text-sm">
-                    <UserPlus className="h-4 w-4 mr-1 sm:mr-2" />
-                    <span className="sm:inline hidden">Nuovo Utente</span>
-                    <span className="sm:hidden inline">Nuovo</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md w-[92%] md:w-full" aria-describedby="new-user-description">
-                  <DialogHeader className="pb-3 border-b">
-                    <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                      <UserPlus className="h-5 w-5 text-primary" />
-                      Aggiungi Nuovo Utente
-                    </DialogTitle>
-                    <DialogDescription id="new-user-description" className="text-sm text-gray-500 mt-1">
-                      Compila il form per creare un nuovo account utente
-                    </DialogDescription>
-                  </DialogHeader>
-                  <UserForm 
-                    onSubmit={(userData) => {
-                      setIsNewUserDialogOpen(false);
-                      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-                      toast({
-                        title: "Utente creato",
-                        description: "Il nuovo utente è stato creato con successo.",
-                      });
-                    }}
-                    onCancel={() => setIsNewUserDialogOpen(false)}
-                  />
-                </DialogContent>
-              </Dialog>
+                <UserPlus className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="sm:inline hidden">Nuovo Utente</span>
+                <span className="sm:hidden inline">Nuovo</span>
+              </Button>
             </div>
           </div>
           

@@ -287,11 +287,11 @@ export default function NewUserPage() {
                 <h4 className="text-sm font-medium mb-2">Requisiti password:</h4>
                 <div className="space-y-2">
                   <p className={`text-xs flex items-center gap-1 ${form.watch("password").length >= 8 ? 'text-green-600' : 'text-gray-500'}`}>
-                    {form.watch("password").length >= 8 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                    {form.watch("password").length >= 8 ? <CheckCircle className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
                     Almeno 8 caratteri
                   </p>
                   <p className={`text-xs flex items-center gap-1 ${/[0-9]/.test(form.watch("password")) ? 'text-green-600' : 'text-gray-500'}`}>
-                    {/[0-9]/.test(form.watch("password")) ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                    {/[0-9]/.test(form.watch("password")) ? <CheckCircle className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
                     Almeno un numero
                   </p>
                 </div>

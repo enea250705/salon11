@@ -27,6 +27,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/schedule" component={Schedule} />
       <Route path="/users" component={Users} />
+      <Route path="/users/new" component={NewUser} />
       <Route path="/documents" component={Documents} />
       <Route path="/requests" component={Requests} />
       <Route path="/time-off" component={TimeOff} />
