@@ -572,15 +572,29 @@ export function UserManagement() {
           </Dialog>
           
           {/* Dialog per il cambio password */}
-          <Dialog open={isChangePasswordDialogOpen} onOpenChange={setIsChangePasswordDialogOpen}>
-            <DialogContent className="sm:max-w-md w-[92%] md:w-full">
+          <Dialog 
+            open={isChangePasswordDialogOpen} 
+            onOpenChange={(open) => {
+              if (!open) {
+                // Reset quando si chiude
+                setTimeout(() => {
+                  setIsChangePasswordDialogOpen(false);
+                  setNewPassword("");
+                  setShowNewPassword(false);
+                }, 50);
+              } else {
+                setIsChangePasswordDialogOpen(true);
+              }
+            }}
+          >
+            <DialogContent className="sm:max-w-md w-[92%] md:w-full" aria-describedby="password-dialog-description">
               <DialogHeader className="pb-3 border-b">
                 <DialogTitle className="text-xl font-bold flex items-center gap-2">
                   <Key className="h-5 w-5 text-primary" />
                   Cambia Password
                 </DialogTitle>
-                <DialogDescription className="text-sm text-gray-500 mt-1">
-                  {selectedUser && `Modifica la password per l'utente: ${selectedUser?.name}`}
+                <DialogDescription id="password-dialog-description" className="text-sm text-gray-500 mt-1">
+                  Imposta una nuova password sicura per l'utente
                 </DialogDescription>
               </DialogHeader>
               
@@ -624,15 +638,21 @@ export function UserManagement() {
                       )}
                     </button>
                   </div>
-                  {newPassword && newPassword.length < 6 && (
+                  {newPassword && newPassword.length < 8 && (
                     <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
-                      <span className="material-icons text-xs">error</span>
-                      La password deve contenere almeno 6 caratteri
+                      <XCircle className="h-3.5 w-3.5" />
+                      La password deve contenere almeno 8 caratteri
                     </p>
                   )}
-                  {newPassword && newPassword.length >= 6 && (
+                  {newPassword && !/[0-9]/.test(newPassword) && (
+                    <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
+                      <XCircle className="h-3.5 w-3.5" />
+                      La password deve contenere almeno un numero
+                    </p>
+                  )}
+                  {newPassword && newPassword.length >= 8 && /[0-9]/.test(newPassword) && (
                     <p className="text-xs text-green-500 flex items-center gap-1 mt-1">
-                      <span className="material-icons text-xs">check_circle</span>
+                      <CheckCircle className="h-3.5 w-3.5" />
                       Password valida
                     </p>
                   )}
@@ -649,9 +669,9 @@ export function UserManagement() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={!newPassword || newPassword.length < 6 || changePasswordMutation.isPending}
+                  disabled={!newPassword || newPassword.length < 8 || !/[0-9]/.test(newPassword) || changePasswordMutation.isPending}
                   onClick={() => {
-                    if (selectedUser && newPassword && newPassword.length >= 6) {
+                    if (selectedUser && newPassword && newPassword.length >= 8 && /[0-9]/.test(newPassword)) {
                       changePasswordMutation.mutate({
                         userId: selectedUser.id,
                         password: newPassword
