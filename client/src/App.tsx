@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/auth-context";
 import { PWAInstallBanner } from "@/components/pwa-install-banner";
 import { OfflineProvider } from "@/hooks/use-offline";
 import OfflineIndicator from "@/components/offline-indicator";
+import NotificationPermissionBanner from "@/components/notification-permission-banner";
 
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
@@ -53,6 +54,8 @@ function App() {
             <Toaster />
             <Router />
             <PWAInstallBanner />
+            <OfflineIndicator />
+            <NotificationPermissionBanner />
           </ThemeProvider>
         </OfflineProvider>
       </AuthProvider>
