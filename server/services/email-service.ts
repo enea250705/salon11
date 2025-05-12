@@ -16,6 +16,8 @@ if (process.env.SENDGRID_API_KEY) {
 
 // Indirizzo email del mittente (deve essere verificato su SendGrid)
 const SENDER_EMAIL = 'info@davittorino.replit.app';
+// URL dell'applicazione
+const APP_URL = process.env.APP_URL || 'https://davittorino.replit.app';
 
 /**
  * Interfaccia per i parametri di invio email
@@ -104,7 +106,7 @@ export async function sendScheduleNotification(user: User, scheduleStartDate: st
         <p>Ti informiamo che è stato pubblicato un nuovo turno di lavoro per il periodo <strong>${startDate} - ${endDate}</strong>.</p>
         <p>Puoi visualizzare i dettagli del tuo turno accedendo alla piattaforma Da Vittorino Gestione.</p>
         <div style="text-align: center; margin-top: 30px;">
-          <a href="${process.env.APP_URL || 'https://staffsync.replit.app'}/my-schedule" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Visualizza Turno</a>
+          <a href="${APP_URL}/my-schedule" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Visualizza Turno</a>
         </div>
         <p style="margin-top: 30px; font-size: 12px; color: #666; text-align: center;">
           Questa è un'email automatica, ti preghiamo di non rispondere.
@@ -133,7 +135,7 @@ export async function sendScheduleUpdateNotification(user: User, scheduleStartDa
         <p>Ti informiamo che è stato <strong>aggiornato</strong> il tuo turno di lavoro per il periodo <strong>${startDate} - ${endDate}</strong>.</p>
         <p>Si prega di verificare le modifiche accedendo alla piattaforma Da Vittorino Gestione.</p>
         <div style="text-align: center; margin-top: 30px;">
-          <a href="${process.env.APP_URL || 'https://staffsync.replit.app'}/my-schedule" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Visualizza Turno</a>
+          <a href="${APP_URL}/my-schedule" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Visualizza Turno</a>
         </div>
         <p style="margin-top: 30px; font-size: 12px; color: #666; text-align: center;">
           Questa è un'email automatica, ti preghiamo di non rispondere.
@@ -169,7 +171,7 @@ export async function sendDocumentNotification(user: User, documentType: string,
         <p>Ti informiamo che è stato caricato un nuovo documento: <strong>${documentName}</strong> per il periodo <strong>${period}</strong>.</p>
         <p>Puoi visualizzare e scaricare il documento accedendo alla piattaforma Da Vittorino Gestione.</p>
         <div style="text-align: center; margin-top: 30px;">
-          <a href="${process.env.APP_URL || 'https://staffsync.replit.app'}/my-documents" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Visualizza Documento</a>
+          <a href="${APP_URL}/my-documents" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Visualizza Documento</a>
         </div>
         <p style="margin-top: 30px; font-size: 12px; color: #666; text-align: center;">
           Questa è un'email automatica, ti preghiamo di non rispondere.
