@@ -114,7 +114,7 @@ export class MemStorage implements IStorage {
       username: "employee",
       password: "employee123",
       name: "Dipendente Demo",
-      email: "dipendente@staffsync.com",
+      email: "dipendente@davittorino.com",
       role: "employee",
       isActive: true,
     });

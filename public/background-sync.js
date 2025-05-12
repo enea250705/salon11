@@ -1,4 +1,4 @@
-// Gestione della sincronizzazione in background per StaffSync PWA
+// Gestione della sincronizzazione in background per Da Vittorino Gestione PWA
 
 // Definizione dei tag di sincronizzazione
 const SYNC_TAGS = {
@@ -31,7 +31,7 @@ const saveFailedRequest = async (tag, request) => {
 // Apre la connessione al database
 const openDatabase = () => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open('staffsync-offline-db', 1);
+    const request = indexedDB.open('davittorino-offline-db', 1);
     
     // Creazione/aggiornamento dello schema
     request.onupgradeneeded = (event) => {

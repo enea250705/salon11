@@ -1,14 +1,14 @@
 // Nome della cache
-const CACHE_NAME = 'staffsync-cache-v2';
+const CACHE_NAME = 'davittorino-cache-v2';
 
 // Importa script per la sincronizzazione in background
 importScripts('/background-sync.js');
 
 // Risorse statiche da salvare nella cache all'installazione
-const STATIC_CACHE_NAME = 'staffsync-static-v2';
+const STATIC_CACHE_NAME = 'davittorino-static-v2';
 
 // Risorse dinamiche
-const DYNAMIC_CACHE_NAME = 'staffsync-dynamic-v2';
+const DYNAMIC_CACHE_NAME = 'davittorino-dynamic-v2';
 
 // Le risorse essenziali da precaricare
 const urlsToCache = [

@@ -5,7 +5,7 @@
 importScripts('https://cdn.jsdelivr.net/npm/idb@7/build/umd.js');
 
 // Nome del database e versione
-const DB_NAME = 'staffsync-notifications';
+const DB_NAME = 'davittorino-notifications';
 const DB_VERSION = 1;
 
 // Definizione degli object stores
