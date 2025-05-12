@@ -17,6 +17,7 @@ import TimeOff from "@/pages/time-off";
 import MySchedule from "@/pages/my-schedule";
 import MyDocuments from "@/pages/my-documents";
 import Messages from "@/pages/messages";
+import NewUser from "@/pages/new-user";
 
 function Router() {
   return (
