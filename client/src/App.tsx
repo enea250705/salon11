@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/auth-context";
 import { PWAInstallBanner } from "@/components/pwa-install-banner";
+import { OfflineProvider } from "@/hooks/use-offline";
+import OfflineIndicator from "@/components/offline-indicator";
 
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
@@ -46,11 +48,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ThemeProvider attribute="class" defaultTheme="light">
-          <Toaster />
-          <Router />
-          <PWAInstallBanner />
-        </ThemeProvider>
+        <OfflineProvider showNotifications={true}>
+          <ThemeProvider attribute="class" defaultTheme="light">
+            <Toaster />
+            <Router />
+            <PWAInstallBanner />
+          </ThemeProvider>
+        </OfflineProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

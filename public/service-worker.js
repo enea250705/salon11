@@ -1,7 +1,16 @@
 // Nome della cache
-const CACHE_NAME = 'staffsync-cache-v1';
+const CACHE_NAME = 'staffsync-cache-v2';
 
-// Risorse da salvare nella cache
+// Importa script per la sincronizzazione in background
+importScripts('/background-sync.js');
+
+// Risorse statiche da salvare nella cache all'installazione
+const STATIC_CACHE_NAME = 'staffsync-static-v2';
+
+// Risorse dinamiche
+const DYNAMIC_CACHE_NAME = 'staffsync-dynamic-v2';
+
+// Le risorse essenziali da precaricare
 const urlsToCache = [
   '/',
   '/index.html',
@@ -15,7 +24,16 @@ const urlsToCache = [
   '/icons/icon-192x192.svg',
   '/icons/icon-384x384.svg',
   '/icons/icon-512x512.svg',
-  '/icons/badge-72x72.svg'
+  '/icons/badge-72x72.svg',
+  '/background-sync.js'
+];
+
+// Risorse che richiedono una strategia network-first
+const NETWORK_FIRST_URLS = [
+  '/api/auth/me',
+  '/api/schedules',
+  '/api/time-off-requests',
+  '/api/documents'
 ];
 
 // Installazione del service worker
@@ -31,52 +49,167 @@ self.addEventListener('install', event => {
 
 // Recupero delle risorse
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - restituisci la risposta dalla cache
-        if (response) {
-          return response;
-        }
-        
-        // Altrimenti, fai la richiesta alla rete
-        return fetch(event.request)
-          .then(response => {
-            // Controlla se abbiamo ricevuto una risposta valida
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-            
-            // Clona la risposta
-            const responseToCache = response.clone();
-            
-            // Aggiungi la risposta alla cache
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
-              
-            return response;
-          })
-          .catch(error => {
-            // Se la richiesta fallisce (es. offline), mostra la pagina offline
-            if (event.request.mode === 'navigate') {
-              return caches.match('/offline.html');
-            }
-            
-            // Per richieste di immagini, usa un'immagine di fallback
-            if (event.request.destination === 'image') {
-              return caches.match('/icons/icon-192x192.svg');
-            }
-            
-            return new Response('Contenuto non disponibile offline', {
-              status: 503,
-              statusText: 'Servizio non disponibile'
-            });
-          });
-      })
+  const requestUrl = new URL(event.request.url);
+  
+  // Verifica se la richiesta è un'API
+  const isApiRequest = requestUrl.pathname.startsWith('/api/');
+  
+  // Verifica se la richiesta dovrebbe usare la strategia network-first
+  const isNetworkFirstRequest = NETWORK_FIRST_URLS.some(url => 
+    requestUrl.pathname.startsWith(url)
   );
+  
+  // Non intercettare richieste non GET o richieste in altri domini
+  if (event.request.method !== 'GET' || requestUrl.origin !== location.origin) {
+    // Per le richieste API POST/PUT/DELETE in caso di offline, 
+    // programma la sincronizzazione in background
+    if (isApiRequest && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(event.request.method)) {
+      // Se il browser è offline, salva la richiesta per sincronizzazione
+      if (!navigator.onLine) {
+        event.respondWith(
+          (async () => {
+            try {
+              // Crea una copia della richiesta da salvare
+              const requestData = {
+                url: event.request.url,
+                method: event.request.method,
+                headers: Object.fromEntries(event.request.headers.entries()),
+                body: await event.request.clone().text()
+              };
+              
+              // Determina il tag appropriato per la sincronizzazione
+              let syncTag = '';
+              if (requestUrl.pathname.includes('time-off')) {
+                syncTag = self.backgroundSync.SYNC_TAGS.TIME_OFF_REQUEST;
+              } else if (requestUrl.pathname.includes('shift')) {
+                syncTag = self.backgroundSync.SYNC_TAGS.SHIFT_CHANGE;
+              } else if (requestUrl.pathname.includes('message')) {
+                syncTag = self.backgroundSync.SYNC_TAGS.MESSAGE_SEND;
+              } else if (requestUrl.pathname.includes('document')) {
+                syncTag = self.backgroundSync.SYNC_TAGS.DOCUMENT_UPLOAD;
+              } else {
+                syncTag = 'default-sync';
+              }
+              
+              // Salva la richiesta e registra la sincronizzazione
+              await self.backgroundSync.saveFailedRequest(syncTag, requestData);
+              
+              return new Response(JSON.stringify({
+                offline: true,
+                message: 'La tua richiesta è stata salvata e verrà inviata quando sarai di nuovo online.',
+                syncTag
+              }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            } catch (error) {
+              console.error('Errore durante il salvataggio della richiesta offline:', error);
+              return new Response(JSON.stringify({
+                error: 'Impossibile salvare la richiesta per la sincronizzazione.',
+                details: error.message
+              }), {
+                status: 503,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            }
+          })()
+        );
+        return;
+      }
+    }
+    
+    return;
+  }
+  
+  // Strategia di caching appropriata in base al tipo di richiesta
+  if (isApiRequest || isNetworkFirstRequest) {
+    // Strategia NETWORK FIRST per le API e le richieste specificate
+    event.respondWith(networkFirst(event.request));
+  } else {
+    // Strategia CACHE FIRST per tutte le altre risorse
+    event.respondWith(cacheFirst(event.request));
+  }
 });
+
+// Strategia Cache First: controlla prima la cache, poi la rete
+async function cacheFirst(request) {
+  try {
+    // Controlla prima nella cache
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
+    // Se non è in cache, vai in rete
+    const networkResponse = await fetch(request);
+    
+    // Salva la risposta in cache per richieste future
+    if (networkResponse && networkResponse.status === 200) {
+      const cache = await caches.open(DYNAMIC_CACHE_NAME);
+      cache.put(request, networkResponse.clone());
+    }
+    
+    return networkResponse;
+  } catch (error) {
+    // Fallback in caso di errore
+    return handleOfflineFallback(request);
+  }
+}
+
+// Strategia Network First: prova prima la rete, poi la cache
+async function networkFirst(request) {
+  try {
+    // Prova prima la rete
+    const networkResponse = await fetch(request);
+    
+    // Salva la risposta nella cache dinamica
+    if (networkResponse && networkResponse.status === 200) {
+      const cache = await caches.open(DYNAMIC_CACHE_NAME);
+      cache.put(request, networkResponse.clone());
+    }
+    
+    return networkResponse;
+  } catch (error) {
+    // Se fallisce, prova dalla cache
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
+    // Fallback se non è in cache
+    return handleOfflineFallback(request);
+  }
+}
+
+// Funzione per gestire i fallback offline
+async function handleOfflineFallback(request) {
+  // Comportamento specifico per la navigazione
+  if (request.mode === 'navigate') {
+    return caches.match('/offline.html');
+  }
+  
+  // Fallback per le immagini
+  if (request.destination === 'image') {
+    return caches.match('/icons/icon-192x192.svg');
+  }
+  
+  // Fallback per le API
+  if (request.url.includes('/api/')) {
+    return new Response(JSON.stringify({
+      offline: true,
+      message: 'Non sei connesso a internet. Alcuni dati potrebbero non essere aggiornati.'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+  
+  // Fallback generico
+  return new Response('Contenuto non disponibile offline', {
+    status: 503,
+    statusText: 'Servizio non disponibile'
+  });
+}
 
 // Gestione delle notifiche push
 self.addEventListener('push', event => {
