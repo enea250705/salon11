@@ -99,7 +99,7 @@ export default function Login() {
           <div className="flex justify-center mb-2">
             <span className="material-icons text-4xl text-primary">schedule</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 font-condensed">StaffSync</h1>
+          <h1 className="text-2xl font-bold text-gray-900 font-condensed">Da Vittorino Gestione</h1>
           <p className="mt-2 text-sm text-gray-600">
             Sistema di Gestione Personale
           </p>

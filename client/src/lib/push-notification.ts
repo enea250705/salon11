@@ -187,7 +187,7 @@ export function sendLocalNotification(title: string, options: ExtendedNotificati
 
   // Imposta le opzioni di default se non specificate
   const notificationOptions: ExtendedNotificationOptions = {
-    body: options.body || 'Notifica da StaffSync',
+    body: options.body || 'Notifica da Da Vittorino Gestione',
     icon: options.icon || '/icons/icon-192x192.svg',
     badge: options.badge || '/icons/badge-72x72.svg',
     vibrate: options.vibrate || [100, 50, 100],

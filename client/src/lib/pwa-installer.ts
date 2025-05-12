@@ -1,4 +1,4 @@
-// Implementazione delle funzionalità PWA per StaffSync
+// Implementazione delle funzionalità PWA per Da Vittorino Gestione
 
 // Definizione dell'interfaccia per l'evento beforeinstallprompt
 interface BeforeInstallPromptEvent extends Event {
