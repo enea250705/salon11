@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/auth-context";
+import PWAInstallBanner from "@/components/pwa-install-banner";
 
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
@@ -48,6 +49,7 @@ function App() {
         <ThemeProvider attribute="class" defaultTheme="light">
           <Toaster />
           <Router />
+          <PWAInstallBanner />
         </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
