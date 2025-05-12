@@ -434,14 +434,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         delete userData.username;
       }
       
+      // Se viene fornita una nuova password, non serve criptarla
+      // in questa applicazione le password sono memorizzate in chiaro
+      // (in un ambiente di produzione reale, qui si dovrebbe aggiungere
+      // una funzione di hashing della password)
+      
       const user = await storage.updateUser(userId, userData);
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
       
+      console.log("✅ Utente aggiornato:", { id: user.id, name: user.name });
       res.json(user);
     } catch (err) {
+      console.error("❌ Errore nell'aggiornamento dell'utente:", err);
       res.status(500).json({ message: "Failed to update user" });
     }
   });

@@ -120,12 +120,18 @@ export function UserManagement() {
   // Password change mutation
   const changePasswordMutation = useMutation({
     mutationFn: async ({ userId, password }: { userId: number, password: string }) => {
+      console.log("Changing password for user:", userId);
       const response = await apiRequest("PATCH", `/api/users/${userId}`, { password });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to change password");
+      }
       return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       setIsChangePasswordDialogOpen(false);
+      setNewPassword("");
       toast({
         title: "Password modificata",
         description: "La password dell'utente è stata modificata con successo.",
@@ -516,12 +522,8 @@ export function UserManagement() {
             <DialogContent className="sm:max-w-md w-[92%] md:w-full">
               <DialogHeader>
                 <DialogTitle>Cambia Password</DialogTitle>
-                <DialogDescription>
-                  {selectedUser && (
-                    <p className="text-sm text-gray-500 mt-1">
-                      Modifica la password per l'utente: <span className="font-medium">{selectedUser.name}</span>
-                    </p>
-                  )}
+                <DialogDescription className="text-sm text-gray-500">
+                  {selectedUser && `Modifica la password per l'utente: ${selectedUser.name}`}
                 </DialogDescription>
               </DialogHeader>
               
