@@ -106,15 +106,23 @@ export function UserManagement() {
   
   // Handle edit user
   const handleEditUser = (user: User) => {
-    setSelectedUser(user);
-    setIsEditUserDialogOpen(true);
+    // Pulisci prima di impostare
+    setSelectedUser(null);
+    setTimeout(() => {
+      setSelectedUser(user);
+      setIsEditUserDialogOpen(true);
+    }, 50);
   };
   
   // Handle change password
   const handleChangePassword = (user: User) => {
-    setSelectedUser(user);
+    // Pulisci prima di impostare
+    setSelectedUser(null);
     setNewPassword("");
-    setIsChangePasswordDialogOpen(true);
+    setTimeout(() => {
+      setSelectedUser(user);
+      setIsChangePasswordDialogOpen(true);
+    }, 50);
   };
   
   // Password change mutation
@@ -174,7 +182,19 @@ export function UserManagement() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
             <h2 className="text-xl font-bold">Gestione Utenti</h2>
             <div className="flex flex-wrap gap-2">
-              <Dialog open={isBulkAddDialogOpen} onOpenChange={setIsBulkAddDialogOpen}>
+              <Dialog 
+                open={isBulkAddDialogOpen} 
+                onOpenChange={(open) => {
+                  // Reset il form quando viene chiuso
+                  if (!open) {
+                    setTimeout(() => {
+                      setIsBulkAddDialogOpen(false);
+                    }, 50);
+                  } else {
+                    setIsBulkAddDialogOpen(true);
+                  }
+                }}
+              >
                 <DialogTrigger asChild>
                   <Button className="flex items-center gap-1 text-xs sm:text-sm" variant="outline">
                     <Users className="h-4 w-4 mr-1 sm:mr-2" />
@@ -183,10 +203,13 @@ export function UserManagement() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-xl w-[92%] md:w-full" aria-describedby="bulk-users-description">
-                  <DialogHeader>
-                    <DialogTitle>Importa Utenti in Blocco</DialogTitle>
-                    <DialogDescription id="bulk-users-description" className="sr-only">
-                      Form per importare utenti in blocco
+                  <DialogHeader className="pb-3 border-b">
+                    <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                      <Upload className="h-5 w-5 text-primary" />
+                      Importa Utenti in Blocco
+                    </DialogTitle>
+                    <DialogDescription id="bulk-users-description" className="text-sm text-gray-500 mt-1">
+                      Carica un elenco di utenti in formato CSV
                     </DialogDescription>
                   </DialogHeader>
                   <BulkUsersForm 
@@ -203,7 +226,19 @@ export function UserManagement() {
                 </DialogContent>
               </Dialog>
               
-              <Dialog open={isNewUserDialogOpen} onOpenChange={setIsNewUserDialogOpen}>
+              <Dialog 
+                open={isNewUserDialogOpen} 
+                onOpenChange={(open) => {
+                  // Reset il form quando viene chiuso
+                  if (!open) {
+                    setTimeout(() => {
+                      setIsNewUserDialogOpen(false);
+                    }, 50);
+                  } else {
+                    setIsNewUserDialogOpen(true);
+                  }
+                }}
+              >
                 <DialogTrigger asChild>
                   <Button className="flex items-center gap-1 text-xs sm:text-sm">
                     <UserPlus className="h-4 w-4 mr-1 sm:mr-2" />
@@ -498,24 +533,40 @@ export function UserManagement() {
           {/* Edit User Dialog */}
           <Dialog open={isEditUserDialogOpen} onOpenChange={setIsEditUserDialogOpen}>
             <DialogContent className="sm:max-w-md w-[92%] md:w-full" aria-describedby="edit-user-description">
-              <DialogHeader>
-                <DialogTitle>Modifica Utente</DialogTitle>
-                <DialogDescription id="edit-user-description" className="sr-only">
-                  Form per modificare i dati dell'utente
+              <DialogHeader className="pb-3 border-b">
+                <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                  <Edit className="h-5 w-5 text-primary" />
+                  Modifica Utente
+                </DialogTitle>
+                <DialogDescription id="edit-user-description" className="text-sm text-gray-500 mt-1">
+                  Modifica le informazioni dell'utente selezionato
                 </DialogDescription>
               </DialogHeader>
               {selectedUser && (
-                <UserForm 
-                  user={selectedUser}
-                  onSubmit={(userData) => {
-                    updateUserMutation.mutate({
-                      ...userData,
-                      id: selectedUser.id,
-                    });
-                  }}
-                  onCancel={() => setIsEditUserDialogOpen(false)}
-                  isEdit={true}
-                />
+                <>
+                  <div className="p-3 mb-4 rounded-md bg-blue-50 border border-blue-100 flex items-center gap-3">
+                    <div className="bg-blue-100 rounded-full p-2 flex-shrink-0">
+                      <span className="text-primary font-medium text-sm">
+                        {selectedUser.name.substring(0, 2).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-sm">{selectedUser.name}</h4>
+                      <p className="text-xs text-gray-500">{selectedUser.username}</p>
+                    </div>
+                  </div>
+                  <UserForm 
+                    user={selectedUser}
+                    onSubmit={(userData) => {
+                      updateUserMutation.mutate({
+                        ...userData,
+                        id: selectedUser.id,
+                      });
+                    }}
+                    onCancel={() => setIsEditUserDialogOpen(false)}
+                    isEdit={true}
+                  />
+                </>
               )}
             </DialogContent>
           </Dialog>
