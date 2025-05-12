@@ -482,21 +482,7 @@ export function EmployeeDashboard() {
         </Card>
       </div>
       
-      {/* Schedule Overview Notification */}
-      {mySchedule && mySchedule.isPublished && (
-        <Card className="bg-blue-50 border border-blue-200">
-          <CardContent className="p-4 flex items-start">
-            <span className="material-icons text-primary mr-3 mt-1">notifications</span>
-            <div>
-              <h3 className="font-medium mb-1">Orario Settimanale Pubblicato</h3>
-              <p className="text-sm text-gray-700">
-                Il tuo orario per la settimana {formatDate(mySchedule.startDate)} - {formatDate(mySchedule.endDate)} è stato pubblicato.
-                Visualizzalo nella sezione "I Miei Turni".
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Rimosso il banner di notifica "Orario Settimanale Pubblicato" come richiesto */}
     </div>
   );
 }
