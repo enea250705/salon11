@@ -1122,7 +1122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const formattedEndDate = new Date(request.endDate).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
           
           const emailParams = {
-            to: admin.email || admin.username,
+            to: "admin@ilirionai.it", // Indirizzo email fisso dell'amministratore
             subject: `Nuova richiesta di ${typeLabel.toLowerCase()} da ${requester.name}`,
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
