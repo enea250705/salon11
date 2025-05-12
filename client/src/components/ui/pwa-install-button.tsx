@@ -1,23 +1,19 @@
 import { useState, useEffect } from 'react';
-import { isPwaInstallable, promptPwaInstall, isAppInstalled } from '@/lib/pwa-installer';
 import { Button } from '@/components/ui/button';
+import { isPwaInstallable, promptPwaInstall, isAppInstalled } from '@/lib/pwa-installer';
 import { DownloadCloud } from 'lucide-react';
 
 interface PWAInstallButtonProps {
-  className?: string;
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive';
   size?: 'default' | 'sm' | 'lg';
-  text?: string;
-  showIcon?: boolean;
+  className?: string;
   onlyIfInstallable?: boolean;
 }
 
 export function PWAInstallButton({
-  className = '',
   variant = 'default',
   size = 'default',
-  text = 'Installa App',
-  showIcon = true,
+  className = '',
   onlyIfInstallable = true
 }: PWAInstallButtonProps) {
   const [installable, setInstallable] = useState(false);
@@ -46,7 +42,6 @@ export function PWAInstallButton({
     };
   }, []);
   
-  // Gestisce il clic sul pulsante
   const handleInstallClick = async () => {
     try {
       const result = await promptPwaInstall();
@@ -66,15 +61,14 @@ export function PWAInstallButton({
   if (installed) return null;
   
   return (
-    <Button
+    <Button 
+      variant={variant} 
+      size={size} 
       className={className}
-      variant={variant}
-      size={size}
       onClick={handleInstallClick}
-      disabled={!installable}
     >
-      {showIcon && <DownloadCloud className="mr-2 h-4 w-4" />}
-      {text}
+      <DownloadCloud className="mr-2 h-4 w-4" />
+      Installa App
     </Button>
   );
 }

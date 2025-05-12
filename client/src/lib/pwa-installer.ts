@@ -1,43 +1,67 @@
-/**
- * Utility per gestire l'installazione della PWA
- */
+// Implementazione delle funzionalità PWA per StaffSync
 
-// Evento BeforeInstallPrompt
-let deferredPrompt: any = null;
+// Definizione dell'interfaccia per l'evento beforeinstallprompt
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
 
-// Verifica se l'app è installabile
+// Variabile per memorizzare l'evento di installazione
+let deferredPrompt: BeforeInstallPromptEvent | null = null;
+
+// Verifica se l'app è già installata
+export function isAppInstalled(): boolean {
+  // Verifica se l'app è in modalità standalone o è già stata installata
+  return window.matchMedia('(display-mode: standalone)').matches || 
+         (window.navigator as any).standalone === true;
+}
+
+// Verifica se l'app può essere installata
 export function isPwaInstallable(): boolean {
   return !!deferredPrompt;
 }
 
-// Cattura l'evento di installazione
+// Inizializza gli eventi per l'installazione PWA
 export function initPwaInstaller() {
-  // Cattura l'evento beforeinstallprompt (viene emesso quando l'app è installabile)
+  if (typeof window === 'undefined') return;
+
+  // Se l'app è già installata, non mostriamo il prompt
+  if (isAppInstalled()) {
+    window.dispatchEvent(new Event('pwaInstalled'));
+    return;
+  }
+  
+  // Intercetta l'evento beforeinstallprompt per mostrare il nostro prompt personalizzato
   window.addEventListener('beforeinstallprompt', (e) => {
-    // Previeni la visualizzazione automatica del prompt
+    // Impedisce al browser di mostrare automaticamente il prompt di installazione
     e.preventDefault();
-    // Salva l'evento per mostrarlo più tardi
-    deferredPrompt = e;
     
-    // Notifica all'applicazione che l'app è installabile
-    const event = new CustomEvent('pwaInstallable');
-    window.dispatchEvent(event);
+    // Memorizza l'evento per poterlo attivare in seguito
+    deferredPrompt = e as BeforeInstallPromptEvent;
+    
+    // Notifica l'app che l'installazione è disponibile
+    window.dispatchEvent(new Event('pwaInstallable'));
+    
+    console.log('PWA installabile: evento beforeinstallprompt ricevuto');
   });
   
-  // Rileva quando l'app è già installata
+  // Gestisce l'evento appinstalled quando l'app viene installata
   window.addEventListener('appinstalled', () => {
-    // Resetta il prompt di installazione
+    // Azzera il prompt differito poiché l'app è stata installata
     deferredPrompt = null;
     
-    // Notifica all'applicazione che l'app è stata installata
-    const event = new CustomEvent('pwaInstalled');
-    window.dispatchEvent(event);
+    // Notifica l'app che l'installazione è completata
+    window.dispatchEvent(new Event('pwaInstalled'));
     
     console.log('PWA installata con successo');
   });
 }
 
-// Mostra il prompt di installazione
+// Mostra il prompt di installazione PWA
 export async function promptPwaInstall(): Promise<boolean> {
   if (!deferredPrompt) {
     console.log('Nessun prompt di installazione disponibile');
@@ -45,96 +69,45 @@ export async function promptPwaInstall(): Promise<boolean> {
   }
   
   // Mostra il prompt di installazione
-  deferredPrompt.prompt();
+  await deferredPrompt.prompt();
   
-  // Attendi la decisione dell'utente
-  const { outcome } = await deferredPrompt.userChoice;
+  // Attende la risposta dell'utente
+  const choiceResult = await deferredPrompt.userChoice;
   
-  // Resetta il prompt
+  // Resetta il prompt differito - può essere usato solo una volta
   deferredPrompt = null;
   
-  // Ritorna true se l'installazione è stata accettata
-  return outcome === 'accepted';
+  // Restituisce true se l'utente ha accettato l'installazione
+  return choiceResult.outcome === 'accepted';
 }
 
-// Aggiunge un piccolo banner per promuovere l'installazione
-export function createPromotionalBanner(
-  containerId: string, 
-  message: string = 'Installa questa app sul tuo dispositivo',
-  buttonText: string = 'Installa'
-) {
-  // Verifica che l'elemento container esista
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  
-  // Crea il banner
-  const banner = document.createElement('div');
-  banner.className = 'pwa-install-banner';
-  banner.style.cssText = `
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin: 16px 0;
-  `;
-  
-  // Crea il messaggio
-  const messageEl = document.createElement('p');
-  messageEl.textContent = message;
-  messageEl.style.cssText = `
-    margin: 0;
-    font-size: 14px;
-  `;
-  
-  // Crea il pulsante
-  const button = document.createElement('button');
-  button.textContent = buttonText;
-  button.style.cssText = `
-    background-color: #4a6cf7;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 16px;
-    cursor: pointer;
-    font-weight: 500;
-  `;
-  
-  // Aggiungi event listener per il pulsante
-  button.addEventListener('click', async () => {
-    const installed = await promptPwaInstall();
-    if (installed) {
-      // Rimuovi il banner se l'installazione è avvenuta con successo
-      banner.remove();
+// Funzione per registrare il service worker per la PWA
+export async function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      console.log('Service Worker registrato con successo:', registration);
+      
+      // Controlla se ci sono aggiornamenti del service worker
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // Un nuovo service worker è disponibile, mostra notifica all'utente
+              window.dispatchEvent(new CustomEvent('pwaUpdateAvailable'));
+            }
+          });
+        }
+      });
+      
+      return registration;
+    } catch (error) {
+      console.error('Errore durante la registrazione del Service Worker:', error);
+      return null;
     }
-  });
-  
-  // Aggiungi elementi al banner
-  banner.appendChild(messageEl);
-  banner.appendChild(button);
-  
-  // Aggiungi banner al container
-  container.prepend(banner);
-  
-  // Aggiungi gestore per nascondere il banner quando l'app è installata
-  window.addEventListener('pwaInstalled', () => {
-    banner.remove();
-  });
-  
-  return banner;
-}
-
-// Rileva se l'app è in modalità standalone (installata)
-export function isAppInstalled(): boolean {
-  return window.matchMedia('(display-mode: standalone)').matches || 
-         (window.navigator as any).standalone === true;
-}
-
-// Inizializza il modulo
-export function initPwa() {
-  if (typeof window !== 'undefined') {
-    initPwaInstaller();
+  } else {
+    console.log('Service Worker non supportato in questo browser');
+    return null;
   }
 }

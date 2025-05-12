@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import { initPwa } from "./lib/pwa-installer";
+import { initPwaInstaller, registerServiceWorker } from "./lib/pwa-installer";
 
 // Initialize fonts and icons from CDN
 const materialIconsLink = document.createElement("link");
@@ -22,7 +22,8 @@ metaDesc.content = "Sistema avanzato di gestione personale, pianificazione turni
 document.head.appendChild(metaDesc);
 
 // Initialize PWA functionality
-initPwa();
+initPwaInstaller();
+registerServiceWorker().catch(console.error);
 
 // Initialize the React application
 createRoot(document.getElementById("root")!).render(<App />);
