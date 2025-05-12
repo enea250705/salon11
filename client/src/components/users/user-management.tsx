@@ -635,29 +635,17 @@ export function UserManagement() {
                   Annulla
                 </Button>
                 <Button
-                  type="submit"
-                  disabled={!newPassword || newPassword.length < 8 || !/[0-9]/.test(newPassword) || changePasswordMutation.isPending}
+                  type="button"
                   onClick={() => {
-                    if (selectedUser && newPassword && newPassword.length >= 8 && /[0-9]/.test(newPassword)) {
-                      changePasswordMutation.mutate({
-                        userId: selectedUser.id,
-                        password: newPassword
-                      });
+                    if (selectedUser) {
+                      setIsChangePasswordDialogOpen(false);
+                      setLocation(`/users/change-password?userId=${selectedUser.id}`);
                     }
                   }}
                   className="w-full sm:w-auto order-1 sm:order-2"
                 >
-                  {changePasswordMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Salvataggio...
-                    </>
-                  ) : (
-                    <>
-                      <Key className="mr-2 h-4 w-4" />
-                      Cambia Password
-                    </>
-                  )}
+                  <Key className="mr-2 h-4 w-4" />
+                  Continua
                 </Button>
               </DialogFooter>
             </DialogContent>
