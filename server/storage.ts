@@ -606,23 +606,27 @@ export class DatabaseStorage implements IStorage {
   
   async getScheduleByDateRange(startDate: Date, endDate: Date): Promise<Schedule | undefined> {
     try {
-      const formattedStartDate = startDate.toISOString();
-      const formattedEndDate = endDate.toISOString();
+      console.log(`🔍 Esecuzione query schedule con date: ${startDate.toISOString()} - ${endDate.toISOString()}`);
       
-      console.log(`🔍 Esecuzione query schedule con date: ${formattedStartDate} - ${formattedEndDate}`);
-      
-      const [schedule] = await db
+      // Cerca tutti gli schedules in ordine decrescente per data
+      const allSchedules = await db
         .select()
         .from(schedules)
-        .where(
-          and(
-            lte(schedules.startDate, formattedEndDate),
-            gte(schedules.endDate, formattedStartDate)
-          )
-        );
+        .orderBy(desc(schedules.createdAt));
       
-      console.log('✅ Query schedule completata:', schedule ? 'Trovato' : 'Non trovato');
-      return schedule;
+      // Trova manualmente quello che corrisponde all'intervallo date
+      const matchingSchedule = allSchedules.find(schedule => {
+        const scheduleStart = new Date(schedule.startDate);
+        const scheduleEnd = new Date(schedule.endDate);
+        
+        return (
+          scheduleStart <= endDate && 
+          scheduleEnd >= startDate
+        );
+      });
+      
+      console.log('✅ Query schedule completata:', matchingSchedule ? 'Trovato' : 'Non trovato');
+      return matchingSchedule;
     } catch (error) {
       console.error('❌ Errore in getScheduleByDateRange:', error);
       return undefined;
@@ -636,9 +640,16 @@ export class DatabaseStorage implements IStorage {
       
       const allSchedules = await db
         .select()
-        .from(schedules)
-        .orderBy(desc(schedules.startDate));
+        .from(schedules);
       
+      // Ordina manualmente per data di inizio più recente
+      allSchedules.sort((a, b) => {
+        const dateA = new Date(a.startDate);
+        const dateB = new Date(b.startDate);
+        return dateB.getTime() - dateA.getTime();
+      });
+      
+      console.log("Retrieved all schedules:", allSchedules);
       return allSchedules;
     } catch (error) {
       console.error("Error in getAllSchedules:", error);
