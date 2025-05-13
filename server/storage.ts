@@ -521,8 +521,35 @@ export class DatabaseStorage implements IStorage {
   }
   
   private async initializeDefaultUsers() {
-    // Il metodo è vuoto, non creiamo utenti di default
-    // Gli utenti verranno creati attraverso la pagina di registrazione
+    // Check if admin exists
+    const adminExists = await this.getUserByUsername("admin");
+    if (!adminExists) {
+      await this.createUser({
+        username: "admin",
+        password: "admin123",
+        name: "Amministratore",
+        email: "admin@azienda.it",
+        role: "admin",
+        position: null,
+        phone: null,
+        isActive: true
+      });
+    }
+    
+    // Check if employee exists
+    const employeeExists = await this.getUserByUsername("employee");
+    if (!employeeExists) {
+      await this.createUser({
+        username: "employee",
+        password: "employee123",
+        name: "Dipendente Demo",
+        email: "dipendente@azienda.it",
+        role: "employee",
+        position: "Cameriere",
+        phone: "+39123456789",
+        isActive: true
+      });
+    }
   }
   
   async getUser(id: number): Promise<User | undefined> {
@@ -578,29 +605,20 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getScheduleByDateRange(startDate: Date, endDate: Date): Promise<Schedule | undefined> {
-    try {
-      console.log("Ricerca schedule per intervallo date:", startDate, "-", endDate);
-      
-      // Formatta le date in modo più sicuro
-      const formattedStartDate = new Date(startDate.getTime());
-      const formattedEndDate = new Date(endDate.getTime());
-      
-      // Interrogazione
-      const [schedule] = await db
-        .select()
-        .from(schedules)
-        .where(
-          and(
-            lte(schedules.startDate, formattedEndDate),
-            gte(schedules.endDate, formattedStartDate)
-          )
-        );
-      
-      return schedule;
-    } catch (error) {
-      console.error("Errore nella ricerca schedule per data:", error);
-      return undefined;
-    }
+    const formattedStartDate = startDate.toISOString().split('T')[0];
+    const formattedEndDate = endDate.toISOString().split('T')[0];
+    
+    const [schedule] = await db
+      .select()
+      .from(schedules)
+      .where(
+        and(
+          lte(schedules.startDate, formattedEndDate),
+          gte(schedules.endDate, formattedStartDate)
+        )
+      );
+    
+    return schedule;
   }
   
   async getAllSchedules(): Promise<Schedule[]> {
