@@ -3,7 +3,7 @@ import { User } from '@shared/schema';
 
 // Modalità di sviluppo (non invia email effettivamente ma le mostra in console)
 // Imposta su false per inviare email reali con Nodemailer
-const DEV_MODE = false;
+const DEV_MODE = true;
 
 // Configurazione per testing/sviluppo usando Ethereal (servizio gratuito per testing)
 // In produzione, sostituire con configurazione SMTP reale
