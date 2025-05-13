@@ -71,7 +71,7 @@ export function RecentActivities() {
         type: "schedule_published",
         title: "Turno settimanale pubblicato",
         details: `${startDateFormatted} - ${endDateFormatted}`,
-        timestamp: new Date(schedule.publishedAt),
+        timestamp: new Date(schedule.createdAt), // Usa createdAt invece di publishedAt
         icon: "event_available"
       });
     });
@@ -93,7 +93,7 @@ export function RecentActivities() {
           details: `Periodo: ${startDateFormatted}${request.startDate !== request.endDate ? 
             ` - ${format(new Date(request.endDate), "d MMMM", { locale: it })}` : ""
           }`,
-          timestamp: new Date(request.updatedAt),
+          timestamp: new Date(request.createdAt),
           icon: isApproved ? "check_circle" : "cancel"
         });
       });
