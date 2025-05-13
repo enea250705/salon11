@@ -14,11 +14,15 @@ export const users = pgTable("users", {
   position: text("position"),
   isActive: boolean("is_active").notNull().default(true),
   lastLogin: timestamp("last_login"),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   lastLogin: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 // Schedules schema
@@ -39,11 +43,11 @@ export const insertScheduleSchema = createInsertSchema(schedules).omit({
 // Shifts schema
 export const shifts = pgTable("shifts", {
   id: serial("id").primaryKey(),
-  scheduleId: integer("schedule_id").notNull(),
-  userId: integer("user_id").notNull(),
+  scheduleId: integer("scheduleId").notNull(),
+  userId: integer("userId").notNull(),
   day: text("day").notNull(), // Monday, Tuesday, etc.
-  startTime: text("start_time").notNull(),
-  endTime: text("end_time").notNull(),
+  startTime: text("startTime").notNull(),
+  endTime: text("endTime").notNull(),
   notes: text("notes"),
   area: text("area"),
   type: text("type").notNull().default("work"), // work, vacation, leave, sick
@@ -108,13 +112,12 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 // Messages schema
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
-  fromUserId: integer("from_user_id").notNull(),
-  toUserId: integer("to_user_id").notNull(),
+  fromUserId: integer("fromUserId").notNull(),
+  toUserId: integer("toUserId").notNull(),
   subject: text("subject").notNull(),
   content: text("content").notNull(),
-  isRead: boolean("is_read").notNull().default(false),
-  relatedToShiftId: integer("related_to_shift_id"),
-  createdAt: timestamp("created_at").notNull(),
+  isRead: boolean("isRead").notNull().default(false),
+  createdAt: timestamp("createdAt").notNull(),
 });
 
 export const insertMessageSchema = createInsertSchema(messages).omit({
