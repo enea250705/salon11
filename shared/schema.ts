@@ -59,16 +59,16 @@ export const insertShiftSchema = createInsertSchema(shifts).omit({
 // TimeOff Requests schema
 export const timeOffRequests = pgTable("time_off_requests", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: integer("userId").notNull(),
   type: text("type").notNull(), // vacation, personal, sick
-  startDate: date("start_date").notNull(),
-  endDate: date("end_date").notNull(),
+  startDate: date("startDate").notNull(),
+  endDate: date("endDate").notNull(),
   duration: text("duration").notNull(), // full_day, morning, afternoon
   reason: text("reason"),
   status: text("status").notNull().default("pending"), // pending, approved, rejected
-  approvedBy: integer("approved_by"),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  approvedBy: integer("approvedBy"),
+  createdAt: timestamp("createdAt").notNull(),
+  updatedAt: timestamp("updatedAt").notNull(),
 });
 
 export const insertTimeOffRequestSchema = createInsertSchema(timeOffRequests).omit({
@@ -82,12 +82,12 @@ export const insertTimeOffRequestSchema = createInsertSchema(timeOffRequests).om
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
   type: text("type").notNull(), // payslip, tax_document
-  userId: integer("user_id").notNull(),
+  userId: integer("userId").notNull(),
   period: text("period").notNull(), // June 2023, 2022 (for tax docs)
   filename: text("filename").notNull(),
-  fileData: text("file_data").notNull(), // Base64 encoded PDF
-  uploadedBy: integer("uploaded_by").notNull(),
-  uploadedAt: timestamp("uploaded_at").notNull(),
+  fileData: text("fileData").notNull(), // Base64 encoded PDF
+  uploadedBy: integer("uploadedBy").notNull(),
+  uploadedAt: timestamp("uploadedAt").notNull(),
 });
 
 export const insertDocumentSchema = createInsertSchema(documents).omit({
@@ -114,13 +114,13 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 // Messages schema
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
-  fromUserId: integer("from_user_id").notNull(),
-  toUserId: integer("to_user_id").notNull(),
+  fromUserId: integer("fromUserId").notNull(),
+  toUserId: integer("toUserId").notNull(),
   subject: text("subject").notNull(),
   content: text("content").notNull(),
-  isRead: boolean("is_read").notNull().default(false),
-  relatedToShiftId: integer("related_to_shift_id"),
-  createdAt: timestamp("created_at").notNull(),
+  isRead: boolean("isRead").notNull().default(false),
+  relatedToShiftId: integer("relatedToShiftId"),
+  createdAt: timestamp("createdAt").notNull(),
 });
 
 export const insertMessageSchema = createInsertSchema(messages).omit({
