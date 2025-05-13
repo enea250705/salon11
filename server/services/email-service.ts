@@ -3,7 +3,7 @@ import { User, TimeOffRequest } from '@shared/schema';
 
 // Modalità di sviluppo (non invia email effettivamente ma le mostra in console)
 // Imposta su false per inviare email reali con SendGrid (richiede SENDGRID_API_KEY)
-const DEV_MODE = true;
+const DEV_MODE = process.env.NODE_ENV !== 'production';
 
 if (!process.env.SENDGRID_API_KEY) {
   console.warn("ATTENZIONE: SENDGRID_API_KEY non è configurata nell'ambiente. Le email non verranno inviate.");
@@ -17,7 +17,7 @@ if (process.env.SENDGRID_API_KEY) {
 // Indirizzo email del mittente (deve essere verificato su SendGrid)
 const SENDER_EMAIL = 'info@davittorino.replit.app';
 // URL dell'applicazione
-const APP_URL = process.env.APP_URL || 'https://davittorino.replit.app';
+const APP_URL = 'https://davittorino.replit.app';
 
 /**
  * Interfaccia per i parametri di invio email
@@ -207,7 +207,7 @@ export async function sendTimeOffApprovalNotification(user: User, type: string, 
         <p>Ti informiamo che la tua richiesta di <strong>${typeLabel.toLowerCase()}</strong> per il periodo <strong>${formattedStartDate} - ${formattedEndDate}</strong> è stata <span style="color: green;"><strong>approvata</strong></span>.</p>
         <p>Puoi visualizzare lo stato di tutte le tue richieste accedendo alla piattaforma Da Vittorino Gestione.</p>
         <div style="text-align: center; margin-top: 30px;">
-          <a href="${process.env.APP_URL || 'https://staffsync.replit.app'}/time-off" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Le Mie Richieste</a>
+          <a href="${APP_URL}/time-off" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Le Mie Richieste</a>
         </div>
         <p style="margin-top: 30px; font-size: 12px; color: #666; text-align: center;">
           Questa è un'email automatica, ti preghiamo di non rispondere.
@@ -243,7 +243,7 @@ export async function sendTimeOffRejectionNotification(user: User, type: string,
         <p>Ti informiamo che la tua richiesta di <strong>${typeLabel.toLowerCase()}</strong> per il periodo <strong>${formattedStartDate} - ${formattedEndDate}</strong> è stata <span style="color: red;"><strong>non approvata</strong></span>.</p>
         <p>Per maggiori informazioni, contatta il tuo responsabile.</p>
         <div style="text-align: center; margin-top: 30px;">
-          <a href="${process.env.APP_URL || 'https://staffsync.replit.app'}/time-off" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Le Mie Richieste</a>
+          <a href="${APP_URL}/time-off" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Le Mie Richieste</a>
         </div>
         <p style="margin-top: 30px; font-size: 12px; color: #666; text-align: center;">
           Questa è un'email automatica, ti preghiamo di non rispondere.
@@ -291,7 +291,7 @@ export async function sendTimeOffRequestNotificationToAdmin(admin: User, request
         <p>Puoi gestire questa richiesta dalla piattaforma Da Vittorino Gestione.</p>
         
         <div style="text-align: center; margin-top: 30px;">
-          <a href="${process.env.APP_URL || 'https://staffsync.replit.app'}/requests" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Gestisci Richieste</a>
+          <a href="${APP_URL}/requests" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Gestisci Richieste</a>
         </div>
         
         <p style="margin-top: 30px; font-size: 12px; color: #666; text-align: center;">
