@@ -61,31 +61,28 @@ export const timeOffRequests = pgTable("time_off_requests", {
   id: serial("id").primaryKey(),
   userId: integer("userId").notNull(),
   type: text("type").notNull(), // vacation, personal, sick
-  startDate: date("startDate").notNull(),
-  endDate: date("endDate").notNull(),
-  duration: text("duration").notNull(), // full_day, morning, afternoon
+  startDate: timestamp("startDate").notNull(),
+  endDate: timestamp("endDate").notNull(),
   reason: text("reason"),
   status: text("status").notNull().default("pending"), // pending, approved, rejected
   approvedBy: integer("approvedBy"),
   createdAt: timestamp("createdAt").notNull(),
-  updatedAt: timestamp("updatedAt").notNull(),
 });
 
 export const insertTimeOffRequestSchema = createInsertSchema(timeOffRequests).omit({
   id: true,
   approvedBy: true,
   createdAt: true,
-  updatedAt: true,
 });
 
 // Documents schema
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
+  title: text("title").notNull(),
   type: text("type").notNull(), // payslip, tax_document
-  userId: integer("userId").notNull(),
-  period: text("period").notNull(), // June 2023, 2022 (for tax docs)
-  filename: text("filename").notNull(),
-  fileData: text("fileData").notNull(), // Base64 encoded PDF
+  path: text("path").notNull(),
+  userId: integer("userId"),
+  isGlobal: boolean("isGlobal").notNull().default(false),
   uploadedBy: integer("uploadedBy").notNull(),
   uploadedAt: timestamp("uploadedAt").notNull(),
 });
