@@ -251,19 +251,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const user = await storage.getUserByUsername(username);
         
         if (!user) {
-          return done(null, false, { message: "Incorrect username" });
+          console.log("Login failed: username not found:", username);
+          return done(null, false, { message: "Credenziali non valide" });
         }
         
+        // DEBUG: Password comparison
+        console.log("Checking password:", password.substring(0, 3) + "...", "vs", user.password.substring(0, 3) + "...");
+        
         if (user.password !== password) {
-          return done(null, false, { message: "Incorrect password" });
+          console.log("Login failed: password mismatch for:", username);
+          return done(null, false, { message: "Credenziali non valide" });
         }
         
         if (!user.isActive) {
-          return done(null, false, { message: "User account is disabled" });
+          console.log("Login failed: account disabled for:", username);
+          return done(null, false, { message: "Account disattivato" });
         }
         
+        // Login successful
+        console.log("Login successful for:", username);
         return done(null, user);
       } catch (err) {
+        console.error("Login error:", err);
         return done(err);
       }
     })
@@ -319,6 +328,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ user: req.user });
     } else {
       res.json({ user: null });
+    }
+  });
+  
+  // Endpoint per il setup iniziale - crea un account amministratore se non ci sono utenti
+  app.post("/api/setup", async (req, res) => {
+    try {
+      // Verifica se ci sono già utenti nel sistema
+      const existingUsers = await storage.getAllUsers();
+      
+      // Se ci sono già utenti, impedisci la creazione di nuovi admin tramite questo endpoint
+      if (existingUsers.length > 0) {
+        return res.status(403).json({ message: "Setup già completato. Usa l'endpoint /api/users come amministratore." });
+      }
+      
+      // Validazione dei dati utente
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Assicurati che sia un amministratore
+      if (userData.role !== "admin") {
+        userData.role = "admin";
+      }
+      
+      // Crea l'utente amministratore
+      const user = await storage.createUser(userData);
+      
+      console.log("Administrator account created:", user.username);
+      
+      res.status(200).json({
+        message: "Setup completato con successo", 
+        user: {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          role: user.role
+        }
+      });
+    } catch (err) {
+      console.error("Setup error:", err);
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: "Dati utente non validi", errors: err.errors });
+      }
+      res.status(500).json({ message: "Errore durante il setup" });
     }
   });
   
