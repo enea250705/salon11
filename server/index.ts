@@ -53,8 +53,21 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    // Serve static files from the correct build directory
-    app.use(express.static("dist/public", { maxAge: '1y' }));
+    // Serve static files from the correct build directory with appropriate MIME types
+    app.use(express.static("dist/public", { 
+      maxAge: '1y',
+      setHeaders: (res, path) => {
+        // Imposta il MIME type corretto per il service worker
+        if (path.endsWith('.js')) {
+          res.setHeader('Content-Type', 'application/javascript');
+        }
+        // Imposta il MIME type corretto per i manifest
+        if (path.endsWith('.json')) {
+          res.setHeader('Content-Type', 'application/json');
+        }
+      }
+    }));
+    
     // Handle client-side routing
     app.get('*', (req, res, next) => {
       if (!req.path.startsWith('/api')) {
@@ -65,8 +78,15 @@ app.use((req, res, next) => {
     });
   }
 
+  // ALWAYS serve the app on port 5000
+  // this serves both the API and the client.
+  // It is the only port that is not firewalled.
   const port = process.env.PORT || 5000;
-  server.listen(port, "0.0.0.0", () => {
+  server.listen({
+    port: Number(port),
+    host: "0.0.0.0",
+    reusePort: true,
+  }, () => {
     log(`serving on port ${port}`);
   });
 })();
