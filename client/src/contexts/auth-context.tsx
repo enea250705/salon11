@@ -10,8 +10,11 @@ import { useToast } from "@/hooks/use-toast";
 
 type AuthContextType = {
   user: User | null;
+  isAuthenticated: boolean;
   isLoading: boolean;
   error: Error | null;
+  login: (username: string, password: string) => Promise<User>;
+  logout: () => Promise<void>;
   loginMutation: UseMutationResult<User, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
 };
@@ -102,12 +105,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [userData]);
 
+  // Implementazione delle funzioni login e logout che vengono utilizzate nei componenti
+  const login = async (username: string, password: string): Promise<User> => {
+    const result = await loginMutation.mutateAsync({ username, password });
+    return result;
+  };
+
+  const logout = async (): Promise<void> => {
+    await logoutMutation.mutateAsync();
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
+        isAuthenticated: !!user,
         isLoading,
         error,
+        login,
+        logout,
         loginMutation,
         logoutMutation,
       }}
