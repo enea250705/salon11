@@ -173,25 +173,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
   // Setup WebSocket server for real-time notifications
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  const wss = new WebSocketServer({ noServer: true });
   
   // Store WebSocket clients by userId
   const clients = new Map<number, WebSocket[]>();
   
   // Handle WebSocket connection
-  // WebSocket connection handling now in the custom handler below
-  
-  // Handle WebSocket connection without upgrade handler
-  wss.on("connection", (ws: WebSocket, req) => {
-    const url = new URL(req.url || "", `http://${req.headers.host}`);
-    const userId = parseInt(url.searchParams.get("userId") || "0");
-    
-    if (!userId) {
-      ws.close();
-      return;
-    }
-    
-    // Store client connection
+  wss.on("connection", (ws: WebSocket, userId: number) => {
     if (!clients.has(userId)) {
       clients.set(userId, []);
     }
@@ -210,6 +198,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           clients.delete(userId);
         }
       }
+    });
+  });
+  
+  // Handle WebSocket upgrade
+  httpServer.on("upgrade", (request, socket, head) => {
+    const url = new URL(request.url || "", `http://${request.headers.host}`);
+    const userId = parseInt(url.searchParams.get("userId") || "0");
+    
+    if (!userId) {
+      socket.destroy();
+      return;
+    }
+    
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit("connection", ws, userId);
     });
   });
   
