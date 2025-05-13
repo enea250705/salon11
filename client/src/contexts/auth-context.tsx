@@ -40,13 +40,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     async function checkAuth() {
       try {
+        console.log("Checking authentication...");
         const response = await fetch("/api/auth/me", {
           credentials: "include",
         });
         const data = await response.json();
         
+        console.log("Auth response:", data);
+        
         if (data.user) {
           setUser(data.user);
+          console.log("User logged in:", data.user);
+        } else {
+          console.log("No user logged in");
         }
       } catch (error) {
         console.error("Failed to check authentication:", error);
@@ -61,15 +67,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Login function
   const login = async (username: string, password: string) => {
     try {
-      const response = await apiRequest("POST", "/api/auth/login", { username, password });
+      console.log("Attempting login with:", username);
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+        credentials: "include"
+      });
+      
+      if (!response.ok) {
+        console.error("Login failed:", response.status, response.statusText);
+        throw new Error("Login failed: " + response.statusText);
+      }
+      
       const data = await response.json();
+      console.log("Login response:", data);
       
       if (data.user) {
         setUser(data.user);
         return;
       }
       
-      throw new Error("Login failed");
+      throw new Error("Login failed: No user returned");
     } catch (error) {
       console.error("Login error:", error);
       throw error;
@@ -79,11 +100,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Logout function
   const logout = async () => {
     try {
+      console.log("Logging out...");
       await apiRequest("POST", "/api/auth/logout", {});
       setUser(null);
       
       // Clear all queries from the cache on logout
       queryClient.clear();
+      console.log("Logout successful");
     } catch (error) {
       console.error("Logout error:", error);
     }

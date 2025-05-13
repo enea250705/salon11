@@ -55,32 +55,11 @@ export default function Login() {
     setIsLoading(true);
     
     try {
-      // Login diretto usando fetch invece di utilizzare la funzione login dal contesto
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: values.username,
-          password: values.password,
-        }),
-        credentials: 'include'
-      });
+      // Usa la funzione login dal contesto
+      await login(values.username, values.password);
       
-      if (!response.ok) {
-        throw new Error('Credenziali non valide');
-      }
-      
-      const data = await response.json();
-      
-      if (data.user) {
-        // Ricarica la pagina per aggiornare lo stato di autenticazione
-        window.location.href = '/';
-        return;
-      }
-      
-      throw new Error('Errore durante l\'accesso');
+      // Se il login ha successo, la pagina verrà reindirizzata automaticamente
+      // grazie all'hook useEffect che controlla isAuthenticated
     } catch (error) {
       console.error("Login error:", error);
       toast({
