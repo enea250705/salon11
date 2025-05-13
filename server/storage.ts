@@ -605,20 +605,28 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getScheduleByDateRange(startDate: Date, endDate: Date): Promise<Schedule | undefined> {
-    const formattedStartDate = startDate.toISOString().split('T')[0];
-    const formattedEndDate = endDate.toISOString().split('T')[0];
-    
-    const [schedule] = await db
-      .select()
-      .from(schedules)
-      .where(
-        and(
-          lte(schedules.startDate, formattedEndDate),
-          gte(schedules.endDate, formattedStartDate)
-        )
-      );
-    
-    return schedule;
+    try {
+      const formattedStartDate = startDate.toISOString();
+      const formattedEndDate = endDate.toISOString();
+      
+      console.log(`🔍 Esecuzione query schedule con date: ${formattedStartDate} - ${formattedEndDate}`);
+      
+      const [schedule] = await db
+        .select()
+        .from(schedules)
+        .where(
+          and(
+            lte(schedules.startDate, formattedEndDate),
+            gte(schedules.endDate, formattedStartDate)
+          )
+        );
+      
+      console.log('✅ Query schedule completata:', schedule ? 'Trovato' : 'Non trovato');
+      return schedule;
+    } catch (error) {
+      console.error('❌ Errore in getScheduleByDateRange:', error);
+      return undefined;
+    }
   }
   
   async getAllSchedules(): Promise<Schedule[]> {
