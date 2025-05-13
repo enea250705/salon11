@@ -578,20 +578,29 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getScheduleByDateRange(startDate: Date, endDate: Date): Promise<Schedule | undefined> {
-    const formattedStartDate = startDate.toISOString().split('T')[0];
-    const formattedEndDate = endDate.toISOString().split('T')[0];
-    
-    const [schedule] = await db
-      .select()
-      .from(schedules)
-      .where(
-        and(
-          lte(schedules.startDate, formattedEndDate),
-          gte(schedules.endDate, formattedStartDate)
-        )
-      );
-    
-    return schedule;
+    try {
+      console.log("Ricerca schedule per intervallo date:", startDate, "-", endDate);
+      
+      // Formatta le date in modo più sicuro
+      const formattedStartDate = new Date(startDate.getTime());
+      const formattedEndDate = new Date(endDate.getTime());
+      
+      // Interrogazione
+      const [schedule] = await db
+        .select()
+        .from(schedules)
+        .where(
+          and(
+            lte(schedules.startDate, formattedEndDate),
+            gte(schedules.endDate, formattedStartDate)
+          )
+        );
+      
+      return schedule;
+    } catch (error) {
+      console.error("Errore nella ricerca schedule per data:", error);
+      return undefined;
+    }
   }
   
   async getAllSchedules(): Promise<Schedule[]> {
