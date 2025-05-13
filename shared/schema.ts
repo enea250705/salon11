@@ -42,11 +42,11 @@ export const insertScheduleSchema = createInsertSchema(schedules).omit({
 // Shifts schema
 export const shifts = pgTable("shifts", {
   id: serial("id").primaryKey(),
-  scheduleId: integer("schedule_id").notNull(),
-  userId: integer("user_id").notNull(),
+  scheduleId: integer("scheduleId").notNull(),
+  userId: integer("userId").notNull(),
   day: text("day").notNull(), // Monday, Tuesday, etc.
-  startTime: text("start_time").notNull(),
-  endTime: text("end_time").notNull(),
+  startTime: text("startTime").notNull(),
+  endTime: text("endTime").notNull(),
   notes: text("notes"),
   area: text("area"),
   type: text("type").notNull().default("work"), // work, vacation, leave, sick
