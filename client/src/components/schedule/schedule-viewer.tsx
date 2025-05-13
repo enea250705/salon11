@@ -160,13 +160,13 @@ export function ScheduleViewer({ schedule, shifts, onDownloadPdf }: ScheduleView
         </div>
         
         {/* Notification Banner */}
-        {schedule.isPublished && schedule.createdAt && (
+        {schedule.isPublished && schedule.publishedAt && (
           <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200 flex items-start">
             <span className="material-icons text-primary mr-2">notifications</span>
             <div>
               <p className="text-sm font-medium">Notifica</p>
               <p className="text-xs text-gray-700">
-                Il tuo orario settimanale è stato aggiornato il {formatDate(schedule.createdAt)}. 
+                Il tuo orario settimanale è stato aggiornato il {formatDate(schedule.publishedAt)}. 
                 Verificalo attentamente e contatta l'amministratore in caso di problemi.
               </p>
             </div>
