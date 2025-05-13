@@ -521,35 +521,8 @@ export class DatabaseStorage implements IStorage {
   }
   
   private async initializeDefaultUsers() {
-    // Check if admin exists
-    const adminExists = await this.getUserByUsername("admin");
-    if (!adminExists) {
-      await this.createUser({
-        username: "admin",
-        password: "admin123",
-        name: "Amministratore",
-        email: "admin@azienda.it",
-        role: "admin",
-        position: null,
-        phone: null,
-        isActive: true
-      });
-    }
-    
-    // Check if employee exists
-    const employeeExists = await this.getUserByUsername("employee");
-    if (!employeeExists) {
-      await this.createUser({
-        username: "employee",
-        password: "employee123",
-        name: "Dipendente Demo",
-        email: "dipendente@azienda.it",
-        role: "employee",
-        position: "Cameriere",
-        phone: "+39123456789",
-        isActive: true
-      });
-    }
+    // Il metodo è vuoto, non creiamo utenti di default
+    // Gli utenti verranno creati attraverso la pagina di registrazione
   }
   
   async getUser(id: number): Promise<User | undefined> {
