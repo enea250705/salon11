@@ -112,13 +112,12 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 // Messages schema
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
-  fromUserId: integer("from_user_id").notNull(),
-  toUserId: integer("to_user_id").notNull(),
+  fromUserId: integer("fromUserId").notNull(),
+  toUserId: integer("toUserId").notNull(),
   subject: text("subject").notNull(),
   content: text("content").notNull(),
-  isRead: boolean("is_read").notNull().default(false),
-  relatedToShiftId: integer("related_to_shift_id"),
-  createdAt: timestamp("created_at").notNull(),
+  isRead: boolean("isRead").notNull().default(false),
+  createdAt: timestamp("createdAt").notNull(),
 });
 
 export const insertMessageSchema = createInsertSchema(messages).omit({

@@ -68,9 +68,10 @@ export function DocumentUpload({ users }: { users: any[] }) {
             const payload = {
               type: data.type,
               userId: data.userId,
-              period: data.period,
-              filename: file.name,
-              fileData: base64Data,
+              title: data.period, // Usiamo il periodo come titolo
+              path: `/uploads/${file.name}`, // Creiamo un percorso virtuale
+              isGlobal: false,
+              uploadedBy: 0, // Verrà sovrascritto lato server
             };
             
             const response = await apiRequest("POST", "/api/documents", payload);

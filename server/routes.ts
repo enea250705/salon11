@@ -1185,7 +1185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   <ul style="margin-bottom: 0;">
                     <li><strong>Tipo:</strong> ${typeLabel}</li>
                     <li><strong>Periodo:</strong> ${formattedStartDate} - ${formattedEndDate}</li>
-                    <li><strong>Durata:</strong> ${request.duration === 'full_day' ? 'Giornata intera' : request.duration === 'morning' ? 'Mattina' : 'Pomeriggio'}</li>
+                    <li><strong>Durata:</strong> Giornata intera</li>
                     <li><strong>Motivo:</strong> ${request.reason || 'Nessun motivo specificato'}</li>
                   </ul>
                 </div>
@@ -1484,7 +1484,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         data: {
           documentId: document.id,
           type: document.type,
-          period: document.period
+          title: document.title
         }
       });
       
@@ -1499,7 +1499,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (user && user.email) {
         try {
           const { sendDocumentNotification } = await import('./services/nodemailer-service');
-          await sendDocumentNotification(user, document.type, document.period);
+          await sendDocumentNotification(user, document.type, document.title);
           console.log(`📧 Email di notifica documento inviata a ${user.name} (${user.email})`);
         } catch (emailError) {
           console.error(`❌ Errore nell'invio email:`, emailError);
@@ -1614,7 +1614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/messages", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
-      const { toUserId, subject, content, relatedToShiftId } = req.body;
+      const { toUserId, subject, content } = req.body;
       
       if (!toUserId || !subject || !content) {
         return res.status(400).json({ message: "Missing required fields" });
@@ -1630,8 +1630,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fromUserId: userId,
         toUserId,
         subject,
-        content,
-        relatedToShiftId
+        content
       });
       
       // Create a notification for the recipient
