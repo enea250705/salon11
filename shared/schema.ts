@@ -24,12 +24,12 @@ export const insertUserSchema = createInsertSchema(users).omit({
 // Schedules schema
 export const schedules = pgTable("schedules", {
   id: serial("id").primaryKey(),
-  startDate: date("start_date").notNull(),
-  endDate: date("end_date").notNull(),
-  isPublished: boolean("is_published").notNull().default(false),
-  publishedAt: timestamp("published_at"),
-  createdBy: integer("created_by").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  startDate: date("startDate").notNull(),
+  endDate: date("endDate").notNull(),
+  isPublished: boolean("isPublished").notNull().default(false),
+  publishedAt: timestamp("publishedAt"),
+  createdBy: integer("createdBy").notNull(),
+  updatedAt: timestamp("updatedAt").notNull(),
 });
 
 export const insertScheduleSchema = createInsertSchema(schedules).omit({
@@ -41,11 +41,11 @@ export const insertScheduleSchema = createInsertSchema(schedules).omit({
 // Shifts schema
 export const shifts = pgTable("shifts", {
   id: serial("id").primaryKey(),
-  scheduleId: integer("schedule_id").notNull(),
-  userId: integer("user_id").notNull(),
+  scheduleId: integer("scheduleId").notNull(),
+  userId: integer("userId").notNull(),
   day: text("day").notNull(), // Monday, Tuesday, etc.
-  startTime: text("start_time").notNull(),
-  endTime: text("end_time").notNull(),
+  startTime: text("startTime").notNull(),
+  endTime: text("endTime").notNull(),
   notes: text("notes"),
   area: text("area"),
   type: text("type").notNull().default("work"), // work, vacation, leave, sick
@@ -58,16 +58,16 @@ export const insertShiftSchema = createInsertSchema(shifts).omit({
 // TimeOff Requests schema
 export const timeOffRequests = pgTable("time_off_requests", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: integer("userId").notNull(),
   type: text("type").notNull(), // vacation, personal, sick
-  startDate: date("start_date").notNull(),
-  endDate: date("end_date").notNull(),
+  startDate: date("startDate").notNull(),
+  endDate: date("endDate").notNull(),
   duration: text("duration").notNull(), // full_day, morning, afternoon
   reason: text("reason"),
   status: text("status").notNull().default("pending"), // pending, approved, rejected
-  approvedBy: integer("approved_by"),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  approvedBy: integer("approvedBy"),
+  createdAt: timestamp("createdAt").notNull(),
+  updatedAt: timestamp("updatedAt").notNull(),
 });
 
 export const insertTimeOffRequestSchema = createInsertSchema(timeOffRequests).omit({
@@ -81,12 +81,12 @@ export const insertTimeOffRequestSchema = createInsertSchema(timeOffRequests).om
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
   type: text("type").notNull(), // payslip, tax_document
-  userId: integer("user_id").notNull(),
+  userId: integer("userId").notNull(),
   period: text("period").notNull(), // June 2023, 2022 (for tax docs)
   filename: text("filename").notNull(),
-  fileData: text("file_data").notNull(), // Base64 encoded PDF
-  uploadedBy: integer("uploaded_by").notNull(),
-  uploadedAt: timestamp("uploaded_at").notNull(),
+  fileData: text("fileData").notNull(), // Base64 encoded PDF
+  uploadedBy: integer("uploadedBy").notNull(),
+  uploadedAt: timestamp("uploadedAt").notNull(),
 });
 
 export const insertDocumentSchema = createInsertSchema(documents).omit({
@@ -97,12 +97,12 @@ export const insertDocumentSchema = createInsertSchema(documents).omit({
 // Notifications schema
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: integer("userId").notNull(),
   type: text("type").notNull(), // schedule_update, request_response, document_upload, new_message
   message: text("message").notNull(),
-  isRead: boolean("is_read").notNull().default(false),
+  isRead: boolean("isRead").notNull().default(false),
   data: json("data"),
-  createdAt: timestamp("created_at").notNull(),
+  createdAt: timestamp("createdAt").notNull(),
 });
 
 export const insertNotificationSchema = createInsertSchema(notifications).omit({
