@@ -9,48 +9,46 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
+  phone: text("phone"),
   role: text("role").notNull().default("employee"),
   position: text("position"),
-  phone: text("phone"),
   isActive: boolean("is_active").notNull().default(true),
   lastLogin: timestamp("last_login"),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   lastLogin: true,
-  createdAt: true,
-  updatedAt: true,
 });
 
 // Schedules schema
 export const schedules = pgTable("schedules", {
   id: serial("id").primaryKey(),
-  startDate: date("startDate").notNull(),
-  endDate: date("endDate").notNull(),
-  isPublished: boolean("isPublished").notNull().default(false),
-  createdBy: integer("createdBy").notNull(),
-  createdAt: timestamp("createdAt").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  isPublished: boolean("is_published").notNull().default(false),
+  publishedAt: timestamp("published_at"),
+  createdBy: integer("created_by").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
 });
 
 export const insertScheduleSchema = createInsertSchema(schedules).omit({
   id: true,
-  createdAt: true,
+  publishedAt: true,
+  updatedAt: true,
 });
 
 // Shifts schema
 export const shifts = pgTable("shifts", {
   id: serial("id").primaryKey(),
-  userId: integer("userId").notNull(),
-  scheduleId: integer("scheduleId").notNull(),
+  scheduleId: integer("schedule_id").notNull(),
+  userId: integer("user_id").notNull(),
   day: text("day").notNull(), // Monday, Tuesday, etc.
-  startTime: text("startTime").notNull(),
-  endTime: text("endTime").notNull(),
-  type: text("type").notNull().default("work"), // work, vacation, leave, sick
-  area: text("area"),
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
   notes: text("notes"),
+  area: text("area"),
+  type: text("type").notNull().default("work"), // work, vacation, leave, sick
 });
 
 export const insertShiftSchema = createInsertSchema(shifts).omit({
@@ -60,32 +58,35 @@ export const insertShiftSchema = createInsertSchema(shifts).omit({
 // TimeOff Requests schema
 export const timeOffRequests = pgTable("time_off_requests", {
   id: serial("id").primaryKey(),
-  userId: integer("userId").notNull(),
+  userId: integer("user_id").notNull(),
   type: text("type").notNull(), // vacation, personal, sick
-  startDate: date("startDate").notNull(),
-  endDate: date("endDate").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  duration: text("duration").notNull(), // full_day, morning, afternoon
   reason: text("reason"),
   status: text("status").notNull().default("pending"), // pending, approved, rejected
-  approvedBy: integer("approvedBy"),
-  createdAt: timestamp("createdAt").notNull(),
+  approvedBy: integer("approved_by"),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
 });
 
 export const insertTimeOffRequestSchema = createInsertSchema(timeOffRequests).omit({
   id: true,
   approvedBy: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 // Documents schema
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
-  title: text("title").notNull(),
   type: text("type").notNull(), // payslip, tax_document
-  path: text("path").notNull(), // Path to the file
-  userId: integer("userId").notNull(),
-  isGlobal: boolean("isGlobal").default(false),
-  uploadedBy: integer("uploadedBy").notNull(),
-  uploadedAt: timestamp("uploadedAt").notNull(),
+  userId: integer("user_id").notNull(),
+  period: text("period").notNull(), // June 2023, 2022 (for tax docs)
+  filename: text("filename").notNull(),
+  fileData: text("file_data").notNull(), // Base64 encoded PDF
+  uploadedBy: integer("uploaded_by").notNull(),
+  uploadedAt: timestamp("uploaded_at").notNull(),
 });
 
 export const insertDocumentSchema = createInsertSchema(documents).omit({
@@ -96,12 +97,12 @@ export const insertDocumentSchema = createInsertSchema(documents).omit({
 // Notifications schema
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
-  userId: integer("userId").notNull(),
+  userId: integer("user_id").notNull(),
   type: text("type").notNull(), // schedule_update, request_response, document_upload, new_message
   message: text("message").notNull(),
-  isRead: boolean("isRead").notNull().default(false),
+  isRead: boolean("is_read").notNull().default(false),
   data: json("data"),
-  createdAt: timestamp("createdAt").notNull(),
+  createdAt: timestamp("created_at").notNull(),
 });
 
 export const insertNotificationSchema = createInsertSchema(notifications).omit({
@@ -112,12 +113,13 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 // Messages schema
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
-  fromUserId: integer("fromUserId").notNull(),
-  toUserId: integer("toUserId").notNull(),
+  fromUserId: integer("from_user_id").notNull(),
+  toUserId: integer("to_user_id").notNull(),
   subject: text("subject").notNull(),
   content: text("content").notNull(),
-  isRead: boolean("isRead").notNull().default(false),
-  createdAt: timestamp("createdAt").notNull(),
+  isRead: boolean("is_read").notNull().default(false),
+  relatedToShiftId: integer("related_to_shift_id"),
+  createdAt: timestamp("created_at").notNull(),
 });
 
 export const insertMessageSchema = createInsertSchema(messages).omit({

@@ -3,9 +3,8 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
-// Aumenta i limiti per consentire il caricamento di file più grandi
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -54,37 +53,15 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    // Serve static files from the correct build directory with appropriate MIME types
-    app.use(express.static("dist/public", { 
-      maxAge: '1y',
-      setHeaders: (res, path) => {
-        // Imposta il MIME type corretto per il service worker
-        if (path.endsWith('.js')) {
-          res.setHeader('Content-Type', 'application/javascript');
-        }
-        // Imposta il MIME type corretto per i manifest
-        if (path.endsWith('.json')) {
-          res.setHeader('Content-Type', 'application/json');
-        }
-      }
-    }));
-    
-    // Handle client-side routing
-    app.get('*', (req, res, next) => {
-      if (!req.path.startsWith('/api')) {
-        res.sendFile('dist/public/index.html', { root: '.' });
-      } else {
-        next();
-      }
-    });
+    serveStatic(app);
   }
 
   // ALWAYS serve the app on port 5000
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = process.env.PORT || 5000;
+  const port = 5000;
   server.listen({
-    port: Number(port),
+    port,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {

@@ -147,7 +147,7 @@ export function AdminDashboard() {
               </div>
             </div>
             <div className="mt-4 text-xs text-gray-500">
-              Dipendenti totali dell'azienda
+              <span className="text-success">+2</span> rispetto al mese scorso
             </div>
           </CardContent>
         </Card>

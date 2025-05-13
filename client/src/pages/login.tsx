@@ -181,6 +181,8 @@ export default function Login() {
         <div className="text-center text-sm text-gray-500">
           <p>
             Utilizzare le credenziali fornite dal tuo amministratore.
+            <br />
+            Per test: username <span className="font-medium">admin</span> / password <span className="font-medium">admin123</span>
           </p>
         </div>
       </div>
