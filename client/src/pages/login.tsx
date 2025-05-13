@@ -97,7 +97,7 @@ export default function Login() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <div className="flex justify-center mb-2">
-            <img src="/assets/logo.png" alt="Da Vittorino Logo" className="h-16" />
+            <img src="/logo.png" alt="Da Vittorino Logo" className="h-16" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 font-condensed">Da Vittorino Gestione</h1>
           <p className="mt-2 text-sm text-gray-600">
