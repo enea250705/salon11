@@ -27,14 +27,12 @@ export const schedules = pgTable("schedules", {
   startDate: timestamp("startDate").notNull(),
   endDate: timestamp("endDate").notNull(),
   isPublished: boolean("isPublished").notNull().default(false),
-  publishedAt: timestamp("publishedAt"),
   createdBy: integer("createdBy").notNull(),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
 });
 
 export const insertScheduleSchema = createInsertSchema(schedules).omit({
-  id: true,
-  publishedAt: true,
+  id: true, 
   createdAt: true,
 }).extend({
   startDate: z.coerce.date(),

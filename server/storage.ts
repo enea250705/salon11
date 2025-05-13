@@ -591,8 +591,7 @@ export class DatabaseStorage implements IStorage {
     const newSchedule = {
       ...scheduleData,
       isPublished: false,
-      publishedAt: null,
-      updatedAt: now
+      createdAt: now
     };
     
     const [schedule] = await db.insert(schedules).values(newSchedule).returning();
@@ -658,7 +657,7 @@ export class DatabaseStorage implements IStorage {
     
     const [schedule] = await db
       .update(schedules)
-      .set({ isPublished: true, publishedAt: now })
+      .set({ isPublished: true })
       .where(eq(schedules.id, id))
       .returning();
     
