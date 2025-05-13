@@ -17,7 +17,7 @@ if (process.env.SENDGRID_API_KEY) {
 // Indirizzo email del mittente (deve essere verificato su SendGrid)
 const SENDER_EMAIL = 'info@davittorino.replit.app';
 // URL dell'applicazione
-const APP_URL = process.env.APP_URL || 'https://davittorino.replit.app';
+const APP_URL = 'https://davittorino.replit.app';
 
 /**
  * Interfaccia per i parametri di invio email
