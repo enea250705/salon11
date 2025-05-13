@@ -608,11 +608,10 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`🔍 Esecuzione query schedule con date: ${startDate.toISOString()} - ${endDate.toISOString()}`);
       
-      // Cerca tutti gli schedules in ordine decrescente per data
+      // Cerca tutti gli schedules
       const allSchedules = await db
         .select()
-        .from(schedules)
-        .orderBy(desc(schedules.createdAt));
+        .from(schedules);
       
       // Trova manualmente quello che corrisponde all'intervallo date
       const matchingSchedule = allSchedules.find(schedule => {
@@ -635,9 +634,6 @@ export class DatabaseStorage implements IStorage {
   
   async getAllSchedules(): Promise<Schedule[]> {
     try {
-      // Importa e usa l'operatore desc da drizzle-orm
-      const { desc } = await import('drizzle-orm');
-      
       const allSchedules = await db
         .select()
         .from(schedules);

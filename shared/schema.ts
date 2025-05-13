@@ -24,12 +24,12 @@ export const insertUserSchema = createInsertSchema(users).omit({
 // Schedules schema
 export const schedules = pgTable("schedules", {
   id: serial("id").primaryKey(),
-  startDate: timestamp("startDate").notNull(),
-  endDate: timestamp("endDate").notNull(),
-  isPublished: boolean("isPublished").notNull().default(false),
-  publishedAt: timestamp("publishedAt"),
-  createdBy: integer("createdBy").notNull(),
-  createdAt: timestamp("createdAt").notNull(),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  isPublished: boolean("is_published").notNull().default(false),
+  publishedAt: timestamp("published_at"),
+  createdBy: integer("created_by").notNull(),
+  createdAt: timestamp("created_at").notNull(),
 });
 
 export const insertScheduleSchema = createInsertSchema(schedules).omit({

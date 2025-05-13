@@ -579,11 +579,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API per creare un NUOVO schedule COMPLETAMENTE pulito garantito
   app.post("/api/schedules/new-empty", isAdmin, async (req, res) => {
     try {
-      // Valida i dati di input
-      const scheduleData = insertScheduleSchema.parse({
+      // Converti le stringhe di date in oggetti Date
+      const inputData = {
         ...req.body,
+        startDate: new Date(req.body.startDate),
+        endDate: new Date(req.body.endDate),
         createdBy: (req.user as any).id
-      });
+      };
+      
+      // Valida i dati di input
+      const scheduleData = insertScheduleSchema.parse(inputData);
       
       // FASE 1: Verifica conflitti con date esistenti
       const startDate = scheduleData.startDate;
