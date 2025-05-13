@@ -12,8 +12,8 @@ export const users = pgTable("users", {
   phone: text("phone"),
   role: text("role").notNull().default("employee"),
   position: text("position"),
-  isActive: boolean("isActive").notNull().default(true),
-  lastLogin: timestamp("lastLogin"),
+  isActive: boolean("is_active").notNull().default(true),
+  lastLogin: timestamp("last_login"),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -24,28 +24,28 @@ export const insertUserSchema = createInsertSchema(users).omit({
 // Schedules schema
 export const schedules = pgTable("schedules", {
   id: serial("id").primaryKey(),
-  startDate: date("startDate").notNull(),
-  endDate: date("endDate").notNull(),
-  isPublished: boolean("isPublished").notNull().default(false),
-  publishedAt: timestamp("publishedAt"),
-  createdBy: integer("createdBy").notNull(),
-  createdAt: timestamp("createdAt").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  isPublished: boolean("is_published").notNull().default(false),
+  publishedAt: timestamp("published_at"),
+  createdBy: integer("created_by").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
 });
 
 export const insertScheduleSchema = createInsertSchema(schedules).omit({
   id: true,
   publishedAt: true,
-  createdAt: true,
+  updatedAt: true,
 });
 
 // Shifts schema
 export const shifts = pgTable("shifts", {
   id: serial("id").primaryKey(),
-  scheduleId: integer("scheduleId").notNull(),
-  userId: integer("userId").notNull(),
+  scheduleId: integer("schedule_id").notNull(),
+  userId: integer("user_id").notNull(),
   day: text("day").notNull(), // Monday, Tuesday, etc.
-  startTime: text("startTime").notNull(),
-  endTime: text("endTime").notNull(),
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
   notes: text("notes"),
   area: text("area"),
   type: text("type").notNull().default("work"), // work, vacation, leave, sick
@@ -58,16 +58,16 @@ export const insertShiftSchema = createInsertSchema(shifts).omit({
 // TimeOff Requests schema
 export const timeOffRequests = pgTable("time_off_requests", {
   id: serial("id").primaryKey(),
-  userId: integer("userId").notNull(),
+  userId: integer("user_id").notNull(),
   type: text("type").notNull(), // vacation, personal, sick
-  startDate: date("startDate").notNull(),
-  endDate: date("endDate").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
   duration: text("duration").notNull(), // full_day, morning, afternoon
   reason: text("reason"),
   status: text("status").notNull().default("pending"), // pending, approved, rejected
-  approvedBy: integer("approvedBy"),
-  createdAt: timestamp("createdAt").notNull(),
-  updatedAt: timestamp("updatedAt"),
+  approvedBy: integer("approved_by"),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
 });
 
 export const insertTimeOffRequestSchema = createInsertSchema(timeOffRequests).omit({
