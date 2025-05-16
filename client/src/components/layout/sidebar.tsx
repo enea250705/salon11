@@ -97,6 +97,7 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
           mobileMenuOpen 
             ? "fixed h-screen z-50 inset-0" 
             : "h-auto md:flex hidden",
+          "safari-fix", // Add Safari-specific class
         )}
       >
         <div className="p-4 sm:p-5 border-b flex items-center justify-between">
@@ -204,7 +205,7 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
           )}
         </nav>
         
-        <div className="p-4 sm:p-5 border-t">
+        <div className="p-4 sm:p-5 border-t pb-safe">
           <button 
             onClick={logout}
             className="flex items-center space-x-2 text-sm sm:text-base text-gray-700 hover:text-primary transition-colors w-full rounded-md py-2 px-3 hover:bg-gray-100"
