@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { format, parseISO, addDays } from "date-fns";
 import { it } from "date-fns/locale";
-import { formatHours, calculateTotalWorkHours, calculateWorkHours } from "@/lib/utils";
+import { formatHours, calculateTotalWorkHours, calculateWorkHours, timeToMinutes } from "@/lib/utils";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -11,6 +11,15 @@ import jsPDF from "jspdf";
  * Corregge l'orario di fine turno per la visualizzazione
  * Rimuove 30 minuti dall'orario di fine per compensare l'offset introdotto dal sistema di celle
  */
+/**
+ * Calcola le ore di lavoro effettive secondo la nuova regola (primo X = 0 ore)
+ * Questa funzione applica la regola che la prima mezz'ora non conta
+ */
+function calculateActualHours(startTime: string, endTime: string): number {
+  // Usiamo la funzione di calcolo aggiornata che tiene conto della regola del primo X = 0 ore
+  return calculateWorkHours(startTime, endTime);
+}
+
 function adjustEndTime(endTime: string): string {
   try {
     const [hours, minutes] = endTime.split(':').map(Number);
