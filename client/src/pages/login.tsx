@@ -158,9 +158,7 @@ export default function Login() {
                     )}
                   />
                   
-                  <a href="#" className="text-sm text-primary hover:underline">
-                    Password dimenticata?
-                  </a>
+                  {/* Link per reset password rimosso su richiesta */}
                 </div>
                 
                 <Button type="submit" className="w-full" disabled={isLoading || authLoading}>
@@ -180,9 +178,7 @@ export default function Login() {
         
         <div className="text-center text-sm text-gray-500">
           <p>
-            Utilizzare le credenziali fornite dal tuo amministratore.
-            <br />
-            Per test: username <span className="font-medium">admin</span> / password <span className="font-medium">admin123</span>
+            © 2025 Da Vittorino - Tutti i diritti riservati
           </p>
         </div>
       </div>
