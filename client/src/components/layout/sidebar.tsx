@@ -101,8 +101,8 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
       >
         <div className="p-4 sm:p-5 border-b flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="material-icons text-primary text-xl sm:text-2xl">schedule</span>
-            <h1 className="font-condensed text-xl sm:text-2xl font-bold text-primary">StaffSync</h1>
+            <span className="material-icons text-primary text-xl sm:text-2xl">restaurant</span>
+            <h1 className="font-condensed text-xl sm:text-2xl font-bold text-primary">Da Vittorino</h1>
           </div>
           <button 
             id="mobile-menu-toggle" 
