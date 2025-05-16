@@ -538,13 +538,13 @@ export function ExcelGrid({
             // l'orario di fine non dovrebbe essere incluso nel calcolo delle ore.
             // L'ultimo X indica solo il punto finale del turno.
             
-            // Calcola le ore basandosi solo sul numero di blocchi, non sugli orari
-            // Ogni blocco è 30 minuti = 0.5 ore
+            // L'ultimo X indica solo la fine del turno, non un blocco da contare
+            // Esempio: da 04:00 a 06:00 (5 celle) = 2 ore, non 2.5 ore
             const workCellCount = i - blockStartIdx;
             
             // Calcoliamo direttamente moltiplicando il numero di blocchi per 0.5 ore
-            // Sottraiamo 1 perché l'ultimo X non conta come mezz'ora extra
-            const calculatedHours = (workCellCount) * 0.5;
+            // Sottraiamo 1 dal blocco totale perché l'ultimo X indica solo la fine
+            const calculatedHours = (workCellCount - 1) * 0.5;
             
             totalHours += calculatedHours;
             
@@ -565,9 +565,10 @@ export function ExcelGrid({
           }
         }
         
-        // Calcolo corretto basato sul numero di blocchi
-        // Ogni blocco è 30 minuti = 0.5 ore
-        const calculatedHours = workCellCount * 0.5;
+        // Calcolo corretto: l'ultimo X indica solo la fine del turno, non un blocco da contare
+        // Esempio: da 04:00 a 06:00 (5 celle) = 2 ore, non 2.5 ore
+        // Quindi sottraiamo 1 dal numero di celle per ottenere il numero corretto di blocchi da 30 minuti
+        const calculatedHours = (workCellCount - 1) * 0.5;
         
         totalHours += calculatedHours;
       }
