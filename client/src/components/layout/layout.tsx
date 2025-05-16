@@ -76,16 +76,40 @@ export function Layout({ children }: PropsWithChildren) {
         <AnimatePresence mode="wait">
           <motion.div
             key={location}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, x: -10 }}
-            transition={{ duration: 0.3 }}
+            transition={{ 
+              duration: 0.4, 
+              ease: [0.25, 0.1, 0.25, 1.0], 
+              staggerChildren: 0.1 
+            }}
             className="p-4 md:p-6 pb-20"
           >
-            {children}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ 
+                duration: 0.5, 
+                ease: "easeOut",
+                delay: 0.1
+              }}
+            >
+              {children}
+            </motion.div>
             
             {/* Footer Navigation - Duplicate di navigazione a piè di pagina */}
-            <FooterNav />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ 
+                duration: 0.5, 
+                ease: "easeOut",
+                delay: 0.3
+              }}
+            >
+              <FooterNav />
+            </motion.div>
           </motion.div>
         </AnimatePresence>
       </div>

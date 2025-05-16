@@ -134,8 +134,9 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
               {adminItems.map((item, index) => (
                 <div
                   key={item.href}
+                  style={{ animationDelay: `${index * 0.05}s` }}
                   className={cn(
-                    "sidebar-item rounded-md mb-1",
+                    "sidebar-item rounded-md mb-1 animate-fadeIn menu-item-animate",
                     location === item.href && "bg-blue-50"
                   )}
                 >
@@ -143,19 +144,19 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
                     href={item.href} 
                     onClick={() => setMobileMenuOpen(false)}
                     className={cn(
-                      "flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700",
+                      "flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 transition-all duration-200",
                       location === item.href && "text-primary font-medium"
                     )}
                   >
                     <span className={cn(
-                      "material-icons text-base sm:text-lg",
-                      location === item.href ? "text-primary" : "text-gray-500"
+                      "material-icons text-base sm:text-lg transition-transform duration-200",
+                      location === item.href ? "text-primary" : "text-gray-500 hover:scale-110"
                     )}>
                       {item.icon}
                     </span>
                     <span>{item.label}</span>
                     {item.badge !== undefined && item.badge > 0 && (
-                      <span className="ml-auto bg-primary text-white text-[10px] sm:text-xs rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1">
+                      <span className="ml-auto bg-primary text-white text-[10px] sm:text-xs rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 animate-pulse">
                         {item.badge}
                       </span>
                     )}
@@ -173,8 +174,9 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
               {employeeItems.map((item, index) => (
                 <div
                   key={item.href}
+                  style={{ animationDelay: `${index * 0.05}s` }}
                   className={cn(
-                    "sidebar-item rounded-md mb-1",
+                    "sidebar-item rounded-md mb-1 animate-fadeIn menu-item-animate",
                     location === item.href && "bg-blue-50"
                   )}
                 >
@@ -182,13 +184,13 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
                     href={item.href} 
                     onClick={() => setMobileMenuOpen(false)}
                     className={cn(
-                      "flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700",
+                      "flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 transition-all duration-200",
                       location === item.href && "text-primary font-medium"
                     )}
                   >
                     <span className={cn(
-                      "material-icons text-base sm:text-lg",
-                      location === item.href ? "text-primary" : "text-gray-500"
+                      "material-icons text-base sm:text-lg transition-transform duration-200",
+                      location === item.href ? "text-primary" : "text-gray-500 hover:scale-110"
                     )}>
                       {item.icon}
                     </span>
@@ -208,9 +210,9 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
         <div className="p-4 sm:p-5 border-t pb-safe">
           <button 
             onClick={logout}
-            className="flex items-center space-x-2 text-sm sm:text-base text-gray-700 hover:text-primary transition-colors w-full rounded-md py-2 px-3 hover:bg-gray-100"
+            className="btn-animated flex items-center space-x-2 text-sm sm:text-base text-gray-700 hover:text-primary transition-all duration-300 w-full rounded-md py-2 px-3 hover:bg-gray-100 hover:shadow-sm"
           >
-            <span className="material-icons text-base sm:text-lg">logout</span>
+            <span className="material-icons text-base sm:text-lg transition-transform duration-300 group-hover:rotate-6">logout</span>
             <span>Logout</span>
           </button>
         </div>

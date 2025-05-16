@@ -64,23 +64,37 @@ export function FooterNav() {
   return (
     <div className="mt-16 border-t border-gray-200 pt-8 pb-4">
       <div className="max-w-4xl mx-auto">
-        <h3 className="text-lg font-medium text-gray-700 mb-4 px-4">Navigazione Rapida</h3>
+        <h3 className="text-lg font-medium text-gray-700 mb-4 px-4 animate-fadeIn">
+          <span className="relative inline-block">
+            <span className="absolute -bottom-1 left-0 w-1/3 h-0.5 bg-primary/50 rounded"></span>
+            Navigazione Rapida
+          </span>
+        </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 px-4 mb-6">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <Link 
               key={item.href}
               href={item.href}
+              style={{
+                animationDelay: `${index * 0.05}s`,
+              }}
               className={cn(
-                "flex items-center p-3 rounded-lg border transition-all",
+                "animate-slideUp card-hover flex items-center p-3 rounded-lg border transition-all",
                 location === item.href 
                   ? "border-primary/30 bg-primary/5 text-primary" 
-                  : "border-gray-200 hover:border-primary/20 hover:bg-gray-50"
+                  : "border-gray-200 hover:border-primary/20 hover:bg-gray-50 hover:text-primary"
               )}
             >
-              <span className="material-icons mr-2 text-current">{item.icon}</span>
+              <span className={cn(
+                "material-icons mr-2 transition-transform",
+                location === item.href ? "text-current" : "text-gray-500", 
+                "group-hover:scale-110"
+              )}>
+                {item.icon}
+              </span>
               <span className="text-sm">{item.label}</span>
               {item.badge !== undefined && item.badge > 0 && (
-                <span className="ml-auto bg-primary text-white text-xs rounded-full px-2 py-0.5">
+                <span className="ml-auto bg-primary text-white text-xs rounded-full px-2 py-0.5 animate-pulse">
                   {item.badge}
                 </span>
               )}
@@ -89,15 +103,20 @@ export function FooterNav() {
           
           <button
             onClick={logout}
-            className="flex items-center p-3 rounded-lg border border-gray-200 hover:border-primary/20 hover:bg-gray-50 text-left"
+            style={{
+              animationDelay: `${items.length * 0.05}s`,
+            }}
+            className="animate-slideUp card-hover flex items-center p-3 rounded-lg border border-gray-200 hover:border-primary/20 hover:bg-gray-50 hover:text-primary text-left"
           >
             <span className="material-icons mr-2 text-gray-500">logout</span>
             <span className="text-sm">Logout</span>
           </button>
         </div>
         
-        <div className="text-center text-xs text-gray-500 mt-6">
-          <p>&copy; {new Date().getFullYear()} Da Vittorino - Gestione Personale</p>
+        <div className="text-center text-xs text-gray-500 mt-6 animate-fadeIn" style={{ animationDelay: '0.5s' }}>
+          <p className="animate-float">
+            &copy; {new Date().getFullYear()} Da Vittorino - Gestione Personale
+          </p>
         </div>
       </div>
     </div>

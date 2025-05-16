@@ -92,14 +92,85 @@
     background-color: #f5f5f5;
   }
   
-  /* Animazioni per form/dialogs */
+  /* Animazioni moderne */
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
   }
   
+  @keyframes slideInUp {
+    from { 
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes scaleIn {
+    from { 
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to { 
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  @keyframes slideInRight {
+    from { 
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes floatAnimation {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0px); }
+  }
+  
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  
   .animate-fadeIn {
-    animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn 0.4s ease-out;
+  }
+  
+  .animate-slideUp {
+    animation: slideInUp 0.5s ease-out;
+  }
+  
+  .animate-scale {
+    animation: scaleIn 0.4s ease-out;
+  }
+  
+  .animate-slideRight {
+    animation: slideInRight 0.5s ease-out;
+  }
+  
+  .animate-float {
+    animation: floatAnimation 3s ease-in-out infinite;
+  }
+  
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
   }
   
   /* Schedule grid styles - Excel-like appearance */
@@ -153,6 +224,51 @@
   /* Sidebar active item */
   .sidebar-item.active {
     @apply border-l-4 border-primary bg-primary/10;
+  }
+  
+  /* Animazioni buttons e cards */
+  /* Buttons con hover elegante */
+  .btn-animated {
+    @apply relative overflow-hidden transition-all duration-300 ease-out;
+    transform: translateZ(0);
+  }
+  
+  .btn-animated:before {
+    @apply absolute bg-white/10 w-full h-full top-0 left-0 opacity-0 transition-opacity duration-300;
+    content: '';
+    transform: translateX(-100%) skewX(-15deg);
+  }
+  
+  .btn-animated:hover {
+    @apply shadow-md transform -translate-y-0.5;
+  }
+  
+  .btn-animated:hover:before {
+    @apply opacity-100;
+    transform: translateX(0) skewX(-15deg);
+  }
+  
+  /* Cards con hover elegante */
+  .card-hover {
+    @apply transition-all duration-300 ease-out;
+  }
+  
+  .card-hover:hover {
+    @apply shadow-lg transform -translate-y-1;
+  }
+  
+  /* Toast notifications animate */
+  .toast-animate {
+    animation: slideInRight 0.4s ease-out;
+  }
+  
+  /* Menu items animate */
+  .menu-item-animate {
+    @apply transition-all duration-200;
+  }
+  
+  .menu-item-animate:hover {
+    @apply transform -translate-y-0.5;
   }
   
   /* Animation classes */
