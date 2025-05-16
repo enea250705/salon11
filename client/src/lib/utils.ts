@@ -124,15 +124,28 @@ export function calculateWorkHours(startTime: string, endTime: string): number {
     diffMinutes += 24 * 60; // Aggiungi 24 ore in minuti
   }
   
+  // NUOVA REGOLA: Sottraiamo 30 minuti (la prima X = 0 ore)
+  // Ma se è meno di 30 minuti totali, restituisci direttamente 0
+  if (diffMinutes <= 30) {
+    console.log(`🔍 NUOVA REGOLA: Turno di ${diffMinutes} minuti, meno di 30 minuti = 0.0 ore`);
+    return 0.0;
+  }
+  
+  // NUOVA REGOLA: Sottraiamo 30 minuti dal totale (primo X = 0 ore)
+  diffMinutes -= 30;
+  
   // Conversione da minuti a ore decimali
   let hours = diffMinutes / 60;
   
   // CASO SPECIALE 2: Se sono 2.5 ore (150 minuti), restituisci 2.0 ore
-  // Questo gestisce il caso specifico di 5 celle da 30 minuti che devono valere 2.0 ore
-  if (Math.abs(hours - 2.5) < 0.01) {
+  // Nota: dopo aver sottratto 30 minuti, sarebbe 2.0 = 150-30 = 120 minuti = 2.0 ore
+  // Questo controllo in realtà non serve più grazie alla nuova regola
+  if (Math.abs(hours - 2.0) < 0.01) {
     console.log(`🔍 CORREZIONE SPECIALE: ${hours} ore arrotondate a 2.0 ore`);
     return 2.0;
   }
+  
+  console.log(`🔍 Calcolo ore: da ${startTime} a ${endTime} = ${hours.toFixed(1)} ore (sottratti 30 min per la prima X)`);
   
   // Arrotondamento a 2 decimali
   return Math.round(hours * 100) / 100;
@@ -177,9 +190,57 @@ export function calculateHoursFromCells(numCells: number): number {
 export function calculateTotalWorkHours(shifts: Array<{startTime: string, endTime: string, type?: string}>): number {
   if (!shifts || !Array.isArray(shifts) || shifts.length === 0) return 0;
   
-  return shifts
-    .filter(shift => !shift.type || shift.type === 'work') // Considera solo i turni di lavoro se è specificato il tipo
-    .reduce((total, shift) => {
-      return total + calculateWorkHours(shift.startTime, shift.endTime);
-    }, 0);
+  // Primo passaggio: raggruppa i turni per giorno e userId (se presente)
+  const groupedShifts: {[key: string]: {startTime: string, endTime: string, type?: string}[]} = {};
+  
+  shifts
+    .filter(shift => !shift.type || shift.type === 'work') // Considera solo i turni di lavoro
+    .forEach(shift => {
+      // Crea una chiave basata sul giorno (se presente nel turno) o usa 'default'
+      const day = (shift as any).day || 'default';
+      const userId = (shift as any).userId || 'all';
+      const key = `${day}_${userId}`;
+      
+      if (!groupedShifts[key]) {
+        groupedShifts[key] = [];
+      }
+      
+      groupedShifts[key].push(shift);
+    });
+  
+  // Secondo passaggio: calcola il totale per ogni giorno e utente
+  let totalHours = 0;
+  
+  Object.values(groupedShifts).forEach(dayShifts => {
+    // Se c'è solo un turno, applica la logica: primo X = 0 ore
+    if (dayShifts.length === 1) {
+      // Verifica se il turno è breve (30 minuti o meno)
+      const shift = dayShifts[0];
+      const startMinutes = timeToMinutes(shift.startTime);
+      const endMinutes = timeToMinutes(shift.endTime);
+      const diffMinutes = (endMinutes - startMinutes + 24 * 60) % (24 * 60); // Gestisce il passaggio di mezzanotte
+      
+      // Se è di 30 minuti o meno, vale 0 ore (primo X)
+      if (diffMinutes <= 30) {
+        console.log(`🔍 REGOLA PRIMO TURNO: Turno singolo di ${diffMinutes} minuti = 0 ore`);
+        // Non aggiungere nulla
+      } else {
+        // Altrimenti, sottrai 30 minuti (prima X = 0 ore)
+        const adjustedHours = (diffMinutes - 30) / 60;
+        totalHours += adjustedHours;
+        console.log(`🔍 REGOLA PRIMO TURNO: Turno singolo di ${diffMinutes} minuti = ${adjustedHours} ore (sottratti 30 min)`);
+      }
+    } else {
+      // Per più turni, somma normalmente ma considera la regola speciale (primo X = 0 ore)
+      let dayTotal = 0;
+      dayShifts.forEach(shift => {
+        dayTotal += calculateWorkHours(shift.startTime, shift.endTime);
+      });
+      
+      totalHours += dayTotal;
+    }
+  });
+  
+  // Arrotonda il risultato a 2 decimali
+  return Math.round(totalHours * 100) / 100;
 }
