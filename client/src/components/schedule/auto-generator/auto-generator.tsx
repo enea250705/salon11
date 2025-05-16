@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { calculateWorkHours } from "@/lib/utils";
 
 // Definiamo lo schema per il form di generazione automatica
 const formSchema = z.object({
@@ -220,14 +221,18 @@ export function ScheduleAutoGenerator({ onScheduleGenerated }: { onScheduleGener
         }
       }
       
-      // Aggiungiamo il totale delle ore settimanali
+      // Aggiungiamo il totale delle ore settimanali utilizzando la funzione di calcolo corretta
       const totalHours = data.shifts
         .filter((shift: any) => shift.userId === userId)
         .reduce((sum: number, shift: any) => {
-          const startTime = new Date(`2000-01-01T${shift.startTime}`);
-          const endTime = new Date(`2000-01-01T${shift.endTime}`);
-          const diffHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
-          return sum + diffHours;
+          // Utilizziamo la funzione centralizzata che implementa la regola "primo X = 0 ore"
+          try {
+            const hours = calculateWorkHours(shift.startTime, shift.endTime);
+            return sum + hours;
+          } catch (e) {
+            console.error(`Errore nel calcolo delle ore:`, e);
+            return sum;
+          }
         }, 0);
       
       row.push(`${totalHours.toFixed(1)} ore`);
