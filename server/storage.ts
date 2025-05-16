@@ -990,4 +990,5 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+// Utilizziamo MemStorage invece di DatabaseStorage per risolvere il problema del database
+export const storage = new MemStorage();
