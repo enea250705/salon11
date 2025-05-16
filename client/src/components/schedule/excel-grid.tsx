@@ -48,9 +48,6 @@ export function ExcelGrid({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedDay, setSelectedDay] = useState(0);
-  // Stato per tener traccia delle celle che sono state appena inserite
-  // Questo ci permette di ignorare il primo click quando creiamo un nuovo turno
-  const [firstClicks, setFirstClicks] = useState<Record<string, boolean>>({});
   
   // Generazione degli slot di tempo (30 minuti) dalle 4:00 alle 24:00
   const timeSlots = generateTimeSlots(4, 24);
@@ -166,10 +163,6 @@ export function ExcelGrid({
     const scheduleIdFromUrl = urlParams.get('scheduleId');
     const resetFromUrl = urlParams.get('reset') === 'true';
     const newScheduleParam = urlParams.get('newSchedule');
-    
-    // Reinizializza il sistema di tracciamento dei primi click
-    // ogni volta che cambiamo schedule o forziamo un reset
-    setFirstClicks({});
     
     // Condizioni per il reset completo della griglia (VERSIONE MIGLIORATA)
     // Inclusi più casi per garantire sempre un reset quando necessario
@@ -389,21 +382,6 @@ export function ExcelGrid({
     
     const userDayData = newGridData[day][userId];
     const currentCell = userDayData.cells[timeIndex];
-    
-    // LOGICA PER IGNORARE IL PRIMO CLICK
-    // Chiave unica per identificare questa cella specifica
-    const cellKey = `${userId}-${day}-${timeIndex}`;
-    
-    // Controlla se è il primo click su questa cella (da vuota a X)
-    const isEmptyCell = currentCell.type === "";
-    const isFirstTimeClick = isEmptyCell && !firstClicks[cellKey];
-    
-    // Se è il primo click, lo registriamo e non facciamo nulla
-    if (isFirstTimeClick) {
-      console.log(`👆 Primo click ignorato su cella vuota: ${cellKey}`);
-      setFirstClicks(prev => ({ ...prev, [cellKey]: true }));
-      return;
-    }
     
     // CICLO DELLE TIPOLOGIE
     // Determina il nuovo tipo di turno secondo la rotazione stabilita
