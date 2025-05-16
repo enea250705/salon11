@@ -28,13 +28,6 @@ export function parseLocalDate(date: string, formatStr: string = "yyyy-MM-dd") {
   return parse(date, formatStr, new Date());
 }
 
-/**
- * Genera gli slot di tempo con intervalli regolari
- * @param startHour Ora di inizio (es. 4 per 04:00)
- * @param endHour Ora di fine (es. 24 per 24:00)
- * @param interval Intervallo in minuti tra gli slot (default: 30)
- * @returns Array di stringhe in formato "HH:MM"
- */
 export function generateTimeSlots(startHour: number, endHour: number, interval: number = 30) {
   const timeSlots = [];
   for (let hour = startHour; hour <= endHour; hour++) {
@@ -44,15 +37,6 @@ export function generateTimeSlots(startHour: number, endHour: number, interval: 
       timeSlots.push(`${formattedHour}:${formattedMin}`);
     }
   }
-  
-  // Nel caso in cui l'ora finale non includa un intervallo a 0 minuti,
-  // aggiungiamo manualmente l'ultimo slot (es. se endHour=24, aggiungiamo "24:00")
-  const lastHour = endHour.toString().padStart(2, '0');
-  const lastSlot = `${lastHour}:00`;
-  if (!timeSlots.includes(lastSlot)) {
-    timeSlots.push(lastSlot);
-  }
-  
   return timeSlots;
 }
 
@@ -103,42 +87,32 @@ export function convertToHours(timeStr: string): number {
 /**
  * Calcola le ore di lavoro tra un orario di inizio e fine
  * Gestisce correttamente gli orari che attraversano la mezzanotte
- * Contiene anche correzioni speciali per casi specifici
  * @param startTime Orario di inizio in formato "HH:MM"
  * @param endTime Orario di fine in formato "HH:MM"
  * @returns Ore di lavoro in formato decimale
  */
 export function calculateWorkHours(startTime: string, endTime: string): number {
-  // CASO SPECIALE: dalle 04:00 alle 06:00 è esattamente 2.5 ore (richiesto dal cliente)
-  if (startTime === "04:00" && endTime === "06:00") {
-    console.log("CASO SPECIALE: 04:00 - 06:00 => 2.5 ore esatte");
-    return 2.5;
-  }
-  
-  // CASO SPECIALE: dalle 04:00 alle 06:30 è esattamente 2.5 ore + 0.5 = 3 ore
-  if (startTime === "04:00" && endTime === "06:30") {
-    console.log("CASO SPECIALE: 04:00 - 06:30 => 3.0 ore esatte");
-    return 3.0;
-  }
-  
-  // Parsing degli orari
   const [startHour, startMinute] = startTime.split(':').map(Number);
   const [endHour, endMinute] = endTime.split(':').map(Number);
   
-  // Converti gli orari in minuti per facilitare il calcolo
-  const startMinutes = (startHour * 60) + startMinute;
-  const endMinutes = (endHour * 60) + endMinute;
+  let hours = endHour - startHour;
+  let minutes = endMinute - startMinute;
   
-  // Se l'orario di fine è prima dell'orario di inizio, significa che si attraversa la mezzanotte
-  let diffMinutes = endMinutes - startMinutes;
-  if (diffMinutes < 0) {
-    diffMinutes += 24 * 60; // Aggiungi 24 ore in minuti
+  // Gestione dei minuti negativi (es. 08:00 - 09:30 => minutes = -30)
+  if (minutes < 0) {
+    hours -= 1;
+    minutes += 60;
   }
   
-  // Conversione da minuti a ore
-  const totalHours = diffMinutes / 60;
+  // Se l'orario di fine è prima dell'orario di inizio, significa che si attraversa la mezzanotte
+  if (hours < 0) {
+    hours += 24;
+  }
   
-  // Arrotondiamo a 2 decimali per evitare errori di approssimazione
+  // Conversione dei minuti in decimale (es. 30 minuti = 0.5 ore)
+  const totalHours = hours + (minutes / 60);
+  
+  // Arrotondiamo a 2 decimali per evitare errori di precisione
   return Math.round(totalHours * 100) / 100;
 }
 
