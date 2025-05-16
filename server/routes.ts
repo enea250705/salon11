@@ -171,6 +171,23 @@ async function generateAutomaticSchedule(
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
+  // Function to create a database notification (senza WebSocket)
+  const sendNotification = async (userId: number, notification: any) => {
+    try {
+      // Salva solo la notifica nel database per essere recuperata tramite API
+      await storage.createNotification({
+        userId,
+        type: notification.type,
+        message: notification.message,
+        isRead: false,
+        data: notification.data
+      });
+      console.log(`✅ Notifica creata per l'utente ${userId}: ${notification.message}`);
+    } catch (error) {
+      console.error('❌ Errore nella creazione della notifica:', error);
+    }
+  };
+  
   // Setup session middleware
   app.use(
     session({
@@ -686,12 +703,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           });
           
-          // Invia notifica real-time
-          sendNotification(user.id, {
-            type: "schedule_update",
-            message: "Nuova pianificazione turni pubblicata",
-            data: notification
-          });
+          // Non abbiamo più bisogno di inviare notifiche real-time via WebSocket
+          // La notification è già stata creata nel database poco sopra
           
           // Recupera i turni specifici dell'utente per questo schedule
           try {
@@ -803,12 +816,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
         
-        // Send real-time notification
-        sendNotification(shiftData.userId, {
-          type: "shift_update",
-          message: "Your work schedule has been updated",
-          data: notification
-        });
+        // Non è più necessario inviare notifiche real-time via WebSocket
+        // La notifica è già creata nel database
       }
       
       res.status(201).json(shift);
