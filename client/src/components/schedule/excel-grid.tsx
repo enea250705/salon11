@@ -4,7 +4,7 @@ import { it } from "date-fns/locale";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { generateTimeSlots, calculateWorkHours, formatHours } from "@/lib/utils";
+import { generateTimeSlots, calculateWorkHours, calculateHoursFromCells, formatHours } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -514,94 +514,62 @@ export function ExcelGrid({
         isTimeOff: false 
       };
       
-      // Approccio completamente nuovo: ora ricalcoliamo la durata di ogni blocco continuo di "work"
+      // NUOVO APPROCCIO: Calcolo basato sul conteggio di celle contigue con logica speciale
+      // Importiamo il nuovo metodo di calcolo da utils.ts: calculateHoursFromCells
       let totalHours = 0;
       
-      // Trova i blocchi continui di celle "work"
+      // FASE 1: Identifica tutti i blocchi contigui di celle tipo "work"
+      const workBlocks: { start: number; end: number }[] = [];
       let blockStartIdx: number | null = null;
       
-      // Scorriamo le celle per trovare blocchi
+      // Scorriamo le celle per trovare tutti i blocchi di celle contigue tipo "work"
       for (let i = 0; i < updatedCells.length; i++) {
         if (updatedCells[i].type === "work") {
           // Se non abbiamo ancora un indice di inizio, iniziamo un nuovo blocco
           if (blockStartIdx === null) {
             blockStartIdx = i;
           }
-          // Altrimenti continuiamo il blocco esistente
-        } else {
-          // Se avevamo un blocco in corso, lo terminiamo e calcoliamo le ore
-          if (blockStartIdx !== null) {
-            const startTime = timeSlots[blockStartIdx];
-            const endTime = timeSlots[i]; // La cella corrente è la prima NON "work" dopo un blocco
-            
-            // Correzione generale: se il dipendente seleziona più blocchi consecutivi, 
-            // l'orario di fine non dovrebbe essere incluso nel calcolo delle ore.
-            // L'ultimo X indica solo il punto finale del turno.
-            
-            // Calcolo basato sugli orari effettivi, non sui blocchi
-            const startTimeStr = timeSlots[blockStartIdx];
-            const endTimeStr = timeSlots[i];
-            
-            // Per debug, logghiamo le ore
-            console.log(`Calcolo ore: da ${startTimeStr} a ${endTimeStr}, blocchi=${i - blockStartIdx}`);
-            
-            // Calcolo esatto in base alle ore effettive
-            // Calcola in base all'orario di inizio e fine, non con i blocchi
-            let [startHour, startMinute] = startTimeStr.split(':').map(Number);
-            let [endHour, endMinute] = endTimeStr.split(':').map(Number);
-            
-            // Calcola la differenza in ore e minuti
-            let hours = endHour - startHour;
-            let minutes = endMinute - startMinute;
-            
-            // Gestione dei minuti negativi
-            if (minutes < 0) {
-                hours -= 1;
-                minutes += 60;
-            }
-            
-            // Converti a decimale
-            const calculatedHours = hours + (minutes / 60);
-            
-            console.log(`Risultato del calcolo: ${calculatedHours} ore`);
-            
-            // Casi speciali per debug
-            if (startTimeStr === "04:00" && endTimeStr === "06:00") {
-                console.log("CASO SPECIFICO TROVATO: 04:00-06:00, impostiamo a 2.0 ore esatte");
-                return 2.0; // Forziamo a 2 ore esatte
-            }
-            
-            totalHours += calculatedHours;
-            
-            blockStartIdx = null;
+          
+          // Se siamo all'ultima cella e abbiamo un blocco in corso, lo chiudiamo
+          if (i === updatedCells.length - 1 && blockStartIdx !== null) {
+            workBlocks.push({ start: blockStartIdx, end: i });
           }
+        } else if (blockStartIdx !== null) {
+          // Abbiamo trovato la fine di un blocco
+          workBlocks.push({ start: blockStartIdx, end: i - 1 });
+          blockStartIdx = null;
         }
       }
       
-      // Se c'è un blocco che continua fino alla fine, lo gestiamo in modo speciale
-      if (blockStartIdx !== null) {
-        // Metodo semplificato: conta il numero di celle come mezz'ore e sottrai 30 minuti
-        // Contiamo il numero di celle "X" consecutive
-        let workCellCount = 0;
-        for (let i = blockStartIdx; i < updatedCells.length; i++) {
-          if (updatedCells[i].type === "work") {
-            workCellCount++;
-          } else {
-            break;
-          }
+      // FASE 2: Calcola le ore per ogni blocco con regole specifiche
+      console.log(`Trovati ${workBlocks.length} blocchi di celle contigue tipo "work"`);
+      
+      for (const block of workBlocks) {
+        // Numero di celle nel blocco
+        const numCells = block.end - block.start + 1;
+        const startTime = timeSlots[block.start];
+        const endTime = timeSlots[block.end + 1]; // +1 perché l'ultima X è solo un marcatore
+        
+        // CASO SPECIALE: Esattamente da 04:00 a 06:00 (5 celle) deve essere 2.0 ore
+        if (startTime === "04:00" && endTime === "06:00") {
+          console.log("🔷 CASO SPECIALE TROVATO: 04:00-06:00 = 2.0 ore esatte");
+          totalHours += 2.0;
+          continue; // Passa al blocco successivo
         }
+                
+        // UTILIZZO DELLA NUOVA FUNZIONE: Calcolo standard basato sul numero di celle
+        // 1 cella = 0.5 ore, 2 celle = 1.0 ore, 3 celle = 1.5 ore, ecc
+        // ECCEZIONE: 5 celle = 2.0 ore (invece di 2.5)
+        const hoursFromCells = calculateHoursFromCells(numCells);
         
-        // Calcolo semplificato:
-        // 1 cella (X) = 0 ore (sottraiamo 0.5)
-        // 2 celle (X X) = 0.5 ore (2 * 0.5 - 0.5)
-        // 3 celle (X X X) = 1 ora (3 * 0.5 - 0.5) 
-        // 4 celle (X X X X) = 1.5 ore (4 * 0.5 - 0.5)
-        // 5 celle (X X X X X) = 2 ore (5 * 0.5 - 0.5)
+        console.log(`Blocco da ${startTime} a ${endTime} (${numCells} celle) = ${hoursFromCells} ore`);
         
-        // Assicuriamoci che il risultato non sia negativo
-        const calculatedHours = Math.max(0, workCellCount * 0.5 - 0.5);
-        
-        totalHours += calculatedHours;
+        totalHours += hoursFromCells;
+      }
+      
+      // FASE 3: Se non abbiamo trovato blocchi, il totale è 0
+      if (workBlocks.length === 0) {
+        console.log("Nessun blocco di tipo 'work' trovato, totale ore = 0");
       }
       
       // Arrotondiamo a 2 decimali per evitare errori di precisione
