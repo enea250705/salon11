@@ -180,29 +180,6 @@ export function AdminDashboard() {
           <CardContent className="p-4">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-gray-500 text-sm">Ore Programmate</p>
-                <p className="text-2xl font-medium">{
-                  // Calcolo del totale ore per tutti i dipendenti nel schedule corrente
-                  // Filtriamo solo i turni di tipo work ed escludiamo altri tipi (vacation, leave)
-                  calculateTotalWorkHours(
-                    allShifts.filter((shift: any) => shift.type === "work")
-                  ).toFixed(0)
-                }</p>
-              </div>
-              <div className="bg-green-100 p-2 rounded-lg">
-                <span className="material-icons text-success">schedule</span>
-              </div>
-            </div>
-            <div className="mt-4 text-xs text-gray-500">
-              Per questa settimana
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex justify-between items-start">
-              <div>
                 <p className="text-gray-500 text-sm">Dipendenti in Ferie</p>
                 <p className="text-2xl font-medium">{employeesOnVacation}</p>
               </div>
