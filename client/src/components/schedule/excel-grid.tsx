@@ -503,28 +503,54 @@ export function ExcelGrid({
         }
       });
       
-      // Gestione del conteggio delle ore
-      // Durata di uno slot è 30 minuti = 0.5 ore
-      const slotDuration = 0.5;
+      // Abbiamo cambiato approccio! Invece di incrementare/decrementare il contatore,
+      // ricalcoliamo l'intero totale basato su tutte le celle di tipo "work"
       
-      // Se la cella era di tipo "work" prima e ora è di altro tipo, sottraiamo le ore
-      if (currentCell.type === "work" && newType !== "work") {
-        // Sottraiamo le ore se stiamo cambiando da work a altro tipo
-        userDayData.total = Math.max(0, Math.round((userDayData.total - slotDuration) * 100) / 100);
-      } 
-      // Se la cella non era di tipo "work" prima ma lo è adesso, aggiungiamo le ore
-      else if (currentCell.type !== "work" && newType === "work") {
-        // Aggiungiamo le ore se stiamo cambiando a work
-        userDayData.total = Math.round((userDayData.total + slotDuration) * 100) / 100;
-      }
-      // Negli altri casi (tipo cambia da vacation a leave, o viceversa) il totale non cambia
-      
-      // Aggiorna lo stato della cella
-      userDayData.cells[timeIndex] = { 
+      // Prima aggiorniamo lo stato della cella corrente
+      const updatedCells = [...userDayData.cells];
+      updatedCells[timeIndex] = { 
         type: newType, 
-        shiftId: null, // Verrà aggiornato nella callback di successo
-        isTimeOff: false
+        shiftId: null, 
+        isTimeOff: false 
       };
+      
+      // Approccio completamente nuovo: ora ricalcoliamo la durata di ogni blocco continuo di "work"
+      let totalHours = 0;
+      
+      // Trova i blocchi continui di celle "work"
+      let blockStartIdx: number | null = null;
+      
+      // Scorriamo le celle per trovare blocchi
+      for (let i = 0; i < updatedCells.length; i++) {
+        if (updatedCells[i].type === "work") {
+          // Se non abbiamo ancora un indice di inizio, iniziamo un nuovo blocco
+          if (blockStartIdx === null) {
+            blockStartIdx = i;
+          }
+          // Altrimenti continuiamo il blocco esistente
+        } else {
+          // Se avevamo un blocco in corso, lo terminiamo e calcoliamo le ore
+          if (blockStartIdx !== null) {
+            const startTime = timeSlots[blockStartIdx];
+            const endTime = timeSlots[i]; // La cella corrente è la prima NON "work" dopo un blocco
+            totalHours += calculateWorkHours(startTime, endTime);
+            blockStartIdx = null;
+          }
+        }
+      }
+      
+      // Se c'è un blocco che continua fino alla fine, lo gestiamo
+      if (blockStartIdx !== null) {
+        const startTime = timeSlots[blockStartIdx];
+        const endTime = timeSlots[timeSlots.length - 1]; // L'ultimo slot
+        totalHours += calculateWorkHours(startTime, endTime);
+      }
+      
+      // Arrotondiamo a 2 decimali per evitare errori di precisione
+      userDayData.total = Math.round(totalHours * 100) / 100;
+      userDayData.cells = updatedCells;
+      
+      // Questa riga non serve più perché aggiorniamo già le celle sopra
     }
     
     // AGGIORNAMENTO STATO FINALE

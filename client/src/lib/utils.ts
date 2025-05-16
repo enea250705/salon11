@@ -92,16 +92,28 @@ export function convertToHours(timeStr: string): number {
  * @returns Ore di lavoro in formato decimale
  */
 export function calculateWorkHours(startTime: string, endTime: string): number {
-  const startHours = convertToHours(startTime);
-  const endHours = convertToHours(endTime);
+  const [startHour, startMinute] = startTime.split(':').map(Number);
+  const [endHour, endMinute] = endTime.split(':').map(Number);
   
-  // Se l'orario di fine è prima dell'orario di inizio, significa che si attraversa la mezzanotte
-  // In questo caso, aggiungiamo 24 ore all'orario di fine
-  if (endHours < startHours) {
-    return (endHours + 24) - startHours;
+  let hours = endHour - startHour;
+  let minutes = endMinute - startMinute;
+  
+  // Gestione dei minuti negativi (es. 08:00 - 09:30 => minutes = -30)
+  if (minutes < 0) {
+    hours -= 1;
+    minutes += 60;
   }
   
-  return endHours - startHours;
+  // Se l'orario di fine è prima dell'orario di inizio, significa che si attraversa la mezzanotte
+  if (hours < 0) {
+    hours += 24;
+  }
+  
+  // Conversione dei minuti in decimale (es. 30 minuti = 0.5 ore)
+  const totalHours = hours + (minutes / 60);
+  
+  // Arrotondiamo a 2 decimali per evitare errori di precisione
+  return Math.round(totalHours * 100) / 100;
 }
 
 /**
