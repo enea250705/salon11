@@ -577,8 +577,13 @@ export function ExcelGrid({
         }
                 
         // UTILIZZO DELLA NUOVA FUNZIONE: Calcolo standard basato sul numero di celle
-        // 1 cella = 0.5 ore, 2 celle = 1.0 ore, 3 celle = 1.5 ore, ecc
-        // ECCEZIONE: 5 celle = 2.0 ore (invece di 2.5)
+        // NUOVA REGOLA BASE: 
+        // - 1 cella (X) = 0 ore (la prima X non conta)
+        // - 2 celle (X X) = 0.5 ore (2-1)*0.5
+        // - 3 celle (X X X) = 1.0 ora (3-1)*0.5
+        // - 4 celle (X X X X) = 1.5 ore (4-1)*0.5 
+        // - 5 celle (X X X X X) = 2.0 ore (caso speciale)
+        // - 6 celle (X X X X X X) = 2.5 ore (6-1)*0.5
         const hoursFromCells = calculateHoursFromCells(numCells);
         
         console.log(`Blocco da ${startTime} a ${endTime} (${numCells} celle) = ${hoursFromCells} ore`);

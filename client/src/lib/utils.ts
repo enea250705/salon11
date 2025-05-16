@@ -157,7 +157,7 @@ export function calculateHoursFromCells(numCells: number): number {
   
   // 5 celle (04:00-06:00) devono essere esattamente 2.0 ore
   if (numCells === 5) {
-    console.log("🔍 CORREZIONE SPECIALE: 5 celle = 2.0 ore (invece di 2.0)");
+    console.log("🔍 CORREZIONE SPECIALE: 5 celle = 2.0 ore (invece di 2.5)");
     return 2.0;
   }
   
