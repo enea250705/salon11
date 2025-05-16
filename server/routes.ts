@@ -6,7 +6,6 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { z } from "zod";
 import MemoryStore from "memorystore";
-import { WebSocketServer, WebSocket } from "ws";
 import { addDays, parseISO, format } from "date-fns";
 import {
   insertUserSchema,
@@ -171,63 +170,6 @@ async function generateAutomaticSchedule(
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
-  
-  // Setup WebSocket server for real-time notifications
-  const wss = new WebSocketServer({ noServer: true });
-  
-  // Store WebSocket clients by userId
-  const clients = new Map<number, WebSocket[]>();
-  
-  // Handle WebSocket connection
-  wss.on("connection", (ws: WebSocket, userId: number) => {
-    if (!clients.has(userId)) {
-      clients.set(userId, []);
-    }
-    
-    clients.get(userId)?.push(ws);
-    
-    ws.on("close", () => {
-      const userClients = clients.get(userId);
-      if (userClients) {
-        const index = userClients.indexOf(ws);
-        if (index > -1) {
-          userClients.splice(index, 1);
-        }
-        
-        if (userClients.length === 0) {
-          clients.delete(userId);
-        }
-      }
-    });
-  });
-  
-  // Handle WebSocket upgrade
-  httpServer.on("upgrade", (request, socket, head) => {
-    const url = new URL(request.url || "", `http://${request.headers.host}`);
-    const userId = parseInt(url.searchParams.get("userId") || "0");
-    
-    if (!userId) {
-      socket.destroy();
-      return;
-    }
-    
-    wss.handleUpgrade(request, socket, head, (ws) => {
-      wss.emit("connection", ws, userId);
-    });
-  });
-  
-  // Function to send notification to a user via WebSocket
-  const sendNotification = (userId: number, notification: any) => {
-    const userClients = clients.get(userId);
-    if (userClients) {
-      const message = JSON.stringify(notification);
-      userClients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(message);
-        }
-      });
-    }
-  };
   
   // Setup session middleware
   app.use(
