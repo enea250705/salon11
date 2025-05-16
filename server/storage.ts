@@ -949,4 +949,5 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+// Utilizziamo MemStorage invece di DatabaseStorage perché l'endpoint del database è disabilitato
+export const storage = new MemStorage();
