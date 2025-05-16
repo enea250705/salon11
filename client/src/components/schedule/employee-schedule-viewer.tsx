@@ -336,14 +336,30 @@ export function EmployeeScheduleViewer({ schedule, shifts, userShifts }: Employe
                                 }
                                 
                                 // Calcola il totale delle ore di lavoro usando la funzione di utilità centralizzata
+                                // Aggiungiamo log per debug
+                                const workHours = consolidatedWorkShifts.map(shift => {
+                                  const hours = calculateActualHours(shift.startTime, shift.endTime);
+                                  console.log(`🔷 Calcolo ore turno ${shift.startTime}-${shift.endTime}: ${hours} ore (nuova regola: primo X = 0 ore)`);
+                                  return {
+                                    ...shift,
+                                    hours
+                                  };
+                                });
+
+                                // Somma manuale delle ore
+                                const manualTotal = workHours.reduce((total, shift) => total + shift.hours, 0);
+                                console.log(`🔷 Totale ore calcolato manualmente: ${manualTotal.toFixed(1)} ore`);
+                                
+                                // Usiamo anche il calcolo standard per confronto
                                 const totalHours = calculateTotalWorkHours(consolidatedWorkShifts);
+                                console.log(`🔷 Totale ore calcolato con calculateTotalWorkHours: ${totalHours.toFixed(1)} ore`);
                                 
                                 return (
                                   <>
                                     {/* Mostra totale ore se ci sono turni di lavoro */}
                                     {workShifts.length > 0 && (
                                       <div className="font-medium text-sm mb-2">
-                                        Ore: {totalHours.toFixed(1)}h
+                                        Ore: {manualTotal.toFixed(1)}h
                                       </div>
                                     )}
                                     
@@ -491,13 +507,29 @@ export function EmployeeScheduleViewer({ schedule, shifts, userShifts }: Employe
                               }
                             }
                             
+                            // Aggiungiamo log per debug
+                            const workHours = consolidatedWorkShifts.map(shift => {
+                              const hours = calculateActualHours(shift.startTime, shift.endTime);
+                              console.log(`🔷 Lista - Calcolo ore turno ${shift.startTime}-${shift.endTime}: ${hours} ore (nuova regola: primo X = 0 ore)`);
+                              return {
+                                ...shift,
+                                hours
+                              };
+                            });
+
+                            // Somma manuale delle ore
+                            const manualTotal = workHours.reduce((total, shift) => total + shift.hours, 0);
+                            console.log(`🔷 Lista - Totale ore calcolato manualmente: ${manualTotal.toFixed(1)} ore`);
+                            
+                            // Usiamo anche il calcolo standard per confronto
                             const totalHours = calculateTotalWorkHours(consolidatedWorkShifts);
+                            console.log(`🔷 Lista - Totale ore calcolato con calculateTotalWorkHours: ${totalHours.toFixed(1)} ore`);
                             
                             return (
                               <>
                                 {workShifts.length > 0 && (
                                   <div className="font-medium text-sm mb-2">
-                                    Ore: {totalHours.toFixed(1)}h
+                                    Ore: {manualTotal.toFixed(1)}h
                                   </div>
                                 )}
                                 
