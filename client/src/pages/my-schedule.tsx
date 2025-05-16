@@ -30,7 +30,7 @@ export default function MySchedule() {
   // Filtra i programmi pubblicati più recenti
   const publishedSchedules = schedules
     .filter(schedule => schedule.isPublished)
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   
   // Trova il programma che contiene la settimana corrente o se non esiste, quello più recente
   // Se l'utente ha selezionato manualmente un programma, usa quello
@@ -127,8 +127,8 @@ export default function MySchedule() {
                     <div className="text-sm">
                       <div className="font-medium">Pubblicato:</div>
                       <div>
-                        {currentSchedule.publishedAt ? 
-                          format(new Date(currentSchedule.publishedAt), "d MMMM yyyy, HH:mm", { locale: it }) :
+                        {currentSchedule.createdAt ? 
+                          format(new Date(currentSchedule.createdAt), "d MMMM yyyy, HH:mm", { locale: it }) :
                           "Non ancora pubblicato"
                         }
                       </div>

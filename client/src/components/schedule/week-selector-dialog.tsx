@@ -60,7 +60,7 @@ export function WeekSelectorDialog({
                     </span>
                     <span className="text-[10px] sm:text-xs text-muted-foreground">
                       {schedule.isPublished 
-                        ? `Pubblicato ${format(new Date(schedule.publishedAt), "d/MM", { locale: it })}` 
+                        ? `Pubblicato ${format(new Date(schedule.createdAt), "d/MM", { locale: it })}` 
                         : "Non pubblicato"}
                     </span>
                   </div>
