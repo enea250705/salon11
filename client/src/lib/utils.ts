@@ -102,6 +102,12 @@ export function timeToMinutes(time: string): number {
  * @returns Ore di lavoro in formato decimale
  */
 export function calculateWorkHours(startTime: string, endTime: string): number {
+  // CASO SPECIALE 0: Orario di inizio e fine identici (deve essere 0 ore)
+  if (startTime === endTime) {
+    console.log(`🔍 CASO SPECIALE: da ${startTime} a ${endTime} = 0.0 ore (stesso orario)`);
+    return 0.0;
+  }
+  
   // CASO SPECIALE 1: Esattamente da 04:00 a 06:00 (deve essere 2.0 ore)
   if (startTime === "04:00" && endTime === "06:00") {
     console.log("🔍 CASO SPECIALE: da 04:00 a 06:00 = 2.0 ore esatte");

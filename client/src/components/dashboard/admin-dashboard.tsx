@@ -21,19 +21,19 @@ export function AdminDashboard() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: users = [] } = useQuery({
+  const { data: users = [] } = useQuery<any[]>({
     queryKey: ["/api/users"],
   });
 
-  const { data: timeOffRequests = [] } = useQuery({
+  const { data: timeOffRequests = [] } = useQuery<any[]>({
     queryKey: ["/api/time-off-requests"],
   });
 
-  const { data: currentSchedule } = useQuery({
+  const { data: currentSchedule } = useQuery<any>({
     queryKey: ["/api/schedules"],
   });
   
-  const { data: allShifts = [] } = useQuery({
+  const { data: allShifts = [] } = useQuery<any[]>({
     queryKey: [`/api/schedules/${currentSchedule?.id}/shifts`],
     enabled: !!currentSchedule?.id,
   });
