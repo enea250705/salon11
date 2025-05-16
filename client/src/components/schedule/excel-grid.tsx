@@ -50,7 +50,26 @@ export function ExcelGrid({
   const [selectedDay, setSelectedDay] = useState(0);
   
   // Generazione degli slot di tempo (30 minuti) dalle 4:00 alle 24:00
+  // Aggiungiamo uno slot alla fine per il calcolo delle ore
   const timeSlots = generateTimeSlots(4, 24);
+  
+  // Aggiungiamo uno slot extra finale per completare la sequenza e permettere il calcolo dell'ultima cella
+  if (timeSlots.length > 0) {
+    const lastSlot = timeSlots[timeSlots.length - 1];
+    const [hour, minute] = lastSlot.split(':').map(Number);
+    
+    // Calcoliamo l'orario 30 minuti dopo l'ultimo slot
+    let newMinute = minute + 30;
+    let newHour = hour;
+    
+    if (newMinute >= 60) {
+      newHour++;
+      newMinute -= 60;
+    }
+    
+    const extraSlot = `${newHour.toString().padStart(2, '0')}:${newMinute.toString().padStart(2, '0')}`;
+    timeSlots.push(extraSlot);
+  }
   
   // Inizializza giorni della settimana
   const weekDays = Array.from({ length: 7 }, (_, i) => {
@@ -584,6 +603,7 @@ export function ExcelGrid({
         });
         
         // CORREZIONE FORZATA PER CASI SPECIFICI
+        // 5 celle da 04:00 (=> 04:00, 04:30, 05:00, 05:30, 06:00) devono essere 2 ore
         if (startTime === "04:00" && workCellCount === 5) {
           console.log("CORREZIONE FORZATA: 2.0 ore per 5 celle da 04:00");
           totalHours += 2.0;

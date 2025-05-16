@@ -28,6 +28,13 @@ export function parseLocalDate(date: string, formatStr: string = "yyyy-MM-dd") {
   return parse(date, formatStr, new Date());
 }
 
+/**
+ * Genera gli slot di tempo con intervalli regolari
+ * @param startHour Ora di inizio (es. 4 per 04:00)
+ * @param endHour Ora di fine (es. 24 per 24:00)
+ * @param interval Intervallo in minuti tra gli slot (default: 30)
+ * @returns Array di stringhe in formato "HH:MM"
+ */
 export function generateTimeSlots(startHour: number, endHour: number, interval: number = 30) {
   const timeSlots = [];
   for (let hour = startHour; hour <= endHour; hour++) {
@@ -37,6 +44,15 @@ export function generateTimeSlots(startHour: number, endHour: number, interval: 
       timeSlots.push(`${formattedHour}:${formattedMin}`);
     }
   }
+  
+  // Nel caso in cui l'ora finale non includa un intervallo a 0 minuti,
+  // aggiungiamo manualmente l'ultimo slot (es. se endHour=24, aggiungiamo "24:00")
+  const lastHour = endHour.toString().padStart(2, '0');
+  const lastSlot = `${lastHour}:00`;
+  if (!timeSlots.includes(lastSlot)) {
+    timeSlots.push(lastSlot);
+  }
+  
   return timeSlots;
 }
 
