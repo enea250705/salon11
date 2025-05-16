@@ -1,5 +1,6 @@
 import { PropsWithChildren, useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
+import { FooterNav } from "@/components/layout/footer-nav";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -82,6 +83,9 @@ export function Layout({ children }: PropsWithChildren) {
             className="p-4 md:p-6 pb-20"
           >
             {children}
+            
+            {/* Footer Navigation - Duplicate di navigazione a piè di pagina */}
+            <FooterNav />
           </motion.div>
         </AnimatePresence>
       </div>

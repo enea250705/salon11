@@ -168,4 +168,20 @@
       opacity: 0.5;
     }
   }
+  
+  /* Fix per Safari */
+  @supports (-webkit-touch-callout: none) {
+    /* Correzione per il pulsante di logout */
+    .safari-fix {
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      height: 100%;
+      max-height: -webkit-fill-available;
+    }
+    
+    /* Aggiunge spazio di sicurezza in fondo */
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom, 1rem);
+    }
+  }
 }
