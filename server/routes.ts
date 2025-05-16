@@ -853,12 +853,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
         
-        // Send real-time notification
-        sendNotification(shift.userId, {
-          type: "shift_update",
-          message: "Your work schedule has been updated",
-          data: notification
-        });
+        // Non è più necessario inviare notifiche real-time via WebSocket
+        // La notifica è già creata nel database
       }
       
       res.json(shift);
@@ -1119,12 +1115,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
         });
         
-        // Send real-time notification
-        sendNotification(admin.id, {
-          type: "time_off_request",
-          message: `Nuova richiesta di ${requestData.type === 'vacation' ? 'ferie' : 'permesso'} da ${requester.name}`,
-          data: notification
-        });
+        // Non è più necessario inviare notifiche real-time via WebSocket
+        // La notifica è già creata nel database per l'admin
       }
       
       res.status(201).json(request);
@@ -1258,12 +1250,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Send real-time notification
-      sendNotification(request.userId, {
-        type: "request_approved",
-        message: "Your time-off request has been approved",
-        data: notification
-      });
+      // Non è più necessario inviare notifiche real-time via WebSocket
+      // La notifica è già creata nel database
       
       res.json(request);
     } catch (err) {
