@@ -1,6 +1,5 @@
 import { PropsWithChildren, useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
-import { NotificationBar } from "@/components/layout/notification-bar";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -47,10 +46,28 @@ export function Layout({ children }: PropsWithChildren) {
         mobileMenuOpen && "hidden md:block"
       )}>
         <div className={cn(
-          "sticky top-0 z-30 transition-all duration-300",
+          "sticky top-0 z-30 transition-all duration-300 bg-white h-16 flex items-center px-4",
           scrolled && "shadow-md"
         )}>
-          <NotificationBar />
+          <h2 className="font-condensed text-xl">
+            {location === "/" || location === "/dashboard" 
+              ? "Dashboard" 
+              : location === "/users" 
+              ? "Gestione Utenti"
+              : location === "/schedule"
+              ? "Pianificazione Turni"
+              : location === "/requests"
+              ? "Approvazioni"
+              : location === "/documents"
+              ? "Documenti"
+              : location === "/my-schedule"
+              ? "I Miei Turni"
+              : location === "/time-off"
+              ? "Ferie e Permessi"
+              : location === "/my-documents"
+              ? "I Miei Documenti"
+              : "Da Vittorino"}
+          </h2>
         </div>
         
         <AnimatePresence mode="wait">
