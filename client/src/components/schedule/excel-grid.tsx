@@ -580,7 +580,8 @@ export function ExcelGrid({
       
       // Se c'è un blocco che continua fino alla fine, lo gestiamo in modo speciale
       if (blockStartIdx !== null) {
-        // Contiamo il numero di celle di tipo "work" continue alla fine
+        // Metodo semplificato: conta il numero di celle come mezz'ore e sottrai 30 minuti
+        // Contiamo il numero di celle "X" consecutive
         let workCellCount = 0;
         for (let i = blockStartIdx; i < updatedCells.length; i++) {
           if (updatedCells[i].type === "work") {
@@ -590,46 +591,15 @@ export function ExcelGrid({
           }
         }
         
-        // Calcolo corretto basato sugli orari effettivi
-        const startTimeStr = timeSlots[blockStartIdx];
+        // Calcolo semplificato:
+        // 1 cella (X) = 0 ore (sottraiamo 0.5)
+        // 2 celle (X X) = 0.5 ore (2 * 0.5 - 0.5)
+        // 3 celle (X X X) = 1 ora (3 * 0.5 - 0.5) 
+        // 4 celle (X X X X) = 1.5 ore (4 * 0.5 - 0.5)
+        // 5 celle (X X X X X) = 2 ore (5 * 0.5 - 0.5)
         
-        // Troviamo l'ultimo orario marcato con X (l'ultima cella di tipo "work")
-        let lastWorkCellIdx = 0;
-        for (let i = blockStartIdx; i < updatedCells.length; i++) {
-          if (updatedCells[i].type === "work") {
-            lastWorkCellIdx = i;
-          } else {
-            break;
-          }
-        }
-        
-        const endTimeStr = timeSlots[lastWorkCellIdx];
-        
-        // Debug
-        console.log(`Calcolo ore alla fine: da ${startTimeStr} a ${endTimeStr}`);
-        
-        // Caso speciale per 04:00-06:00 (bug noto)
-        if (startTimeStr === "04:00" && endTimeStr === "06:00") {
-          console.log("CASO SPECIALE: 04:00-06:00 = 2 ore esatte");
-          return 2.0;
-        }
-        
-        // Calcolo generico per tutti gli altri casi
-        let [startHour, startMinute] = startTimeStr.split(':').map(Number);
-        let [endHour, endMinute] = endTimeStr.split(':').map(Number);
-        
-        // Calcola la differenza in ore e minuti
-        let hours = endHour - startHour;
-        let minutes = endMinute - startMinute;
-        
-        // Gestione dei minuti negativi
-        if (minutes < 0) {
-            hours -= 1;
-            minutes += 60;
-        }
-        
-        // Converti a decimale
-        const calculatedHours = hours + (minutes / 60);
+        // Assicuriamoci che il risultato non sia negativo
+        const calculatedHours = Math.max(0, workCellCount * 0.5 - 0.5);
         
         totalHours += calculatedHours;
       }
