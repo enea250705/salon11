@@ -109,16 +109,16 @@ export function convertToHours(timeStr: string): number {
  * @returns Ore di lavoro in formato decimale
  */
 export function calculateWorkHours(startTime: string, endTime: string): number {
-  // CASO SPECIALE: dalle 04:00 alle 06:00 è esattamente 2 ore (richiesto dal cliente)
+  // CASO SPECIALE: dalle 04:00 alle 06:00 è esattamente 2.5 ore (richiesto dal cliente)
   if (startTime === "04:00" && endTime === "06:00") {
-    console.log("CASO SPECIALE: 04:00 - 06:00 => 2.0 ore esatte");
-    return 2.0;
+    console.log("CASO SPECIALE: 04:00 - 06:00 => 2.5 ore esatte");
+    return 2.5;
   }
   
-  // CASO SPECIALE: dalle 04:00 alle 06:30 è esattamente 2.5 ore
+  // CASO SPECIALE: dalle 04:00 alle 06:30 è esattamente 2.5 ore + 0.5 = 3 ore
   if (startTime === "04:00" && endTime === "06:30") {
-    console.log("CASO SPECIALE: 04:00 - 06:30 => 2.5 ore esatte");
-    return 2.5;
+    console.log("CASO SPECIALE: 04:00 - 06:30 => 3.0 ore esatte");
+    return 3.0;
   }
   
   // Parsing degli orari

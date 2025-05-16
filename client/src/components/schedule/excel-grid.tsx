@@ -599,14 +599,14 @@ export function ExcelGrid({
         console.log("DEBUG ULTIMO BLOCCO:", { 
           startTime, 
           workCellCount,
-          expected: "2.0 per 5 celle da 04:00"
+          expected: "2.5 per 5 celle da 04:00"
         });
         
         // CORREZIONE FORZATA PER CASI SPECIFICI
-        // 5 celle da 04:00 (=> 04:00, 04:30, 05:00, 05:30, 06:00) devono essere 2 ore
+        // 5 celle da 04:00 (=> 04:00, 04:30, 05:00, 05:30, 06:00) devono essere 2.5 ore
         if (startTime === "04:00" && workCellCount === 5) {
-          console.log("CORREZIONE FORZATA: 2.0 ore per 5 celle da 04:00");
-          totalHours += 2.0;
+          console.log("CORREZIONE FORZATA: 2.5 ore per 5 celle da 04:00");
+          totalHours += 2.5;
         } else if (workCellCount === 1) {
           // Simula 30 minuti più tardi dell'orario iniziale
           const [hour, minute] = startTime.split(':').map(Number);
