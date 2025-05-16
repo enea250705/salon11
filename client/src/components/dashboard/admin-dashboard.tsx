@@ -15,7 +15,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { apiRequest } from "@/lib/queryClient";
-import { RecentActivities } from "./recent-activities";
+import { EmployeeList } from "./employee-list";
 
 export function AdminDashboard() {
   const { user } = useAuth();
@@ -194,8 +194,8 @@ export function AdminDashboard() {
         </Card>
       </div>
       
-      {/* Recent Activity */}
-      <RecentActivities />
+      {/* Lista dipendenti */}
+      <EmployeeList />
       
       {/* Single column layout for Pending Approvals only */}
       <div className="grid grid-cols-1 gap-4">
