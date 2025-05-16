@@ -579,16 +579,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API per creare un NUOVO schedule COMPLETAMENTE pulito garantito
   app.post("/api/schedules/new-empty", isAdmin, async (req, res) => {
     try {
-      // Converti le stringhe di date in oggetti Date
-      const inputData = {
-        ...req.body,
-        startDate: new Date(req.body.startDate),
-        endDate: new Date(req.body.endDate),
-        createdBy: (req.user as any).id
-      };
-      
       // Valida i dati di input
-      const scheduleData = insertScheduleSchema.parse(inputData);
+      const scheduleData = insertScheduleSchema.parse({
+        ...req.body,
+        createdBy: (req.user as any).id
+      });
       
       // FASE 1: Verifica conflitti con date esistenti
       const startDate = scheduleData.startDate;
@@ -1132,7 +1127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
                 <div style="text-align: center; margin-bottom: 20px;">
-                  <h2 style="color: #4a6cf7;">Da Vittorino Gestione</h2>
+                  <h2 style="color: #4a6cf7;">StaffSync</h2>
                 </div>
                 <p>Gentile ${admin.name || admin.username},</p>
                 <p>Ti informiamo che <strong>${requester.name}</strong> ha inviato una nuova richiesta di <strong>${typeLabel.toLowerCase()}</strong>.</p>
@@ -1147,10 +1142,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   </ul>
                 </div>
                 
-                <p>Puoi gestire questa richiesta dalla piattaforma Da Vittorino Gestione.</p>
+                <p>Puoi gestire questa richiesta dalla piattaforma StaffSync.</p>
                 
                 <div style="text-align: center; margin-top: 30px;">
-                  <a href="https://davittorino.replit.app/requests" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Gestisci Richieste</a>
+                  <a href="https://staffsync.replit.app/requests" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Gestisci Richieste</a>
                 </div>
                 
                 <p style="margin-top: 30px; font-size: 12px; color: #666; text-align: center;">

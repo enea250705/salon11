@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import PWAInstallMenuItem from "@/components/ui/pwa-install-menu-item";
 
 type SidebarItem = {
   href: string;
@@ -102,8 +101,8 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
       >
         <div className="p-4 sm:p-5 border-b flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <img src="/logo.webp" alt="Da Vittorino Logo" className="h-8" />
-            <h1 className="font-condensed text-xl sm:text-2xl font-bold text-primary">Da Vittorino Gestione</h1>
+            <span className="material-icons text-primary text-xl sm:text-2xl">schedule</span>
+            <h1 className="font-condensed text-xl sm:text-2xl font-bold text-primary">StaffSync</h1>
           </div>
           <button 
             id="mobile-menu-toggle" 
@@ -206,12 +205,6 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
         </nav>
         
         <div className="p-4 sm:p-5 border-t">
-          {/* Opzione per installare l'app come PWA */}
-          <div className="mb-2">
-            <PWAInstallMenuItem className="flex items-center space-x-2 text-sm sm:text-base text-gray-700 hover:text-primary transition-colors w-full rounded-md py-2 px-3 hover:bg-gray-100" />
-          </div>
-          
-          {/* Pulsante di logout */}
           <button 
             onClick={logout}
             className="flex items-center space-x-2 text-sm sm:text-base text-gray-700 hover:text-primary transition-colors w-full rounded-md py-2 px-3 hover:bg-gray-100"

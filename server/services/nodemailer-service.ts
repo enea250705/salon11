@@ -12,7 +12,7 @@ let transporter: nodemailer.Transporter;
 // Indirizzo email del mittente
 // Utilizza l'indirizzo configurato nelle variabili d'ambiente
 const SENDER_EMAIL = process.env.EMAIL_USER || 'admin@ilirionai.it';
-const SENDER_NAME = 'Da Vittorino Gestione';
+const SENDER_NAME = 'StaffSync';
 
 // Inizializza il transporter in modalità developement o production
 async function initTransporter() {
@@ -351,14 +351,14 @@ export async function sendScheduleNotification(user: User, scheduleStartDate: st
   const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #4a6cf7;">Da Vittorino Gestione</h2>
+          <h2 style="color: #4a6cf7;">StaffSync</h2>
         </div>
         <p>Gentile ${user.name},</p>
         <p>Ti informiamo che è stato pubblicato un nuovo turno per il periodo <strong>${formattedStartDate} - ${formattedEndDate}</strong>.</p>
         
         ${shiftsTable}
         
-        <p>Puoi visualizzare ulteriori dettagli dei tuoi turni accedendo alla piattaforma Da Vittorino Gestione.</p>
+        <p>Puoi visualizzare ulteriori dettagli dei tuoi turni accedendo alla piattaforma StaffSync.</p>
         <div style="text-align: center; margin-top: 30px;">
           <a href="https://staffsync.replit.app/my-schedule" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Visualizza Turni</a>
         </div>
@@ -394,11 +394,11 @@ export async function sendScheduleUpdateNotification(user: User, scheduleStartDa
   const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #4a6cf7;">Da Vittorino Gestione</h2>
+          <h2 style="color: #4a6cf7;">StaffSync</h2>
         </div>
         <p>Gentile ${user.name},</p>
         <p>Ti informiamo che è stato aggiornato il turno per il periodo <strong>${formattedStartDate} - ${formattedEndDate}</strong>.</p>
-        <p>Puoi visualizzare i tuoi turni aggiornati accedendo alla piattaforma Da Vittorino Gestione.</p>
+        <p>Puoi visualizzare i tuoi turni aggiornati accedendo alla piattaforma StaffSync.</p>
         <div style="text-align: center; margin-top: 30px;">
           <a href="https://staffsync.replit.app/my-schedule" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Visualizza Turni</a>
         </div>
@@ -438,11 +438,11 @@ export async function sendDocumentNotification(user: User, documentType: string,
   const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #4a6cf7;">Da Vittorino Gestione</h2>
+          <h2 style="color: #4a6cf7;">StaffSync</h2>
         </div>
         <p>Gentile ${user.name},</p>
         <p>Ti informiamo che è stato caricato un nuovo documento: <strong>${documentTypeTranslated}</strong> per il periodo <strong>${period}</strong>.</p>
-        <p>Puoi visualizzare e scaricare il documento accedendo alla piattaforma Da Vittorino Gestione.</p>
+        <p>Puoi visualizzare e scaricare il documento accedendo alla piattaforma StaffSync.</p>
         <div style="text-align: center; margin-top: 30px;">
           <a href="https://staffsync.replit.app/my-documents" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Visualizza Documento</a>
         </div>
@@ -490,11 +490,11 @@ export async function sendTimeOffApprovalNotification(user: User, type: string, 
   const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #4a6cf7;">Da Vittorino Gestione</h2>
+          <h2 style="color: #4a6cf7;">StaffSync</h2>
         </div>
         <p>Gentile ${user.name},</p>
         <p>Ti informiamo che la tua richiesta di <strong>${typeTranslated}</strong> per il periodo <strong>${formattedStartDate} - ${formattedEndDate}</strong> è stata <span style="color: green;"><strong>approvata</strong></span>.</p>
-        <p>Puoi visualizzare lo stato di tutte le tue richieste accedendo alla piattaforma Da Vittorino Gestione.</p>
+        <p>Puoi visualizzare lo stato di tutte le tue richieste accedendo alla piattaforma StaffSync.</p>
         <div style="text-align: center; margin-top: 30px;">
           <a href="https://staffsync.replit.app/time-off" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Le Mie Richieste</a>
         </div>
@@ -542,12 +542,12 @@ export async function sendTimeOffRejectionNotification(user: User, type: string,
   const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #4a6cf7;">Da Vittorino Gestione</h2>
+          <h2 style="color: #4a6cf7;">StaffSync</h2>
         </div>
         <p>Gentile ${user.name},</p>
         <p>Ti informiamo che la tua richiesta di <strong>${typeTranslated}</strong> per il periodo <strong>${formattedStartDate} - ${formattedEndDate}</strong> è stata <span style="color: red;"><strong>rifiutata</strong></span>.</p>
         <p>Per maggiori informazioni, contatta il tuo responsabile.</p>
-        <p>Puoi visualizzare lo stato di tutte le tue richieste accedendo alla piattaforma Da Vittorino Gestione.</p>
+        <p>Puoi visualizzare lo stato di tutte le tue richieste accedendo alla piattaforma StaffSync.</p>
         <div style="text-align: center; margin-top: 30px;">
           <a href="https://staffsync.replit.app/time-off" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Le Mie Richieste</a>
         </div>

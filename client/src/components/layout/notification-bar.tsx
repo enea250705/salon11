@@ -135,7 +135,7 @@ export function NotificationBar() {
             ? "Ferie e Permessi"
             : location === "/my-documents"
             ? "I Miei Documenti"
-            : "Da Vittorino Gestione"}
+            : "StaffSync"}
         </h2>
       </div>
       

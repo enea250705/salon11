@@ -114,7 +114,7 @@ export class MemStorage implements IStorage {
       username: "employee",
       password: "employee123",
       name: "Dipendente Demo",
-      email: "dipendente@davittorino.com",
+      email: "dipendente@staffsync.com",
       role: "employee",
       isActive: true,
     });
@@ -591,7 +591,8 @@ export class DatabaseStorage implements IStorage {
     const newSchedule = {
       ...scheduleData,
       isPublished: false,
-      createdAt: now
+      publishedAt: null,
+      updatedAt: now
     };
     
     const [schedule] = await db.insert(schedules).values(newSchedule).returning();
@@ -604,47 +605,32 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getScheduleByDateRange(startDate: Date, endDate: Date): Promise<Schedule | undefined> {
-    try {
-      console.log(`🔍 Esecuzione query schedule con date: ${startDate.toISOString()} - ${endDate.toISOString()}`);
-      
-      // Cerca tutti gli schedules
-      const allSchedules = await db
-        .select()
-        .from(schedules);
-      
-      // Trova manualmente quello che corrisponde all'intervallo date
-      const matchingSchedule = allSchedules.find(schedule => {
-        const scheduleStart = new Date(schedule.startDate);
-        const scheduleEnd = new Date(schedule.endDate);
-        
-        return (
-          scheduleStart <= endDate && 
-          scheduleEnd >= startDate
-        );
-      });
-      
-      console.log('✅ Query schedule completata:', matchingSchedule ? 'Trovato' : 'Non trovato');
-      return matchingSchedule;
-    } catch (error) {
-      console.error('❌ Errore in getScheduleByDateRange:', error);
-      return undefined;
-    }
+    const formattedStartDate = startDate.toISOString().split('T')[0];
+    const formattedEndDate = endDate.toISOString().split('T')[0];
+    
+    const [schedule] = await db
+      .select()
+      .from(schedules)
+      .where(
+        and(
+          lte(schedules.startDate, formattedEndDate),
+          gte(schedules.endDate, formattedStartDate)
+        )
+      );
+    
+    return schedule;
   }
   
   async getAllSchedules(): Promise<Schedule[]> {
     try {
+      // Importa e usa l'operatore desc da drizzle-orm
+      const { desc } = await import('drizzle-orm');
+      
       const allSchedules = await db
         .select()
-        .from(schedules);
+        .from(schedules)
+        .orderBy(desc(schedules.startDate));
       
-      // Ordina manualmente per data di inizio più recente
-      allSchedules.sort((a, b) => {
-        const dateA = new Date(a.startDate);
-        const dateB = new Date(b.startDate);
-        return dateB.getTime() - dateA.getTime();
-      });
-      
-      console.log("Retrieved all schedules:", allSchedules);
       return allSchedules;
     } catch (error) {
       console.error("Error in getAllSchedules:", error);
@@ -657,7 +643,7 @@ export class DatabaseStorage implements IStorage {
     
     const [schedule] = await db
       .update(schedules)
-      .set({ isPublished: true })
+      .set({ isPublished: true, publishedAt: now })
       .where(eq(schedules.id, id))
       .returning();
     
@@ -990,5 +976,4 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Utilizziamo MemStorage invece di DatabaseStorage per risolvere il problema del database
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

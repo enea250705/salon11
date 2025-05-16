@@ -5,10 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/auth-context";
-import { PWAInstallBanner } from "@/components/pwa-install-banner";
-import { OfflineProvider } from "@/hooks/use-offline";
-import OfflineIndicator from "@/components/offline-indicator";
-import NotificationPermissionBanner from "@/components/notification-permission-banner";
 
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
@@ -24,75 +20,22 @@ import Messages from "@/pages/messages";
 import NewUser from "@/pages/new-user";
 import ChangePassword from "@/pages/change-password";
 
-import { ProtectedRoute } from "@/components/protected-route";
-
 function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
-      
-      {/* Rotte protette */}
-      <Route path="/">
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/dashboard">
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/schedule">
-        <ProtectedRoute>
-          <Schedule />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/users">
-        <ProtectedRoute>
-          <Users />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/users/new">
-        <ProtectedRoute>
-          <NewUser />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/users/change-password">
-        <ProtectedRoute>
-          <ChangePassword />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/documents">
-        <ProtectedRoute>
-          <Documents />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/requests">
-        <ProtectedRoute>
-          <Requests />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/time-off">
-        <ProtectedRoute>
-          <TimeOff />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/my-schedule">
-        <ProtectedRoute>
-          <MySchedule />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/my-documents">
-        <ProtectedRoute>
-          <MyDocuments />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/messages">
-        <ProtectedRoute>
-          <Messages />
-        </ProtectedRoute>
-      </Route>
-      
+      <Route path="/" component={Dashboard} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/schedule" component={Schedule} />
+      <Route path="/users" component={Users} />
+      <Route path="/users/new" component={NewUser} />
+      <Route path="/users/change-password" component={ChangePassword} />
+      <Route path="/documents" component={Documents} />
+      <Route path="/requests" component={Requests} />
+      <Route path="/time-off" component={TimeOff} />
+      <Route path="/my-schedule" component={MySchedule} />
+      <Route path="/my-documents" component={MyDocuments} />
+      <Route path="/messages" component={Messages} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -102,15 +45,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <OfflineProvider showNotifications={true}>
-          <ThemeProvider attribute="class" defaultTheme="light">
-            <Toaster />
-            <Router />
-            <PWAInstallBanner />
-            <OfflineIndicator />
-            <NotificationPermissionBanner />
-          </ThemeProvider>
-        </OfflineProvider>
+        <ThemeProvider attribute="class" defaultTheme="light">
+          <Toaster />
+          <Router />
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

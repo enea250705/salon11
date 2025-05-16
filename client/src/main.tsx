@@ -1,7 +1,6 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import { initPwaInstaller, registerServiceWorker } from "./lib/pwa-installer";
 
 // Initialize fonts and icons from CDN
 const materialIconsLink = document.createElement("link");
@@ -15,15 +14,11 @@ robotoFontLink.rel = "stylesheet";
 document.head.appendChild(robotoFontLink);
 
 // Add page title and meta description
-document.title = "Da Vittorino Gestione - Sistema di Gestione Personale";
+document.title = "StaffSync - Sistema di Gestione Personale";
 const metaDesc = document.createElement("meta");
 metaDesc.name = "description";
-metaDesc.content = "Sistema avanzato di gestione personale, pianificazione turni, ferie e documentazione aziendale. Ottimizza la tua forza lavoro con Da Vittorino Gestione.";
+metaDesc.content = "Sistema avanzato di gestione personale, pianificazione turni, ferie e documentazione aziendale. Ottimizza la tua forza lavoro con StaffSync.";
 document.head.appendChild(metaDesc);
-
-// Initialize PWA functionality
-initPwaInstaller();
-registerServiceWorker().catch(console.error);
 
 // Initialize the React application
 createRoot(document.getElementById("root")!).render(<App />);

@@ -55,11 +55,32 @@ export default function Login() {
     setIsLoading(true);
     
     try {
-      // Usa la funzione login dal contesto
-      await login(values.username, values.password);
+      // Login diretto usando fetch invece di utilizzare la funzione login dal contesto
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: values.username,
+          password: values.password,
+        }),
+        credentials: 'include'
+      });
       
-      // Se il login ha successo, la pagina verrà reindirizzata automaticamente
-      // grazie all'hook useEffect che controlla isAuthenticated
+      if (!response.ok) {
+        throw new Error('Credenziali non valide');
+      }
+      
+      const data = await response.json();
+      
+      if (data.user) {
+        // Ricarica la pagina per aggiornare lo stato di autenticazione
+        window.location.href = '/';
+        return;
+      }
+      
+      throw new Error('Errore durante l\'accesso');
     } catch (error) {
       console.error("Login error:", error);
       toast({
@@ -76,9 +97,9 @@ export default function Login() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <div className="flex justify-center mb-2">
-            <img src="/logo.webp" alt="Da Vittorino Logo" className="h-16" />
+            <span className="material-icons text-4xl text-primary">schedule</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 font-condensed">Da Vittorino Gestione</h1>
+          <h1 className="text-2xl font-bold text-gray-900 font-condensed">StaffSync</h1>
           <p className="mt-2 text-sm text-gray-600">
             Sistema di Gestione Personale
           </p>
