@@ -1301,12 +1301,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Send real-time notification
-      sendNotification(request.userId, {
-        type: "request_rejected",
-        message: "La tua richiesta è stata respinta",
-        data: notification
-      });
+      // Non è più necessario inviare notifiche real-time via WebSocket
+      // La notifica è già creata nel database
       
       res.json(request);
     } catch (err) {
@@ -1379,12 +1375,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      // Send real-time notification
-      sendNotification(document.userId, {
-        type: "document_upload",
-        message: `Nuovo ${document.type === "payslip" ? "Busta Paga" : "Documento Fiscale"} disponibile`,
-        data: notification
-      });
+      // Non è più necessario inviare notifiche real-time via WebSocket
+      // La notifica è già creata nel database
       
       // Invia email di notifica
       if (user && user.email) {
