@@ -422,7 +422,8 @@ export function ExcelGrid({
         // Aggiorna il conteggio delle ore (solo se era un turno di lavoro)
         if (currentCell.type === "work") {
           const slotDuration = 0.5; // 30 minuti
-          userDayData.total = Math.max(0, userDayData.total - slotDuration);
+          // Arrotondiamo a due decimali per evitare errori di approssimazione
+          userDayData.total = Math.max(0, Math.round((userDayData.total - slotDuration) * 100) / 100);
         }
         
         // Aggiorna la cella localmente
@@ -502,13 +503,21 @@ export function ExcelGrid({
         }
       });
       
-      // Aggiorna il conteggio delle ore (solo per tipo "work")
-      if (newType === "work") {
-        // Durata di uno slot è 30 minuti = 0.5 ore
-        const slotDuration = 0.5;
-        // Arrotondiamo a due decimali per evitare problemi di precisione nei calcoli
+      // Gestione del conteggio delle ore
+      // Durata di uno slot è 30 minuti = 0.5 ore
+      const slotDuration = 0.5;
+      
+      // Se la cella era di tipo "work" prima e ora è di altro tipo, sottraiamo le ore
+      if (currentCell.type === "work" && newType !== "work") {
+        // Sottraiamo le ore se stiamo cambiando da work a altro tipo
+        userDayData.total = Math.max(0, Math.round((userDayData.total - slotDuration) * 100) / 100);
+      } 
+      // Se la cella non era di tipo "work" prima ma lo è adesso, aggiungiamo le ore
+      else if (currentCell.type !== "work" && newType === "work") {
+        // Aggiungiamo le ore se stiamo cambiando a work
         userDayData.total = Math.round((userDayData.total + slotDuration) * 100) / 100;
       }
+      // Negli altri casi (tipo cambia da vacation a leave, o viceversa) il totale non cambia
       
       // Aggiorna lo stato della cella
       userDayData.cells[timeIndex] = { 
