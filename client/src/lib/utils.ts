@@ -127,9 +127,20 @@ export function calculateWorkHours(startTime: string, endTime: string): number {
   // Conversione da minuti a ore decimali
   let hours = diffMinutes / 60;
   
+  // Applica la nuova formula: 
+  // - Se la differenza è uguale o minore di 0.5 ore (30 minuti), restituisci 0
+  // - Altrimenti, sottrai 0.5 ore (per la prima X che vale 0)
+  if (hours <= 0.5) {
+    console.log(`🔍 REGOLA BASE: Primo turno di ${hours} ore vale 0 ore`);
+    return 0.0;
+  } else {
+    hours = hours - 0.5; // Sottrai 30 minuti (prima X = 0 ore)
+    console.log(`🔍 REGOLA BASE: Sottratti 30 minuti dalla durata totale di ${hours + 0.5} ore`);
+  }
+  
   // CASO SPECIALE 2: Se sono 2.5 ore (150 minuti), restituisci 2.0 ore
   // Questo gestisce il caso specifico di 5 celle da 30 minuti che devono valere 2.0 ore
-  if (Math.abs(hours - 2.5) < 0.01) {
+  if (Math.abs(hours - 2.0) < 0.01) {
     console.log(`🔍 CORREZIONE SPECIALE: ${hours} ore arrotondate a 2.0 ore`);
     return 2.0;
   }
@@ -149,15 +160,15 @@ export function calculateHoursFromCells(numCells: number): number {
   // Nessuna cella = 0 ore
   if (numCells <= 0) return 0;
   
-  // 1 cella (X) deve essere esattamente 0 ore
+  // 1 cella (X) deve essere esattamente 0 ore (REGOLA BASE)
   if (numCells === 1) {
-    console.log("🔍 CORREZIONE SPECIALE: 1 cella = 0.0 ore");
+    console.log("🔍 REGOLA BASE: 1 cella (X) = 0.0 ore");
     return 0.0;
   }
   
   // 5 celle (04:00-06:00) devono essere esattamente 2.0 ore
   if (numCells === 5) {
-    console.log("🔍 CORREZIONE SPECIALE: 5 celle = 2.0 ore (invece di 2.5)");
+    console.log("🔍 CORREZIONE SPECIALE: 5 celle = 2.0 ore (invece di 2.0)");
     return 2.0;
   }
   
@@ -165,6 +176,7 @@ export function calculateHoursFromCells(numCells: number): number {
   // Sottraiamo 1 perché la prima X non conta (vale 0 ore)
   const hours = (numCells - 1) * 0.5;
   
+  console.log(`🔍 REGOLA BASE: ${numCells} celle = ${hours} ore (prima cella X = 0 ore)`);
   return Math.round(hours * 100) / 100;
 }
 
