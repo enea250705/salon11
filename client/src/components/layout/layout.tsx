@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { useAuth } from "@/hooks/use-auth";
+import { MobileNav } from "@/components/ui/mobile-nav";
 
 export function Layout({ children }: PropsWithChildren) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -49,7 +50,8 @@ export function Layout({ children }: PropsWithChildren) {
           "sticky top-0 z-30 transition-all duration-300 bg-white h-16 flex items-center px-4",
           scrolled && "shadow-md"
         )}>
-          <h2 className="font-condensed text-xl">
+          <MobileNav isMobileMenuOpen={mobileMenuOpen} toggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)} />
+          <h2 className="font-condensed text-xl ml-2 md:ml-0">
             {location === "/" || location === "/dashboard" 
               ? "Dashboard" 
               : location === "/users" 
