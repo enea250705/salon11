@@ -11,7 +11,7 @@ let transporter: nodemailer.Transporter;
 
 // Indirizzo email del mittente
 // Utilizza l'indirizzo configurato nelle variabili d'ambiente
-const SENDER_EMAIL = process.env.EMAIL_USER || 'admin@davittorino.it';
+const SENDER_EMAIL = process.env.EMAIL_USER || 'admin@ilirionai.it';
 const SENDER_NAME = 'Da Vittorino';
 
 // Inizializza il transporter in modalità developement o production
