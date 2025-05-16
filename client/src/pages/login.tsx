@@ -97,9 +97,9 @@ export default function Login() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <div className="flex justify-center mb-2">
-            <span className="material-icons text-4xl text-primary">schedule</span>
+            <span className="material-icons text-4xl text-primary">restaurant</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 font-condensed">StaffSync</h1>
+          <h1 className="text-2xl font-bold text-gray-900 font-condensed">Da Vittorino</h1>
           <p className="mt-2 text-sm text-gray-600">
             Sistema di Gestione Personale
           </p>
@@ -116,7 +116,7 @@ export default function Login() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="nome.cognome@azienda.it" {...field} />
+                        <Input placeholder="nome.cognome@davittorino.it" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
