@@ -143,14 +143,21 @@ export function calculateHoursFromCells(numCells: number): number {
   // Nessuna cella = 0 ore
   if (numCells <= 0) return 0;
   
+  // 1 cella (X) deve essere esattamente 0 ore
+  if (numCells === 1) {
+    console.log("🔍 CORREZIONE SPECIALE: 1 cella = 0.0 ore");
+    return 0.0;
+  }
+  
   // 5 celle (04:00-06:00) devono essere esattamente 2.0 ore
   if (numCells === 5) {
     console.log("🔍 CORREZIONE SPECIALE: 5 celle = 2.0 ore (invece di 2.5)");
     return 2.0;
   }
   
-  // Altre celle seguono la regola normale: ogni X = 0.5 ore
-  const hours = numCells * 0.5;
+  // Altre celle seguono la regola normale: (numCells - 1) * 0.5 ore
+  // Sottraiamo 1 perché la prima X non conta (vale 0 ore)
+  const hours = (numCells - 1) * 0.5;
   
   return Math.round(hours * 100) / 100;
 }
