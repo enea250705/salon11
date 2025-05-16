@@ -127,20 +127,9 @@ export function calculateWorkHours(startTime: string, endTime: string): number {
   // Conversione da minuti a ore decimali
   let hours = diffMinutes / 60;
   
-  // Applica la nuova formula: 
-  // - Se la differenza è uguale o minore di 0.5 ore (30 minuti), restituisci 0
-  // - Altrimenti, sottrai 0.5 ore (per la prima X che vale 0)
-  if (hours <= 0.5) {
-    console.log(`🔍 REGOLA BASE: Primo turno di ${hours} ore vale 0 ore`);
-    return 0.0;
-  } else {
-    hours = hours - 0.5; // Sottrai 30 minuti (prima X = 0 ore)
-    console.log(`🔍 REGOLA BASE: Sottratti 30 minuti dalla durata totale di ${hours + 0.5} ore`);
-  }
-  
   // CASO SPECIALE 2: Se sono 2.5 ore (150 minuti), restituisci 2.0 ore
   // Questo gestisce il caso specifico di 5 celle da 30 minuti che devono valere 2.0 ore
-  if (Math.abs(hours - 2.0) < 0.01) {
+  if (Math.abs(hours - 2.5) < 0.01) {
     console.log(`🔍 CORREZIONE SPECIALE: ${hours} ore arrotondate a 2.0 ore`);
     return 2.0;
   }

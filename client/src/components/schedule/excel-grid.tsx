@@ -450,16 +450,35 @@ export function ExcelGrid({
         updateShiftMutation.mutate(updateData);
         
         // Aggiorna il conteggio delle ore
-        if (currentCell.type === "work" && newType !== "work") {
-          // Se passiamo da lavoro a non-lavoro, sottraiamo ore
-          const slotDuration = 0.5;
-          // Arrotondiamo a due decimali per evitare problemi di precisione
-          userDayData.total = Math.round(Math.max(0, userDayData.total - slotDuration) * 100) / 100;
-        } else if (currentCell.type !== "work" && newType === "work") {
-          // Se passiamo da non-lavoro a lavoro, aggiungiamo ore
-          const slotDuration = 0.5;
-          // Arrotondiamo a due decimali per evitare problemi di precisione
-          userDayData.total = Math.round((userDayData.total + slotDuration) * 100) / 100;
+        // Ricalcoliamo COMPLETAMENTE le ore lavorative per l'utente in questa giornata
+        // invece di incrementare/decrementare per garantire la corretta applicazione della formula (primo X = 0 ore)
+        if (currentCell.type === "work" || newType === "work") {
+          // Contiamo quante celle "work" ci sono nella giornata DOPO il cambiamento
+          const workCells = userDayData.cells.filter((cell, idx) => {
+            // Considera la cella attuale col suo nuovo valore
+            if (idx === timeIndex) {
+              return newType === "work";
+            }
+            // Per tutte le altre celle, usa il loro valore corrente
+            return cell.type === "work";
+          }).length;
+          
+          // Applica la formula: ore = (celle_work - 1) * 0.5, ma sempre minimo 0
+          // Quindi primo X = 0 ore, due X = 0.5 ore, tre X = 1 ora, ecc.
+          let hours = 0;
+          if (workCells > 1) {
+            hours = (workCells - 1) * 0.5;
+          }
+          
+          // Caso speciale: 5 celle devono essere esattamente 2.0 ore
+          if (workCells === 5) {
+            hours = 2.0;
+          }
+          
+          // Aggiorna il totale con il nuovo calcolo
+          userDayData.total = Math.round(hours * 100) / 100;
+          
+          console.log(`🕒 Ricalcolo ore: ${workCells} celle di tipo 'work' = ${hours} ore`);
         }
         
         // Aggiorna lo stato della cella
