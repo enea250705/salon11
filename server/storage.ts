@@ -521,24 +521,30 @@ export class DatabaseStorage implements IStorage {
   }
   
   private async initializeDefaultUsers() {
-    // Check if admin exists
-    const adminExists = await this.getUserByUsername("admin");
-    if (!adminExists) {
+    try {
+      // Prima verifica se ci sono utenti nel database
+      const allUsers = await db.select().from(users);
+      if (allUsers.length > 0) {
+        console.log("Utenti già presenti nel database, nessun utente predefinito necessario.");
+        return;
+      }
+      
+      console.log("Creazione degli utenti predefiniti...");
+      
+      // Crea l'admin
       await this.createUser({
         username: "admin",
         password: "admin123",
         name: "Amministratore",
-        email: "admin@azienda.it",
+        email: "admin@ilirionai.it", // Usiamo l'email che hai specificato
         role: "admin",
         position: null,
         phone: null,
         isActive: true
       });
-    }
-    
-    // Check if employee exists
-    const employeeExists = await this.getUserByUsername("employee");
-    if (!employeeExists) {
+      console.log("Utente admin creato con successo");
+      
+      // Crea l'employee 
       await this.createUser({
         username: "employee",
         password: "employee123",
@@ -549,6 +555,10 @@ export class DatabaseStorage implements IStorage {
         phone: "+39123456789",
         isActive: true
       });
+      console.log("Utente employee creato con successo");
+    } catch (error) {
+      console.error("Errore durante l'inizializzazione degli utenti predefiniti:", error);
+      // Non lanciamo l'errore per permettere all'app di avviarsi
     }
   }
   
