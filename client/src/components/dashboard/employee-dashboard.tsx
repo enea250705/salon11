@@ -191,7 +191,7 @@ export function EmployeeDashboard() {
                       {/* Capitalizza il primo carattere del giorno */}
                       {day.charAt(0).toUpperCase() + day.slice(1)}
                     </h3>
-                    <div className="text-xs text-gray-500 font-medium">
+                    <div className="text-xs text-blue-600 font-medium">
                       {formatHours(calculateTotalWorkHours(shifts.filter((shift: any) => shift.type === "work")))}
                     </div>
                   </div>
