@@ -130,7 +130,23 @@ export function DocumentList() {
     }
     
     try {
-      downloadPdf(filename, fileData);
+      // Metodo alternativo di download che funziona meglio per i PDF
+      const blob = base64ToBlob(fileData, 'application/pdf');
+      const url = URL.createObjectURL(blob);
+      
+      // Crea un link e avvia il download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Pulizia
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
+      
       toast({
         title: "Download avviato",
         description: "Il documento viene scaricato sul tuo dispositivo",
@@ -142,6 +158,36 @@ export function DocumentList() {
         description: "Si è verificato un problema durante il download del documento",
         variant: "destructive",
       });
+    }
+  };
+  
+  // Funzione di supporto per convertire base64 in blob
+  const base64ToBlob = (base64: string, mimeType: string): Blob => {
+    // Rimuovi prefisso data:application/pdf;base64, se presente
+    const base64Data = base64.startsWith('data:') 
+      ? base64.split(',')[1] 
+      : base64;
+    
+    try {
+      const byteCharacters = atob(base64Data);
+      const byteArrays = [];
+      
+      for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+        const slice = byteCharacters.slice(offset, offset + 512);
+        
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+          byteNumbers[i] = slice.charCodeAt(i);
+        }
+        
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+      }
+      
+      return new Blob(byteArrays, { type: mimeType });
+    } catch (error) {
+      console.error('Errore durante la conversione da base64 a blob:', error);
+      throw new Error('Impossibile convertire i dati del documento');
     }
   };
   
