@@ -1,14 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import cors from "cors";
-import { corsConfig, sessionConfig, isVercelProduction } from "./config/vercel";
+import { sessionConfig, isVercelProduction } from "./config/vercel";
 
 // Creazione dell'app Express
 const app = express();
-
-// Configurazione CORS ottimizzata per Vercel
-app.use(cors(corsConfig));
 
 // Configurazione base di Express
 app.use(express.json());

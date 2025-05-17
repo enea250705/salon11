@@ -25,32 +25,9 @@ export const sessionConfig = {
   cookie: {
     secure: isVercelProduction, // Cookie sicuri solo in produzione
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 giorni
-    sameSite: isVercelProduction ? 'none' : 'lax',
+    sameSite: isVercelProduction ? 'strict' : 'lax', // Strict è più sicuro quando tutto è sullo stesso dominio
   },
   resave: false,
   saveUninitialized: false,
   secret: process.env.SESSION_SECRET || 'dev-session-secret',
-};
-
-/**
- * Configurazione CORS ottimizzata per Vercel
- */
-export const corsConfig = {
-  credentials: true,
-  origin: (origin: string | undefined, callback: Function) => {
-    // In produzione, consenti solo domini specifici
-    const whitelist = [
-      'https://da-vittorino.vercel.app',
-      'https://staffsync.vercel.app',
-    ];
-    
-    // In sviluppo, accetta qualsiasi origine o nessuna origine (per richieste locali)
-    if (!isVercelProduction || !origin || whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
 };
