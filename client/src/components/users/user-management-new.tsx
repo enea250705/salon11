@@ -4,16 +4,11 @@ import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatDate } from "@/lib/utils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { UserForm } from "./user-form";
-import { BulkUsersForm } from "./bulk-users-form";
 import { User } from "@shared/schema";
-import { Loader2, Search, Edit, UserPlus, CheckCircle, XCircle, Upload, Users, MoreVertical, Key, Eye, EyeOff } from "lucide-react";
+import { Loader2, Search, Edit, UserPlus, CheckCircle, XCircle, Upload, Users, MoreVertical, Key } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedContainer } from "@/components/ui/animated-container";
 import {
@@ -54,7 +49,6 @@ export function UserManagement() {
       apiRequest("PATCH", `/api/users/${userData.id}`, userData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-      setIsEditUserDialogOpen(false);
       toast({
         title: "Utente aggiornato",
         description: "L'utente è stato aggiornato con successo.",
@@ -109,8 +103,6 @@ export function UserManagement() {
     setLocation(`/users/change-password?userId=${user.id}`);
   };
   
-  // Nessuna mutation per cambio password poiché è stata spostata nella sua pagina dedicata
-  
   // Format last login date
   const formatLastLogin = (lastLogin: string | Date | null | undefined) => {
     if (!lastLogin) return "Mai";
@@ -121,13 +113,13 @@ export function UserManagement() {
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
     if (diffDays === 0) {
-      return "Oggi, " + date.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+      return "Oggi";
     } else if (diffDays === 1) {
-      return "Ieri, " + date.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+      return "Ieri";
     } else if (diffDays < 7) {
       return `${diffDays} giorni fa`;
     } else {
-      return formatDate(date.toISOString());
+      return date.toLocaleDateString('it-IT');
     }
   };
   
@@ -395,7 +387,7 @@ export function UserManagement() {
               </div>
               <div className="flex space-x-1 order-1 sm:order-2">
                 <Button
-                  variant={currentPage === 1 ? "secondary" : "outline"}
+                  variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
@@ -431,7 +423,7 @@ export function UserManagement() {
                 })}
                 
                 <Button
-                  variant={currentPage === totalPages ? "secondary" : "outline"}
+                  variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
@@ -442,160 +434,6 @@ export function UserManagement() {
               </div>
             </div>
           )}
-          
-          {/* Edit User Dialog */}
-          <Dialog open={isEditUserDialogOpen} onOpenChange={setIsEditUserDialogOpen}>
-            <DialogContent className="sm:max-w-md w-[92%] md:w-full" aria-describedby="edit-user-description">
-              <DialogHeader className="pb-3 border-b">
-                <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                  <Edit className="h-5 w-5 text-primary" />
-                  Modifica Utente
-                </DialogTitle>
-                <DialogDescription id="edit-user-description" className="text-sm text-gray-500 mt-1">
-                  Modifica le informazioni dell'utente selezionato
-                </DialogDescription>
-              </DialogHeader>
-              {selectedUser && (
-                <>
-                  <div className="p-3 mb-4 rounded-md bg-blue-50 border border-blue-100 flex items-center gap-3">
-                    <div className="bg-blue-100 rounded-full p-2 flex-shrink-0">
-                      <span className="text-primary font-medium text-sm">
-                        {selectedUser.name.substring(0, 2).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-sm">{selectedUser.name}</h4>
-                      <p className="text-xs text-gray-500">{selectedUser.username}</p>
-                    </div>
-                  </div>
-                  <UserForm 
-                    user={selectedUser}
-                    onSubmit={(userData) => {
-                      updateUserMutation.mutate({
-                        ...userData,
-                        id: selectedUser.id,
-                      });
-                    }}
-                    onCancel={() => setIsEditUserDialogOpen(false)}
-                    isEdit={true}
-                  />
-                </>
-              )}
-            </DialogContent>
-          </Dialog>
-          
-          {/* Dialog per il cambio password */}
-          <Dialog 
-            open={isChangePasswordDialogOpen} 
-            onOpenChange={(open) => {
-              if (!open) {
-                // Reset quando si chiude
-                setTimeout(() => {
-                  setIsChangePasswordDialogOpen(false);
-                  setNewPassword("");
-                  setShowNewPassword(false);
-                }, 50);
-              } else {
-                setIsChangePasswordDialogOpen(true);
-              }
-            }}
-          >
-            <DialogContent className="sm:max-w-md w-[92%] md:w-full" aria-describedby="password-dialog-description">
-              <DialogHeader className="pb-3 border-b">
-                <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                  <Key className="h-5 w-5 text-primary" />
-                  Cambia Password
-                </DialogTitle>
-                <DialogDescription id="password-dialog-description" className="text-sm text-gray-500 mt-1">
-                  Imposta una nuova password sicura per l'utente
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="space-y-5 py-4">
-                {selectedUser && (
-                  <div className="p-3 rounded-md bg-blue-50 border border-blue-100 flex items-center gap-3">
-                    <div className="bg-blue-100 rounded-full p-2 flex-shrink-0">
-                      <span className="text-primary font-medium text-sm">
-                        {selectedUser.name.substring(0, 2).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-sm">{selectedUser.name}</h4>
-                      <p className="text-xs text-gray-500">{selectedUser.username}</p>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="space-y-2">
-                  <Label htmlFor="new-password" className="text-sm font-medium">
-                    Nuova Password
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="new-password"
-                      type={showNewPassword ? "text" : "password"}
-                      placeholder="Inserisci la nuova password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="pr-10 border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary"
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                    >
-                      {showNewPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                  {newPassword && newPassword.length < 8 && (
-                    <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
-                      <XCircle className="h-3.5 w-3.5" />
-                      La password deve contenere almeno 8 caratteri
-                    </p>
-                  )}
-                  {newPassword && !/[0-9]/.test(newPassword) && (
-                    <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
-                      <XCircle className="h-3.5 w-3.5" />
-                      La password deve contenere almeno un numero
-                    </p>
-                  )}
-                  {newPassword && newPassword.length >= 8 && /[0-9]/.test(newPassword) && (
-                    <p className="text-xs text-green-500 flex items-center gap-1 mt-1">
-                      <CheckCircle className="h-3.5 w-3.5" />
-                      Password valida
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              <DialogFooter className="flex-col sm:flex-row gap-2 pt-2 border-t">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsChangePasswordDialogOpen(false)}
-                  className="w-full sm:w-auto order-2 sm:order-1"
-                >
-                  Annulla
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => {
-                    if (selectedUser) {
-                      setIsChangePasswordDialogOpen(false);
-                      setLocation(`/users/change-password?userId=${selectedUser.id}`);
-                    }
-                  }}
-                  className="w-full sm:w-auto order-1 sm:order-2"
-                >
-                  <Key className="mr-2 h-4 w-4" />
-                  Continua
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </CardContent>
       </Card>
     </AnimatedContainer>

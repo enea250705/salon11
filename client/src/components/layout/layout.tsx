@@ -1,5 +1,6 @@
 import { PropsWithChildren, useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
+import { FooterNav } from "@/components/layout/footer-nav";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -47,7 +48,7 @@ export function Layout({ children }: PropsWithChildren) {
         mobileMenuOpen && "hidden md:block"
       )}>
         <div className={cn(
-          "sticky top-0 z-30 transition-all duration-300 bg-white h-16 flex items-center px-4",
+          "sticky top-0 z-30 transition-all duration-300 bg-white/80 backdrop-blur-sm h-16 flex items-center px-4",
           scrolled && "shadow-md"
         )}>
           <MobileNav isMobileMenuOpen={mobileMenuOpen} toggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)} />
@@ -75,13 +76,40 @@ export function Layout({ children }: PropsWithChildren) {
         <AnimatePresence mode="wait">
           <motion.div
             key={location}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, x: -10 }}
-            transition={{ duration: 0.3 }}
+            transition={{ 
+              duration: 0.4, 
+              ease: [0.25, 0.1, 0.25, 1.0], 
+              staggerChildren: 0.1 
+            }}
             className="p-4 md:p-6 pb-20"
           >
-            {children}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ 
+                duration: 0.5, 
+                ease: "easeOut",
+                delay: 0.1
+              }}
+            >
+              {children}
+            </motion.div>
+            
+            {/* Footer Navigation - Duplicate di navigazione a piè di pagina */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ 
+                duration: 0.5, 
+                ease: "easeOut",
+                delay: 0.3
+              }}
+            >
+              <FooterNav />
+            </motion.div>
           </motion.div>
         </AnimatePresence>
       </div>

@@ -144,15 +144,22 @@ export default function ChangePasswordPage() {
         </CardHeader>
         
         <CardContent className="pt-6 space-y-6">
-          <div className="p-4 rounded-md bg-blue-50 border border-blue-100 flex items-center gap-3 mb-4">
-            <div className="bg-blue-100 rounded-full p-3 flex-shrink-0">
-              <span className="text-primary font-medium">
-                {user.name.substring(0, 2).toUpperCase()}
-              </span>
+          <div className="p-4 rounded-md menu-card flex items-center gap-3 mb-4 animate-fadeIn">
+            <div className="rounded-full flex-shrink-0 shadow-md">
+              <img 
+                src={user.role === "admin" ? "/avatars/admin.svg" : "/avatars/employee.svg"} 
+                alt={user.role === "admin" ? "Avatar amministratore" : "Avatar dipendente"}
+                className="w-12 h-12 rounded-full transition-all duration-300"
+              />
             </div>
             <div>
-              <h4 className="font-medium">{user.name}</h4>
-              <p className="text-sm text-gray-500">{user.username} • {user.role === 'admin' ? 'Amministratore' : 'Dipendente'}</p>
+              <h4 className="font-medium text-primary">{user.name}</h4>
+              <p className="text-sm opacity-80">
+                {user.username} • 
+                <span className="font-medium ml-1">
+                  {user.role === 'admin' ? 'Amministratore' : 'Dipendente'}
+                </span>
+              </p>
             </div>
           </div>
           
