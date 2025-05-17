@@ -312,7 +312,7 @@ export function DocumentList() {
                     variant="outline"
                     size="sm"
                     className="text-blue-600 border-blue-300 hover:bg-blue-50 text-xs"
-                    onClick={() => handleViewDocument(doc, 'open')}
+                    onClick={() => handleOpenPdf(doc)}
                     disabled={!doc.fileData}
                   >
                     <span className="material-icons text-sm mr-1">open_in_new</span>
@@ -322,7 +322,7 @@ export function DocumentList() {
                     variant="outline"
                     size="sm"
                     className="text-green-600 border-green-300 hover:bg-green-50 text-xs"
-                    onClick={() => handleViewDocument(doc, 'download')}
+                    onClick={() => handleDownload(doc)}
                     disabled={!doc.fileData}
                   >
                     <span className="material-icons text-sm mr-1">download</span>
@@ -352,14 +352,14 @@ export function DocumentList() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="center" className="w-[180px]">
                       <DropdownMenuItem 
-                        onClick={() => handleViewDocument(doc, 'open')}
+                        onClick={() => handleOpenPdf(doc)}
                         disabled={!doc.fileData}
                       >
                         <span className="material-icons text-sm mr-2 text-blue-600">open_in_new</span>
                         Apri PDF
                       </DropdownMenuItem>
                       <DropdownMenuItem 
-                        onClick={() => handleViewDocument(doc, 'download')}
+                        onClick={() => handleDownload(doc)}
                         disabled={!doc.fileData}
                       >
                         <span className="material-icons text-sm mr-2 text-green-600">download</span>
@@ -401,7 +401,7 @@ export function DocumentList() {
           {selectedDocument && (
             <div className="h-full max-h-[calc(80vh-80px)] overflow-auto">
               <iframe
-                src={`data:application/pdf;base64,${selectedDocument.fileData}`}
+                src={`/api/documents/${selectedDocument.id}/pdf`}
                 className="w-full h-full min-h-[500px]"
                 title="Anteprima PDF"
               />
