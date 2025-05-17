@@ -12,7 +12,7 @@ let transporter: nodemailer.Transporter;
 // Indirizzo email del mittente
 // Utilizza l'indirizzo configurato nelle variabili d'ambiente
 const SENDER_EMAIL = process.env.EMAIL_USER || 'admin@ilirionai.it';
-const SENDER_NAME = 'Da Vittorino';
+const SENDER_NAME = 'Da Vittorino Staff';
 
 // Inizializza il transporter in modalità developement o production
 async function initTransporter() {
@@ -351,7 +351,7 @@ export async function sendScheduleNotification(user: User, scheduleStartDate: st
   const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #4a6cf7;">StaffSync</h2>
+          <h2 style="color: #4a6cf7;">Da Vittorino Staff</h2>
         </div>
         <p>Gentile ${user.name},</p>
         <p>Ti informiamo che è stato pubblicato un nuovo turno per il periodo <strong>${formattedStartDate} - ${formattedEndDate}</strong>.</p>
