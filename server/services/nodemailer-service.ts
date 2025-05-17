@@ -35,16 +35,13 @@ async function initTransporter() {
   } else {
     // Configurazione del server SMTP personalizzato
     transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false, // true per 465, false per altre porte come 587
+      service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER || '',
         pass: process.env.EMAIL_PASSWORD || '',
       },
-      tls: {
-        rejectUnauthorized: false // Accetta certificati autofirmati in ambiente di sviluppo
-      }
+      debug: true, // Modalità debug per vedere più informazioni
+      logger: true // Attiva il logger per tracciare le operazioni SMTP
     });
     
     console.log('🔧 Server SMTP configurato con indirizzo:', process.env.EMAIL_USER);
