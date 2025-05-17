@@ -27,17 +27,10 @@ export function UserManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
-  const [isNewUserDialogOpen, setIsNewUserDialogOpen] = useState(false);
-  const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
-  const [isBulkAddDialogOpen, setIsBulkAddDialogOpen] = useState(false);
-  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [newPassword, setNewPassword] = useState("");
-  const [showNewPassword, setShowNewPassword] = useState(false);
   
   const usersPerPage = 10;
   
@@ -106,56 +99,17 @@ export function UserManagement() {
     currentPage * usersPerPage
   );
   
-  // Handle edit user
+  // Handle edit user - reindirizza alla pagina dedicata
   const handleEditUser = (user: User) => {
-    // Pulisci prima di impostare
-    setSelectedUser(null);
-    setTimeout(() => {
-      setSelectedUser(user);
-      setIsEditUserDialogOpen(true);
-    }, 50);
+    setLocation(`/users/edit?userId=${user.id}`);
   };
   
-  // Handle change password
+  // Handle change password - reindirizza alla pagina dedicata
   const handleChangePassword = (user: User) => {
-    // Pulisci prima di impostare
-    setSelectedUser(null);
-    setNewPassword("");
-    setTimeout(() => {
-      setSelectedUser(user);
-      setIsChangePasswordDialogOpen(true);
-    }, 50);
+    setLocation(`/users/change-password?userId=${user.id}`);
   };
   
-  // Password change mutation
-  const changePasswordMutation = useMutation({
-    mutationFn: async ({ userId, password }: { userId: number, password: string }) => {
-      console.log("Changing password for user:", userId);
-      const response = await apiRequest("PATCH", `/api/users/${userId}`, { password });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to change password");
-      }
-      return await response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-      setIsChangePasswordDialogOpen(false);
-      setNewPassword("");
-      toast({
-        title: "Password modificata",
-        description: "La password dell'utente è stata modificata con successo.",
-      });
-    },
-    onError: (error) => {
-      console.error("Failed to change password:", error);
-      toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante la modifica della password.",
-        variant: "destructive",
-      });
-    }
-  });
+  // Nessuna mutation per cambio password poiché è stata spostata nella sua pagina dedicata
   
   // Format last login date
   const formatLastLogin = (lastLogin: string | Date | null | undefined) => {
@@ -184,49 +138,15 @@ export function UserManagement() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
             <h2 className="text-xl font-bold">Gestione Utenti</h2>
             <div className="flex flex-wrap gap-2">
-              <Dialog 
-                open={isBulkAddDialogOpen} 
-                onOpenChange={(open) => {
-                  // Reset il form quando viene chiuso
-                  if (!open) {
-                    setTimeout(() => {
-                      setIsBulkAddDialogOpen(false);
-                    }, 50);
-                  } else {
-                    setIsBulkAddDialogOpen(true);
-                  }
-                }}
+              <Button 
+                className="flex items-center gap-1 text-xs sm:text-sm" 
+                variant="outline"
+                onClick={() => setLocation("/users/import")}
               >
-                <DialogTrigger asChild>
-                  <Button className="flex items-center gap-1 text-xs sm:text-sm" variant="outline">
-                    <Users className="h-4 w-4 mr-1 sm:mr-2" />
-                    <span className="sm:inline hidden">Importa Multipli</span>
-                    <span className="sm:hidden inline">Importa</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-xl w-[92%] md:w-full" aria-describedby="bulk-users-description">
-                  <DialogHeader className="pb-3 border-b">
-                    <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                      <Upload className="h-5 w-5 text-primary" />
-                      Importa Utenti in Blocco
-                    </DialogTitle>
-                    <DialogDescription id="bulk-users-description" className="text-sm text-gray-500 mt-1">
-                      Carica un elenco di utenti in formato CSV
-                    </DialogDescription>
-                  </DialogHeader>
-                  <BulkUsersForm 
-                    onSubmit={(result) => {
-                      setIsBulkAddDialogOpen(false);
-                      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-                      toast({
-                        title: "Utenti importati",
-                        description: `${result.createdCount} utenti sono stati creati con successo.`,
-                      });
-                    }}
-                    onCancel={() => setIsBulkAddDialogOpen(false)}
-                  />
-                </DialogContent>
-              </Dialog>
+                <Upload className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="sm:inline hidden">Importa Multipli</span>
+                <span className="sm:hidden inline">Importa</span>
+              </Button>
               
               <Button 
                 className="flex items-center gap-1 text-xs sm:text-sm"
