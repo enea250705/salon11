@@ -356,12 +356,7 @@ export function EmployeeScheduleViewer({ schedule, shifts, userShifts }: Employe
                                 
                                 return (
                                   <>
-                                    {/* Mostra totale ore se ci sono turni di lavoro */}
-                                    {workShifts.length > 0 && (
-                                      <div className="font-medium text-sm mb-2">
-                                        Ore: {manualTotal.toFixed(1)}h
-                                      </div>
-                                    )}
+                                    {/* Non mostriamo più il totale ore qui */}
                                     
                                     {/* Mostra gli slot di lavoro in modo destacato */}
                                     {consolidatedWorkShifts.length > 0 && (
@@ -527,11 +522,7 @@ export function EmployeeScheduleViewer({ schedule, shifts, userShifts }: Employe
                             
                             return (
                               <>
-                                {workShifts.length > 0 && (
-                                  <div className="font-medium text-sm mb-2">
-                                    Ore: {manualTotal.toFixed(1)}h
-                                  </div>
-                                )}
+                                {/* Non mostriamo più il totale ore qui */}
                                 
                                 {consolidatedWorkShifts.length > 0 && (
                                   <div className="rounded-md border-l-4 border-blue-500 overflow-hidden">
