@@ -510,7 +510,7 @@ export function EmployeeScheduleViewer({ schedule, shifts, userShifts }: Employe
                             // Aggiungiamo log per debug
                             const workHours = consolidatedWorkShifts.map(shift => {
                               const hours = calculateActualHours(shift.startTime, shift.endTime);
-                              console.log(`🔷 Lista - Calcolo ore turno ${shift.startTime}-${shift.endTime}: ${hours} ore (nuova regola: primo X = 0 ore)`);
+                              console.log(`🔷 Lista - Calcolo ore turno ${shift.startTime}-${shift.endTime}: ${hours} ore`);
                               return {
                                 ...shift,
                                 hours
