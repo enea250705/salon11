@@ -904,6 +904,12 @@ export function ExcelGrid({
                           
                           <td className="p-1 sm:p-2 text-center font-semibold text-xs sm:text-sm">
                             {formatHours(Math.round((gridData[day.name]?.[user.id]?.total || 0) * 100) / 100)}
+                            {/* DEBUG INFO */}
+                            {gridData[day.name]?.[user.id]?.total && gridData[day.name]?.[user.id]?.total > 0 ? 
+                              <div className="text-xs text-gray-500 mt-1">
+                                {gridData[day.name]?.[user.id]?.total} ore
+                              </div> : null
+                            }
                           </td>
                         </tr>
                       ))}
