@@ -796,7 +796,6 @@ export function ExcelGrid({
                         )
                       ))}
                       <th className="p-2 text-left font-medium">Note</th>
-                      <th className="p-2 text-center font-medium">Totale</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -854,9 +853,6 @@ export function ExcelGrid({
                             />
                           </td>
                           
-                          <td className="p-1 sm:p-2 text-center font-semibold text-xs sm:text-sm">
-                            {formatHours(Math.round((gridData[day.name]?.[user.id]?.total || 0) * 100) / 100)}
-                          </td>
                         </tr>
                       ))}
                   </tbody>
