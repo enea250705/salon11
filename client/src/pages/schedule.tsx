@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { WeekSelectorDialog } from "@/components/schedule/week-selector-dialog";
 import { ScheduleAutoGenerator } from "@/components/schedule/auto-generator/auto-generator";
 import { ExcelGrid } from "@/components/schedule/excel-grid";
-import { ExportToPdfDialog } from "@/components/schedule/export-to-pdf";
+
 
 // Date utilities
 import { format, startOfWeek, addDays, isBefore, parseISO } from "date-fns";
@@ -715,14 +715,7 @@ export default function Schedule() {
               forceResetGrid={forceResetGrid || isLoadingNewSchedule}
             />
             
-            {/* Dialogo di esportazione PDF */}
-            <ExportToPdfDialog
-              open={showExportPdfDialog}
-              onOpenChange={setShowExportPdfDialog}
-              schedules={allSchedules || []}
-              users={users || []}
-              fetchShifts={fetchShiftsForSchedule}
-            />
+
             
             {/* Pulsanti di azione posizionati sotto la tabella */}
             <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 mt-6 pt-4 border-t border-gray-200">
@@ -744,24 +737,7 @@ export default function Schedule() {
                 <span className="material-icons text-xs sm:text-sm mr-1">add</span>
                 Nuovo turno settimanale
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportPdf}
-                className="text-xs sm:text-sm"
-              >
-                <span className="material-icons text-xs sm:text-sm mr-1">download</span>
-                Esporta PDF
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportAllToPdf}
-                className="text-xs sm:text-sm"
-              >
-                <span className="material-icons text-xs sm:text-sm mr-1">file_download</span>
-                Esporta tutte le settimane
-              </Button>
+
             </div>
           </div>
         ) : (
