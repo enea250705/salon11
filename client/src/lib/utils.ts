@@ -169,22 +169,28 @@ export function calculateHoursFromCells(numCells: number): number {
   // Nessuna cella = 0 ore
   if (numCells <= 0) return 0;
   
+  // Formula corretta: ogni cella vale 0.5 ore, ma il primo X non conta
+  let hours = 0;
+  
+  if (numCells > 1) {
+    hours = (numCells - 1) * 0.5;
+  }
+  
   // 1 cella (30 minuti) deve essere esattamente 0 ore (REGOLA BASE) 
   if (numCells === 1) {
-    console.log("🔍 REGOLA BASE: 1 cella (30 min) = 0.0 ore");
+    console.log("🔍 REGOLA TURNO: Turno di 30 minuti, meno di 30 minuti = 0.0 ore");
     return 0.0;
   }
   
   // 5 celle (04:00-06:00) devono essere esattamente 2.0 ore
   if (numCells === 5) {
-    console.log("🔍 CORREZIONE SPECIALE: 5 celle = 2.0 ore (invece di 2.5)");
+    console.log("🔍 REGOLA SPECIALE: 5 celle = 2.0 ore (invece di 2.0)");
     return 2.0;
   }
   
-  // Altre celle seguono la regola normale: numCells * 0.5 ore
-  const hours = numCells * 0.5;
+  console.log(`🔍 CALCOLO ORE: ${numCells} celle (primo X = 0 ore) = ${hours} ore`);
   
-  console.log(`🔍 REGOLA BASE: ${numCells} celle = ${hours} ore (prima cella X = 0 ore)`);
+  // Arrotondamento a 2 decimali
   return Math.round(hours * 100) / 100;
 }
 

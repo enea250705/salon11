@@ -451,41 +451,22 @@ export function ExcelGrid({
         
         // Aggiorna il conteggio delle ore
         // Ricalcoliamo COMPLETAMENTE le ore lavorative per l'utente in questa giornata
-        // invece di incrementare/decrementare per garantire la corretta applicazione della formula (primo X = 0 ore)
         if (currentCell.type === "work" || newType === "work") {
           // Contiamo quante celle "work" ci sono nella giornata DOPO il cambiamento
-          const workCells = userDayData.cells.filter((cell, idx) => {
-            // Considera la cella attuale col suo nuovo valore
-            if (idx === timeIndex) {
-              return newType === "work";
-            }
-            // Per tutte le altre celle, usa il loro valore corrente
-            return cell.type === "work";
-          }).length;
+          const workCells = userDayData.cells.map((cell, idx) => 
+            idx === timeIndex ? newType : cell.type
+          ).filter(type => type === "work").length;
           
-          // Calcolo migliorato: ogni cella di tipo "work" vale 0.5 ore
-          let hours = workCells * 0.5;
+          // VERSIONE FINALE - REGOLA CORRETTA:
+          // Useremo la funzione utility dedicata che implementa tutte le regole
+          // richieste dal cliente in modo consistente
+          let hours = calculateHoursFromCells(workCells);
           
-          // Regola speciale: il primo "X" (work) non conta come ore
-          if (workCells > 0) {
-            hours -= 0.5;
-          }
-          
-          // Assicurati che non sia negativo
-          hours = Math.max(0, hours);
-          
-          // Caso speciale: 5 celle devono essere esattamente 2.0 ore
-          if (workCells === 5) {
-            hours = 2.0;
-          }
-          
-          // Aggiorna il totale con il nuovo calcolo (arrotondato a 2 decimali)
-          userDayData.total = Math.round(hours * 100) / 100;
+          // Aggiorna il totale con il nuovo calcolo
+          userDayData.total = hours;
           
           // Log dettagliati del calcolo per debugging
-          console.log(`🧮 CALCOLO ORE: ${workCells} celle work → ${hours} ore totali`);
-          
-          console.log(`🕒 Ricalcolo ore: ${workCells} celle di tipo 'work' = ${hours} ore`);
+          console.log(`🧮 CALCOLO ORE [FINALE]: ${workCells} celle work → ${hours} ore totali`);
         }
         
         // Aggiorna lo stato della cella
