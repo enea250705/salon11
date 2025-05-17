@@ -154,29 +154,39 @@ export function GrigliaTurni({
     // Popola la griglia con i turni esistenti
     if (turni && turni.length > 0) {
       turni.forEach(turno => {
-        const nomeGiorno = format(new Date(turno.date), "EEEE", { locale: it });
-        
-        if (nuoviDatiGriglia[nomeGiorno] && nuoviDatiGriglia[nomeGiorno][turno.userId]) {
-          // Trova gli indici di inizio e fine del turno
-          const indiceInizio = slotOrari.findIndex(t => t === turno.startTime);
-          const indiceFine = slotOrari.findIndex(t => t === turno.endTime);
+        // Gestiamo gli errori che potrebbero verificarsi con le date
+        try {
+          if (!turno.date) {
+            console.error("Turno senza data:", turno);
+            return; // Skip questo turno
+          }
           
-          if (indiceInizio !== -1 && indiceFine !== -1) {
-            // Imposta le celle come "work" o altro tipo
-            for (let i = indiceInizio; i < indiceFine; i++) {
-              if (i < nuoviDatiGriglia[nomeGiorno][turno.userId].celle.length) {
-                nuoviDatiGriglia[nomeGiorno][turno.userId].celle[i] = {
-                  tipo: turno.type || "work",
-                  turnoId: turno.id
-                };
+          const nomeGiorno = format(new Date(turno.date), "EEEE", { locale: it });
+          
+          if (nuoviDatiGriglia[nomeGiorno] && nuoviDatiGriglia[nomeGiorno][turno.userId]) {
+            // Trova gli indici di inizio e fine del turno
+            const indiceInizio = slotOrari.findIndex(t => t === turno.startTime);
+            const indiceFine = slotOrari.findIndex(t => t === turno.endTime);
+            
+            if (indiceInizio !== -1 && indiceFine !== -1) {
+              // Imposta le celle come "work" o altro tipo
+              for (let i = indiceInizio; i < indiceFine; i++) {
+                if (i < nuoviDatiGriglia[nomeGiorno][turno.userId].celle.length) {
+                  nuoviDatiGriglia[nomeGiorno][turno.userId].celle[i] = {
+                    tipo: turno.type || "work",
+                    turnoId: turno.id
+                  };
+                }
+              }
+              
+              // Imposta le note
+              if (turno.notes) {
+                nuoviDatiGriglia[nomeGiorno][turno.userId].note = turno.notes;
               }
             }
-            
-            // Imposta le note
-            if (turno.notes) {
-              nuoviDatiGriglia[nomeGiorno][turno.userId].note = turno.notes;
-            }
           }
+        } catch (error) {
+          console.error("Errore nel processare il turno:", turno, error);
         }
       });
     }
@@ -186,58 +196,67 @@ export function GrigliaTurni({
       richiesteFerie
         .filter(req => req.status === "approved")
         .forEach(richiesta => {
-          const dataInizioRichiesta = new Date(richiesta.startDate);
-          const dataFineRichiesta = new Date(richiesta.endDate);
+          try {
+            if (!richiesta.startDate || !richiesta.endDate) {
+              console.error("Richiesta ferie con date mancanti:", richiesta);
+              return; // Skip questa richiesta
+            }
+            
+            const dataInizioRichiesta = new Date(richiesta.startDate);
+            const dataFineRichiesta = new Date(richiesta.endDate);
           
-          // Per ogni giorno compreso nella richiesta
-          giorniSettimana.forEach(giorno => {
-            const dataCorrente = giorno.data;
-            if (dataCorrente >= dataInizioRichiesta && dataCorrente <= dataFineRichiesta) {
-              if (nuoviDatiGriglia[giorno.nome] && nuoviDatiGriglia[giorno.nome][richiesta.userId]) {
-                // Se è richiesta per l'intera giornata
-                if (richiesta.allDay) {
-                  for (let i = 0; i < nuoviDatiGriglia[giorno.nome][richiesta.userId].celle.length; i++) {
-                    nuoviDatiGriglia[giorno.nome][richiesta.userId].celle[i] = {
-                      tipo: richiesta.type === "vacation" ? "vacation" : "leave",
-                      turnoId: null,
-                      permesso: true
-                    };
+            // Per ogni giorno compreso nella richiesta
+            giorniSettimana.forEach(giorno => {
+              const dataCorrente = giorno.data;
+              if (dataCorrente >= dataInizioRichiesta && dataCorrente <= dataFineRichiesta) {
+                if (nuoviDatiGriglia[giorno.nome] && nuoviDatiGriglia[giorno.nome][richiesta.userId]) {
+                  // Se è richiesta per l'intera giornata
+                  if (richiesta.allDay) {
+                    for (let i = 0; i < nuoviDatiGriglia[giorno.nome][richiesta.userId].celle.length; i++) {
+                      nuoviDatiGriglia[giorno.nome][richiesta.userId].celle[i] = {
+                        tipo: richiesta.type === "vacation" ? "vacation" : "leave",
+                        turnoId: null,
+                        permesso: true
+                      };
+                    }
+                    
+                    nuoviDatiGriglia[giorno.nome][richiesta.userId].note = 
+                      `${richiesta.type === "vacation" ? "Ferie" : "Permesso"} giornata intera`;
+                  } 
+                  // Se è mezza giornata: mattina (prime metà delle celle)
+                  else if (richiesta.halfDay === "morning") {
+                    const metaGiorno = Math.floor(slotOrari.length / 2);
+                    for (let i = 0; i < metaGiorno; i++) {
+                      nuoviDatiGriglia[giorno.nome][richiesta.userId].celle[i] = {
+                        tipo: richiesta.type === "vacation" ? "vacation" : "leave",
+                        turnoId: null,
+                        permesso: true
+                      };
+                    }
+                    
+                    nuoviDatiGriglia[giorno.nome][richiesta.userId].note = 
+                      `${richiesta.type === "vacation" ? "Ferie" : "Permesso"} mattina`;
+                  } 
+                  // Se è mezza giornata: pomeriggio (seconda metà delle celle)
+                  else if (richiesta.halfDay === "afternoon") {
+                    const metaGiorno = Math.floor(slotOrari.length / 2);
+                    for (let i = metaGiorno; i < slotOrari.length - 1; i++) {
+                      nuoviDatiGriglia[giorno.nome][richiesta.userId].celle[i] = {
+                        tipo: richiesta.type === "vacation" ? "vacation" : "leave",
+                        turnoId: null,
+                        permesso: true
+                      };
+                    }
+                    
+                    nuoviDatiGriglia[giorno.nome][richiesta.userId].note = 
+                      `${richiesta.type === "vacation" ? "Ferie" : "Permesso"} pomeriggio`;
                   }
-                  
-                  nuoviDatiGriglia[giorno.nome][richiesta.userId].note = 
-                    `${richiesta.type === "vacation" ? "Ferie" : "Permesso"} giornata intera`;
-                } 
-                // Se è mezza giornata: mattina (prime metà delle celle)
-                else if (richiesta.halfDay === "morning") {
-                  const metaGiorno = Math.floor(slotOrari.length / 2);
-                  for (let i = 0; i < metaGiorno; i++) {
-                    nuoviDatiGriglia[giorno.nome][richiesta.userId].celle[i] = {
-                      tipo: richiesta.type === "vacation" ? "vacation" : "leave",
-                      turnoId: null,
-                      permesso: true
-                    };
-                  }
-                  
-                  nuoviDatiGriglia[giorno.nome][richiesta.userId].note = 
-                    `${richiesta.type === "vacation" ? "Ferie" : "Permesso"} mattina`;
-                } 
-                // Se è mezza giornata: pomeriggio (seconda metà delle celle)
-                else if (richiesta.halfDay === "afternoon") {
-                  const metaGiorno = Math.floor(slotOrari.length / 2);
-                  for (let i = metaGiorno; i < slotOrari.length - 1; i++) {
-                    nuoviDatiGriglia[giorno.nome][richiesta.userId].celle[i] = {
-                      tipo: richiesta.type === "vacation" ? "vacation" : "leave",
-                      turnoId: null,
-                      permesso: true
-                    };
-                  }
-                  
-                  nuoviDatiGriglia[giorno.nome][richiesta.userId].note = 
-                    `${richiesta.type === "vacation" ? "Ferie" : "Permesso"} pomeriggio`;
                 }
               }
-            }
-          });
+            });
+          } catch (error) {
+            console.error("Errore nel processare la richiesta di ferie:", richiesta, error);
+          }
         });
     }
     
