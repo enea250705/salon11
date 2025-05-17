@@ -39,12 +39,9 @@ export function downloadPdf(filename: string, base64Data: string, mode: 'downloa
       document.body.removeChild(link);
       console.log(`Download avviato: ${filename}`);
     } else {
-      // Modalità open: apri in una nuova scheda
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Modalità open: apri in una nuova scheda usando window.open()
+      // Questo approccio evita problemi di intercettazione da parte dei router
+      window.open(dataUrl, '_blank', 'noopener,noreferrer');
       console.log(`PDF aperto in nuova scheda: ${filename}`);
     }
   } catch (error) {
