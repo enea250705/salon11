@@ -796,6 +796,7 @@ export function ExcelGrid({
                         )
                       ))}
                       <th className="p-2 text-left font-medium">Note</th>
+                      <th className="p-2 text-center font-medium bg-green-100 text-green-800">TOTALE ORE</th>
                     </tr>
                   </thead>
                   <tbody>
