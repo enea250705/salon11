@@ -69,9 +69,24 @@ export function DocumentList() {
   // Funzione per scaricare un documento
   const handleDownload = (document: any) => {
     const { type, period, fileData, userId } = document;
+    
+    // Verifica se il documento ha dati
+    if (!fileData) {
+      console.error("Errore: document.fileData non disponibile:", document);
+      toast({
+        title: "Errore nel download",
+        description: "Impossibile scaricare il documento. Dati PDF mancanti.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Ottieni il nome dipendente corretto
     const employeeName = isAdmin 
       ? users.find((u: any) => u.id === userId)?.name || `Utente ${userId}`
-      : user?.name || "";
+      : user?.fullName || user?.username || "";
+    
+    console.log("Download documento:", { type, period, userId, employeeName, fileDataLength: fileData.length });
       
     let filename = "";
     if (type === "payslip") {
@@ -82,7 +97,20 @@ export function DocumentList() {
       filename = `documento_${period}.pdf`;
     }
     
-    downloadPdf(filename, fileData);
+    try {
+      downloadPdf(filename, fileData);
+      toast({
+        title: "Download avviato",
+        description: "Il documento viene scaricato sul tuo dispositivo",
+      });
+    } catch (error) {
+      console.error("Errore durante il download:", error);
+      toast({
+        title: "Errore nel download",
+        description: "Si è verificato un problema durante il download del documento",
+        variant: "destructive",
+      });
+    }
   };
   
   // Funzione per eliminare un documento (solo admin)
