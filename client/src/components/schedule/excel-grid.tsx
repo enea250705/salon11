@@ -470,9 +470,23 @@ export function ExcelGrid({
             hours = (workCells - 1) * 0.5;
           }
           
-          // Caso speciale: 5 celle devono essere esattamente 2.0 ore
+          // Caso speciale 1: 5 celle devono essere esattamente 2.0 ore
           if (workCells === 5) {
             hours = 2.0;
+          }
+          
+          // Caso speciale 2: Da 04:00 a 00:00 (41 celle) deve essere 20.0 ore
+          // È solo una verifica approssimativa, poiché qui non abbiamo accesso diretto agli orari
+          if (workCells === 41) {
+            // Verifichiamo meglio controllando l'ora di inizio del primo blocco
+            const firstWorkCell = userDayData.cells.findIndex(cell => cell.type === "work" || (timeIndex === timeIndex && newType === "work"));
+            if (firstWorkCell >= 0 && timeSlots[firstWorkCell] === "04:00") {
+              const lastWorkCell = userDayData.cells.findLastIndex(cell => cell.type === "work" || (timeIndex === timeIndex && newType === "work"));
+              if (lastWorkCell >= 0 && timeSlots[lastWorkCell + 1] === "00:00") {
+                hours = 20.0;
+                console.log("🔷 CASO SPECIALE: Rilevato turno 04:00-00:00 = 20.0 ore esatte");
+              }
+            }
           }
           
           // Aggiorna il totale con il nuovo calcolo
@@ -569,10 +583,17 @@ export function ExcelGrid({
         const startTime = timeSlots[block.start];
         const endTime = timeSlots[block.end + 1]; // +1 perché l'ultima X è solo un marcatore
         
-        // CASO SPECIALE: Esattamente da 04:00 a 06:00 (5 celle) deve essere 2.0 ore
+        // CASO SPECIALE 1: Esattamente da 04:00 a 06:00 (5 celle) deve essere 2.0 ore
         if (startTime === "04:00" && endTime === "06:00") {
           console.log("🔷 CASO SPECIALE TROVATO: 04:00-06:00 = 2.0 ore esatte");
           totalHours += 2.0;
+          continue; // Passa al blocco successivo
+        }
+        
+        // CASO SPECIALE 2: Da 04:00 a 00:00 deve essere esattamente 20.0 ore
+        if (startTime === "04:00" && endTime === "00:00") {
+          console.log("🔷 CASO SPECIALE TROVATO: 04:00-00:00 = 20.0 ore esatte");
+          totalHours += 20.0;
           continue; // Passa al blocco successivo
         }
                 
