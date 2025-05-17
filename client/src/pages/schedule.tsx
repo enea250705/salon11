@@ -148,7 +148,6 @@ export default function Schedule() {
   const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
   const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showExportPdfDialog, setShowExportPdfDialog] = useState(false);
   
   // QUERY MIGLIORATA: Fetch existing schedule data for the selected week
   // Manteniamo una scheduleId corrente per garantire il caricamento corretto

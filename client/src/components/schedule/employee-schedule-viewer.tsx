@@ -181,16 +181,6 @@ export function EmployeeScheduleViewer({ schedule, shifts, userShifts }: Employe
       <CardHeader className="flex flex-col sm:flex-row items-center justify-between gap-2 pb-2 pt-4 sm:pt-6">
         <CardTitle className="text-base sm:text-lg font-medium">I Miei Turni</CardTitle>
         <div className="flex flex-col xs:flex-row gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportPDF}
-            disabled={isExporting || !schedule}
-            className="text-xs"
-          >
-            <span className="material-icons text-xs sm:text-sm mr-1">download</span>
-            {isExporting ? "Esportazione..." : "Scarica PDF"}
-          </Button>
           <div className="flex bg-gray-100 rounded-md p-0.5">
             <Button
               variant={view === "week" ? "default" : "ghost"}
