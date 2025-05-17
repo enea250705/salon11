@@ -1,0 +1,14 @@
+1. Rimuovere i pulsanti "Esporta PDF" e "Esporta tutte le settimane" dalla pianificazione turni
+2. Rimuovere il pulsante "Scarica PDF" dalla vista dei dipendenti
+
+POSIZIONE DEI PULSANTI NELLA PIANIFICAZIONE:
+- Nel file client/src/pages/schedule.tsx nella sezione con i pulsanti di azione
+- Pulsanti identificati come "Esporta PDF" e "Esporta tutte le settimane"
+
+POSIZIONE DEL PULSANTE NELLA VISTA DIPENDENTI:
+- Nel file client/src/components/schedule/employee-schedule-viewer.tsx
+- Pulsante identificato come "Scarica PDF" o simile
+
+AZIONI DA INTRAPRENDERE:
+1. Nel file client/src/components/schedule/employee-schedule-viewer.tsx, rimuovere completamente il pulsante "Scarica PDF" ✓
+2. Nel file client/src/pages/schedule.tsx, rimuovere i pulsanti "Esporta PDF" e "Esporta tutte le settimane" ✓

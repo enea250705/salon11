@@ -15,7 +15,6 @@ import { WeekSelectorDialog } from "@/components/schedule/week-selector-dialog";
 import { ScheduleAutoGenerator } from "@/components/schedule/auto-generator/auto-generator";
 import { ExcelGrid } from "@/components/schedule/excel-grid";
 
-
 // Date utilities
 import { format, startOfWeek, addDays, isBefore, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
@@ -279,8 +278,6 @@ export default function Schedule() {
   // State for creating a new schedule
   const [creatingNewSchedule, setCreatingNewSchedule] = useState(false);
   
-
-  
   // State for week selector dialog
   const [showWeekSelector, setShowWeekSelector] = useState(false);
   
@@ -403,56 +400,52 @@ export default function Schedule() {
     if (!customStartDate || !customEndDate) {
       toast({
         title: "Date mancanti",
-        description: "Seleziona una data di inizio e di fine per la nuova pianificazione.",
+        description: "Seleziona le date di inizio e fine per la pianificazione",
         variant: "destructive",
       });
       return;
     }
     
-    // Log delle date selezionate per debug
-    console.log("🗓️ Date selezionate per nuovo schedule:", { 
-      startDate: format(customStartDate, "yyyy-MM-dd"), 
-      endDate: format(customEndDate, "yyyy-MM-dd") 
-    });
-    
-    // Nascondi il selettore di date
-    setShowDatePicker(false);
-    
-    // Mostra subito il costruttore di pianificazione
-    setShowScheduleBuilder(true);
-    
-    // FASE 1: PULIZIA CACHE E PREPARAZIONE
-    // Se stiamo creando un nuovo schedule, puliamo completamente la cache
-    if (creatingNewSchedule) {
-      queryClient.clear(); // Pulizia totale per evitare conflitti
+    // Se la data di inizio è dopo la data di fine, mostriamo un errore
+    if (isBefore(customEndDate, customStartDate)) {
+      toast({
+        title: "Date non valide",
+        description: "La data di fine deve essere successiva alla data di inizio",
+        variant: "destructive",
+      });
+      return;
     }
     
-    // Crea la struttura dati per il nuovo schedule
-    const newScheduleData = {
-      startDate: format(customStartDate, "yyyy-MM-dd"),
-      endDate: format(customEndDate, "yyyy-MM-dd"),
-      isPublished: false,
-      createdBy: user?.id,
-    };
-    
-    console.log("🏗️ Creazione nuovo schedule con il sistema migliorato:", newScheduleData);
-    
-    // FASE 2: INVOCAZIONE ENDPOINT MIGLIORATO
-    // Usa il nuovo endpoint che garantisce la pulizia completa e l'unicità
-    createScheduleMutation.mutate(newScheduleData, {
-      onSuccess: async (response) => {
-        try {
-          // Converti la risposta in JSON
-          const data = await response.json();
-          console.log("✅ CREAZIONE SCHEDULE COMPLETATA:", data);
+    try {
+      // Prepara i dati per la creazione
+      const formattedStartDate = format(customStartDate, "yyyy-MM-dd");
+      const formattedEndDate = format(customEndDate, "yyyy-MM-dd");
+      
+      // Dati dello schedule
+      const newScheduleData = {
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+        isPublished: false,
+      };
+      
+      console.log(`🆕 Creazione nuovo schedule: ${formattedStartDate} - ${formattedEndDate}`);
+      
+      // FASE 1: CREAZIONE NUOVA PIANIFICAZIONE SUL SERVER
+      // Usiamo apiRequest direttamente per maggiore controllo
+      apiRequest("POST", "/api/schedules/new-empty", newScheduleData)
+        .then((data: any) => {
+          console.log("✅ Nuovo schedule vuoto creato con ID:", data.id);
           
-          // Imposta esplicitamente l'ID della pianificazione corrente
-          setCurrentScheduleId(data.id);
-          
-          // Forza il reset completo della griglia
+          // FASE 2: AGGIORNAMENTO DELLO STATO E PREPARAZIONE UI
+          // Passare all'interfaccia di pianificazione con la griglia vuota
+          setCreatingNewSchedule(false);
+          setShowDatePicker(false);
           setForceResetGrid(true);
           
-          // Pre-carica lo schedule nella cache di React Query
+          // Aggiorna l'ID corrente
+          setCurrentScheduleId(data.id);
+          
+          // Ri-carica lo schedule nella cache di React Query
           queryClient.setQueryData(["/api/schedules", { id: data.id }], data);
           
           // Notifica all'utente
@@ -477,27 +470,23 @@ export default function Schedule() {
             // Usa parametri URL più espliciti e aggiungi currentScheduleId in modo esplicito
             window.location.href = `/schedule?reset=true&id=${data.id}&scheduleId=${data.id}&currentScheduleId=${data.id}&newSchedule=${data.id}&date=${format(customStartDate!, "yyyy-MM-dd")}&forceEmpty=true&refreshed=true&ts=${timestamp}`;
           }, 1000);
-        } catch (err) {
+        })
+        .catch(err => {
           console.error("❌ Errore nella gestione dello schedule:", err);
           toast({
-            title: "Errore di elaborazione",
-            description: "Problema nel caricamento del nuovo turno. Riprova tra qualche secondo.",
-            variant: "destructive"
+            title: "Errore",
+            description: "Si è verificato un errore durante la creazione della pianificazione.",
+            variant: "destructive",
           });
-        }
-      },
-      onError: (error) => {
-        console.error("❌ Errore nella creazione dello schedule:", error);
-        toast({
-          title: "Errore",
-          description: "Impossibile creare la pianificazione. Verificare le date e riprovare.",
-          variant: "destructive",
         });
-        // Reset dello stato
-        setCreatingNewSchedule(false);
-        setShowScheduleBuilder(false);
-      }
-    });
+    } catch (err) {
+      console.error("❌ Errore nella gestione dello schedule:", err);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la creazione della pianificazione.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Funzione per recuperare i turni di uno schedule specifico
@@ -514,188 +503,46 @@ export default function Schedule() {
     }
   };
 
-  // Funzione per aprire il dialogo di esportazione PDF di tutte le settimane
-  const handleExportAllToPdf = () => {
-    setShowExportPdfDialog(true);
-  };
-  
-  // Handle PDF export per la settimana corrente
-  const handleExportPdf = () => {
-    if (!existingSchedule || !users || !shifts) return;
-    
-    // Create PDF content
-    let pdfContent = `
-      <html>
-      <head>
-        <title>Pianificazione Turni</title>
-        <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          h1 { color: #333; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #f2f2f2; }
-          .header { display: flex; justify-content: space-between; }
-          .working { background-color: #e6f7ff; }
-          .vacation { background-color: #f6ffed; }
-          .leave { background-color: #fff2e8; }
-          .legend { margin: 10px 0; display: flex; gap: 15px; }
-          .legend-item { display: flex; align-items: center; font-size: 12px; }
-          .legend-color { display: inline-block; width: 16px; height: 16px; margin-right: 5px; border: 1px solid #ccc; }
-          .name-cell { width: 150px; }
-          .total-cell { width: 80px; }
-        </style>
-      </head>
-      <body>
-        <h1>Pianificazione Turni: ${format(new Date(existingSchedule.startDate), "d MMMM", { locale: it })} - ${format(new Date(existingSchedule.endDate), "d MMMM yyyy", { locale: it })}</h1>
-        
-        <div class="header">
-          <div>
-            <p>Data: ${format(new Date(), "dd/MM/yyyy")}</p>
-            <p>Stato: ${existingSchedule.isPublished ? 'Pubblicato' : 'Bozza'}</p>
-          </div>
-        </div>
-        
-        <div class="legend">
-          <div class="legend-item"><span class="legend-color working"></span> In servizio (X)</div>
-          <div class="legend-item"><span class="legend-color vacation"></span> Ferie (F)</div>
-          <div class="legend-item"><span class="legend-color leave"></span> Permesso (P)</div>
-        </div>
-        
-        <table>
-          <thead>
-            <tr>
-              <th class="name-cell">Dipendente</th>
-              <th>Lunedì</th>
-              <th>Martedì</th>
-              <th>Mercoledì</th>
-              <th>Giovedì</th>
-              <th>Venerdì</th>
-              <th>Sabato</th>
-              <th>Domenica</th>
-              <th class="total-cell">Totale Ore</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-    
-    // Add employee rows with shift summary
-    users
-      .filter((user: any) => user.role === "employee" && user.isActive)
-      .forEach((user: any) => {
-        let userTotalHours = 0;
-        
-        pdfContent += `
-          <tr>
-            <td class="name-cell">${user.fullName || user.username}</td>
-        `;
-        
-        // Add days of week
-        ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'].forEach(day => {
-          // Mappatura tra il nome del giorno e il formato yyyy-MM-dd
-          const dayIndex = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'].indexOf(day);
-          if (dayIndex === -1) return;
-          
-          const dateObj = new Date(existingSchedule.startDate);
-          dateObj.setDate(dateObj.getDate() + dayIndex);
-          const formattedDate = format(dateObj, "yyyy-MM-dd");
-          
-          const userShifts = shifts.filter((s: any) => s.userId === user.id && s.day === formattedDate);
-          let daySummary = '-';
-          let cellClass = '';
-          
-          if (userShifts.length > 0) {
-            // Sort shifts by start time
-            userShifts.sort((a: any, b: any) => {
-              return a.startTime.localeCompare(b.startTime);
-            });
-            
-            // Get first and last shift
-            const firstShift = userShifts[0];
-            const lastShift = userShifts[userShifts.length - 1];
-            
-            // Determine shift type for cell color
-            if (firstShift.type === 'work') {
-              cellClass = 'working';
-              daySummary = `${firstShift.startTime} - ${lastShift.endTime}`;
-              
-              // Calculate hours for this day using utility function
-              let dayHours = 0;
-              userShifts.forEach(shift => {
-                dayHours += calculateWorkHours(shift.startTime, shift.endTime);
-              });
-              
-              // Add to total
-              userTotalHours += dayHours;
-            } else if (firstShift.type === 'vacation') {
-              cellClass = 'vacation';
-              daySummary = 'Ferie';
-            } else if (firstShift.type === 'leave') {
-              cellClass = 'leave';
-              daySummary = 'Permesso';
-            }
-          }
-          
-          pdfContent += `<td class="${cellClass}">${daySummary}</td>`;
-        });
-        
-        // Add total hours with proper formatting
-        pdfContent += `<td class="total-cell">${formatHours(userTotalHours)}</td></tr>`;
-      });
-    
-    pdfContent += `
-          </tbody>
-        </table>
-      </body>
-      </html>
-    `;
-    
-    // Create a blob and download
-    const blob = new Blob([pdfContent], { type: 'text/html' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `pianificazione_${format(new Date(existingSchedule.startDate), "yyyy-MM-dd")}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="text-center">
-          <span className="material-icons text-primary animate-spin text-4xl">sync</span>
-          <p className="mt-4 text-gray-600">Caricamento...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <Layout>
-      <div className="space-y-6">
-        <WeekSelectorDialog 
-          open={showWeekSelector}
-          onOpenChange={setShowWeekSelector}
-          schedules={allSchedules || []}
-          onSelectSchedule={handleSelectSchedule}
-        />
-        
-        {isScheduleLoading || isUsersLoading || isShiftsLoading ? (
-          <div className="flex items-center justify-center h-64 bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="text-center">
-              <span className="material-icons text-primary animate-spin text-4xl">sync</span>
-              <p className="mt-4 text-gray-600">Caricamento pianificazione...</p>
-            </div>
-          </div>
-        ) : showScheduleBuilder && !existingSchedule ? (
+      <div className="py-6 px-4 md:px-6 max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <ExcelGrid
-              scheduleId={null}
-              users={users || []}
-              startDate={selectedWeek}
-              endDate={endOfWeek}
-              shifts={[]}
-              timeOffRequests={timeOffRequests || []}
+            <h1 className="text-2xl font-bold mb-1">Pianificazione Turni</h1>
+            <p className="text-gray-500">
+              {existingSchedule?.startDate ? (
+                <>
+                  {format(new Date(existingSchedule.startDate), "d MMMM", { locale: it })} - {format(new Date(existingSchedule.endDate), "d MMMM yyyy", { locale: it })}
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {existingSchedule.isPublished ? "Pubblicato" : "Bozza"}
+                  </span>
+                </>
+              ) : (
+                "Seleziona o crea una settimana"
+              )}
+            </p>
+          </div>
+          {existingSchedule?.id && !existingSchedule.isPublished && (
+            <Button
+              onClick={handlePublish}
+              disabled={publishScheduleMutation.isPending}
+              className="mt-4 md:mt-0 w-full md:w-auto"
+            >
+              {publishScheduleMutation.isPending ? "Pubblicazione..." : "Pubblica Turni"}
+            </Button>
+          )}
+        </div>
+
+        {isScheduleLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        ) : showAutoGenerator ? (
+          <div>
+            <ScheduleAutoGenerator
+              onClose={() => setShowAutoGenerator(false)}
+              startDate={customStartDate!}
+              endDate={customEndDate!}
               isPublished={false}
               onPublish={() => {}}
             />
@@ -713,8 +560,6 @@ export default function Schedule() {
               onPublish={handlePublish}
               forceResetGrid={forceResetGrid || isLoadingNewSchedule}
             />
-            
-
             
             {/* Pulsanti di azione posizionati sotto la tabella */}
             <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 mt-6 pt-4 border-t border-gray-200">
@@ -736,7 +581,6 @@ export default function Schedule() {
                 <span className="material-icons text-xs sm:text-sm mr-1">add</span>
                 Nuovo turno settimanale
               </Button>
-
             </div>
           </div>
         ) : (
