@@ -9,31 +9,47 @@ import { useLocation } from 'wouter';
 export function ScrollToTop() {
   const [location] = useLocation();
 
+  // Scroll immediatamente quando cambia la rotta
   useEffect(() => {
-    // When location changes, scroll to top
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+    // Scroll to top immediatamente quando cambia la location
+    window.scrollTo(0, 0);
+    
+    // Anche con un piccolo ritardo per assicurarsi che funzioni dopo il rendering
+    const timeoutId = setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 10);
+    
+    return () => clearTimeout(timeoutId);
   }, [location]);
 
-  // Handle page refresh
+  // Handle page refresh e primo caricamento
   useEffect(() => {
-    // Set up an event that runs once when the page loads
-    const handlePageLoad = () => {
-      window.scrollTo({
-        top: 0,
-        behavior: 'auto' // Use 'auto' for refresh to avoid visible animation
-      });
+    // Funzione che imposta la posizione dello scroll all'inizio
+    const resetScroll = () => {
+      // Scroll immediato (senza animazioni)
+      window.scrollTo(0, 0);
+      
+      // Anche con un ritardo per assicurarsi che funzioni dopo il rendering del DOM
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 50);
     };
 
-    // Call immediately and also attach to load event
-    handlePageLoad();
-    window.addEventListener('load', handlePageLoad);
-
-    // Clean up
+    // Esegui subito al montaggio del componente
+    resetScroll();
+    
+    // Eventi da monitorare per il reset dello scroll
+    window.addEventListener('load', resetScroll);
+    window.addEventListener('beforeunload', resetScroll);
+    
+    // Applica anche quando le pagine vengono ripristinate dallo storico
+    window.addEventListener('popstate', resetScroll);
+    
+    // Clean up degli event listener
     return () => {
-      window.removeEventListener('load', handlePageLoad);
+      window.removeEventListener('load', resetScroll);
+      window.removeEventListener('beforeunload', resetScroll);
+      window.removeEventListener('popstate', resetScroll);
     };
   }, []);
 
