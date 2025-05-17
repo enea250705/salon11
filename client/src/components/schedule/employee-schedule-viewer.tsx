@@ -356,10 +356,10 @@ export function EmployeeScheduleViewer({ schedule, shifts, userShifts }: Employe
                                 
                                 return (
                                   <>
-                                    {/* Mostra totale ore se ci sono turni di lavoro */}
+                                    {/* Info sui turni di lavoro - senza ore */}
                                     {workShifts.length > 0 && (
                                       <div className="font-medium text-sm mb-2">
-                                        Ore: {manualTotal.toFixed(1)}h
+                                        Turni di lavoro:
                                       </div>
                                     )}
                                     
