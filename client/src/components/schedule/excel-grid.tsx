@@ -4,12 +4,7 @@ import { it } from "date-fns/locale";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { generateTimeSlots, calculateWorkHours, calculateHoursFromCells, formatHours, timeToMinutes } from "@/lib/utils";
-
-// Funzione corretta per calcolare le ore che applica la regola "primo X = 0 ore"
-function calculateActualHours(startTime: string, endTime: string): number {
-  return calculateWorkHours(startTime, endTime);
-}
+import { generateTimeSlots, calculateWorkHours, calculateHoursFromCells, formatHours } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -255,8 +250,8 @@ export function ExcelGrid({
               // Aggiorna il conteggio delle ore (solo per il tipo "work")
               if (shift.type === "work") {
                 try {
-                  // Calcola correttamente la durata in ore usando la funzione con la regola "primo X = 0 ore"
-                  const hours = calculateActualHours(shift.startTime, shift.endTime);
+                  // Calcola correttamente la durata in ore (ad es. 4.5 per 4 ore e 30 minuti)
+                  const hours = calculateWorkHours(shift.startTime, shift.endTime);
                   
                   // Correggiamo il calcolo arrotondando a 2 decimali per evitare errori di approssimazione
                   const roundedHours = Math.round(hours * 100) / 100;
