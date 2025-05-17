@@ -11,8 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WeekSelectorDialog } from "@/components/schedule/week-selector-dialog";
 import { formatHours, calculateTotalWorkHours } from "@/lib/utils";
-import { ProssimiTurni } from "@/components/schedule/prossimi-turni";
-import { TurniTable } from "@/components/schedule/turni-table";
 
 export default function MySchedule() {
   const { user } = useAuth();
@@ -163,20 +161,12 @@ export default function MySchedule() {
           </div>
           
           {/* Colonna destra con visualizzatore turni */}
-          <div className="md:col-span-2 space-y-6">
-            {/* Nuova tabella turni (visualizzazione semplificata) */}
-            {currentSchedule && (
-              <TurniTable
-                scheduleId={currentSchedule?.id || null}
-                users={user ? [user] : []} // Solo l'utente corrente, se definito
-                startDate={currentSchedule ? new Date(currentSchedule.startDate) : new Date()}
-                endDate={currentSchedule ? new Date(currentSchedule.endDate) : new Date()}
-                shifts={userShifts || []}
-                timeOffRequests={[]}
-                isPublished={true}
-                isAdminView={false}
-              />
-            )}
+          <div className="md:col-span-2">
+            <EmployeeScheduleViewer
+              schedule={currentSchedule}
+              shifts={allShifts}
+              userShifts={userShifts}
+            />
           </div>
         </div>
         

@@ -691,8 +691,7 @@ export default function Schedule() {
           </div>
         ) : showScheduleBuilder && !existingSchedule ? (
           <div>
-            {/* Nuova tabella turni in modalità creazione */}
-            <TurniTable
+            <ExcelGrid
               scheduleId={null}
               users={users || []}
               startDate={selectedWeek}
@@ -701,13 +700,11 @@ export default function Schedule() {
               timeOffRequests={timeOffRequests || []}
               isPublished={false}
               onPublish={() => {}}
-              isAdminView={true}
             />
           </div>
         ) : existingSchedule && !showDatePicker && !creatingNewSchedule ? (
           <div>
-            {/* Nuova tabella turni completamente ricostruita */}
-            <TurniTable
+            <ExcelGrid
               scheduleId={existingSchedule?.id || null}
               users={users || []}
               startDate={existingSchedule?.startDate ? new Date(existingSchedule.startDate) : selectedWeek}
@@ -716,7 +713,7 @@ export default function Schedule() {
               timeOffRequests={timeOffRequests || []}
               isPublished={existingSchedule?.isPublished || false}
               onPublish={handlePublish}
-              isAdminView={true}
+              forceResetGrid={forceResetGrid || isLoadingNewSchedule}
             />
             
             {/* Dialogo di esportazione PDF */}
