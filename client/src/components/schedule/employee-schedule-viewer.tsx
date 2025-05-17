@@ -217,10 +217,37 @@ export function EmployeeScheduleViewer({ schedule, shifts, userShifts }: Employe
       
       {/* Dettagli pianificazione */}
       <div className="px-4 sm:px-6 pb-2 pt-0">
-        <p className="text-xs sm:text-sm text-gray-500 mb-4 text-center sm:text-left">
-          <span className="material-icons text-xs align-middle mr-1">calendar_today</span>
-          {format(startDate, "d MMM", { locale: it })} - {format(endDate, "d MMM yyyy", { locale: it })}
-        </p>
+        <div className="flex flex-col sm:flex-row justify-between items-center">
+          <p className="text-xs sm:text-sm text-gray-500 mb-4 text-center sm:text-left">
+            <span className="material-icons text-xs align-middle mr-1">calendar_today</span>
+            {format(startDate, "d MMM", { locale: it })} - {format(endDate, "d MMM yyyy", { locale: it })}
+          </p>
+          {/* Visualizzatore ore totali */}
+          {(() => {
+            // Calcola il totale delle ore settimanali
+            let totalWeekHours = 0;
+            
+            // Iteriamo su tutti i giorni e calcoliamo il totale delle ore
+            Object.values(shiftsByDay).forEach(dayShifts => {
+              if (Array.isArray(dayShifts) && dayShifts.length > 0) {
+                // Filtra solo i turni di lavoro
+                const workShifts = dayShifts.filter(s => s.type === "work");
+                
+                // Usa la funzione di calcolo delle ore
+                totalWeekHours += calculateTotalWorkHours(workShifts);
+              }
+            });
+            
+            // Se ci sono ore, mostra il totale
+            return (
+              <div className="bg-blue-50 text-blue-700 border border-blue-200 rounded-md px-3 py-2 flex items-center">
+                <span className="material-icons text-xs mr-1">schedule</span>
+                <span className="font-medium">Totale ore:</span>
+                <span className="ml-2 font-bold">{formatHours(totalWeekHours)}</span>
+              </div>
+            );
+          })()}
+        </div>
       </div>
       
       <CardContent className="pb-6 pt-0" id="scheduleContent">
