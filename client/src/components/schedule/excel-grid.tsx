@@ -602,6 +602,7 @@ export function ExcelGrid({
         
         // Numero di celle nel blocco
         const numCells = block.end - block.start + 1;
+        console.log(`🔢 Calcolo ore per blocco di ${numCells} celle...`);
         
         // Assicuriamoci che timeSlots contenga gli indici necessari
         if (block.start >= timeSlots.length || (block.end + 1) >= timeSlots.length) {
@@ -629,7 +630,11 @@ export function ExcelGrid({
         }
         // Caso standard: utilizzo della funzione di calcolo basata sul numero di celle
         else {
+          // Usa direttamente la funzione importata da hours-calculator.ts
+          // Questa funzione implementa tutte le regole corrette
+          const { calculateHoursFromCells } = require("@/lib/hours-calculator");
           hoursForThisBlock = calculateHoursFromCells(numCells);
+          console.log(`🧮 Importato calculateHoursFromCells da hours-calculator.ts: ${numCells} celle = ${hoursForThisBlock} ore`);
         }
         
         console.log(`📋 Blocco da ${startTime} a ${endTime} (${numCells} celle) = ${hoursForThisBlock} ore`);
