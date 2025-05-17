@@ -856,6 +856,37 @@ export function ExcelGrid({
                 </table>
               </div>
               
+              {/* Calcolo e visualizzazione del totale ore settimanale */}
+              <div className="mt-6 overflow-auto rounded-lg bg-muted/20 p-4 border shadow-sm">
+                <h3 className="text-lg font-semibold mb-3 flex items-center text-green-800">
+                  <span className="material-icons mr-2">calculate</span>
+                  Riepilogo ore settimanali
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {users
+                    .filter(user => user.role === "employee" && user.isActive)
+                    .map(user => {
+                      // Calcola il totale delle ore settimanali per l'utente
+                      let weeklyTotal = 0;
+                      weekDays.forEach(day => {
+                        weeklyTotal += gridData[day.name]?.[user.id]?.total || 0;
+                      });
+                      
+                      return (
+                        <div key={user.id} className="p-3 bg-white rounded-md shadow-sm border flex justify-between items-center">
+                          <div className="font-medium">{user.fullName || user.username}</div>
+                          <div className="flex items-center bg-green-50 px-3 py-1 rounded-full text-green-700 font-bold">
+                            <span className="material-icons mr-1 text-green-600">schedule</span>
+                            {formatHours(weeklyTotal)}
+                          </div>
+                        </div>
+                      );
+                    })
+                  }
+                </div>
+              </div>
+              
               <div className="mt-4 text-xs text-muted-foreground">
                 <div className="flex flex-wrap gap-2 sm:gap-4">
                   <div className="flex items-center">
