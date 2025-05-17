@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { WeekSelectorDialog } from "@/components/schedule/week-selector-dialog";
 import { ScheduleAutoGenerator } from "@/components/schedule/auto-generator/auto-generator";
 import { ExcelGrid } from "@/components/schedule/excel-grid";
+import { TurniTable } from "@/components/schedule/turni-table";
 import { ExportToPdfDialog } from "@/components/schedule/export-to-pdf";
 
 // Date utilities
