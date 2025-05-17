@@ -558,19 +558,25 @@ export function ExcelGrid({
       let blockStartIdx: number | null = null;
       
       // Scorriamo le celle per trovare tutti i blocchi di celle contigue tipo "work"
+      console.log(`🔍 Analisi celle per trovare blocchi contigui tipo "work". Totale celle: ${updatedCells.length}`);
+      console.log(`🔍 Mappa celle: ${updatedCells.map((c, idx) => `${idx}:${c.type || '-'}`).join(' ')}`);
+      
       for (let i = 0; i < updatedCells.length; i++) {
         if (updatedCells[i].type === "work") {
           // Se non abbiamo ancora un indice di inizio, iniziamo un nuovo blocco
           if (blockStartIdx === null) {
             blockStartIdx = i;
+            console.log(`🔍 Inizio nuovo blocco a indice ${i}, orario ${timeSlots[i]}`);
           }
           
           // Se siamo all'ultima cella e abbiamo un blocco in corso, lo chiudiamo
           if (i === updatedCells.length - 1 && blockStartIdx !== null) {
+            console.log(`🔍 Fine blocco all'ultima cella ${i}, orario ${timeSlots[i]}-${timeSlots[i+1]}`);
             workBlocks.push({ start: blockStartIdx, end: i });
           }
         } else if (blockStartIdx !== null) {
           // Abbiamo trovato la fine di un blocco
+          console.log(`🔍 Fine blocco a indice ${i-1}, orario ${timeSlots[i-1]}-${timeSlots[i]}`);
           workBlocks.push({ start: blockStartIdx, end: i - 1 });
           blockStartIdx = null;
         }
@@ -621,11 +627,25 @@ export function ExcelGrid({
       
       // FASE 3: Se non abbiamo trovato blocchi, il totale è 0
       if (workBlocks.length === 0) {
-        console.log("Nessun blocco di tipo 'work' trovato, totale ore = 0");
+        console.log("❌ Nessun blocco di tipo 'work' trovato, totale ore = 0");
+        totalHours = 0;
+      } else {
+        console.log(`✅ Calcolo completato. Totale ore per ${day}: ${totalHours}`);
       }
       
       // Arrotondiamo a 2 decimali per evitare errori di precisione
       userDayData.total = Math.round(totalHours * 100) / 100;
+      
+      // Aggiunta: verifica finali di debug
+      console.log(`🏁 TOTALE ORE per ${userId} in ${day}: ${userDayData.total} ore`);
+      console.log(`🏁 Tutte le celle: ${updatedCells.map(c => c.type || '-').join('|')}`);
+      
+      // Assicuriamoci che non ci siano NaN o undefined
+      if (isNaN(userDayData.total)) {
+        console.error("⚠️ ERRORE: Totale ore è NaN!");
+        userDayData.total = 0;
+      }
+      
       userDayData.cells = updatedCells;
       
       // Questa riga non serve più perché aggiorniamo già le celle sopra
