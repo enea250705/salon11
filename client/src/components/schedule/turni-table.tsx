@@ -48,16 +48,34 @@ export function TurniTable({
   const timeSlots = generateTimeSlots(4, 24);
   
   // Preparazione giorni della settimana
-  const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date(startDate);
-    date.setDate(date.getDate() + i);
-    return {
-      date,
-      name: format(date, "EEEE", { locale: it }),
-      shortName: format(date, "EEE", { locale: it }),
-      formattedDate: format(date, "dd/MM")
-    };
-  });
+  const weekDays = (() => {
+    try {
+      // Verifica che le date siano valide
+      if (!(startDate instanceof Date) || isNaN(startDate.getTime()) || 
+          !(endDate instanceof Date) || isNaN(endDate.getTime())) {
+        console.error("Date non valide", { startDate, endDate });
+        return [];
+      }
+      
+      // Calcola il numero di giorni tra inizio e fine
+      const days = Math.min(7, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+      
+      // Crea l'array di giorni
+      return Array.from({ length: days }, (_, i) => {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i);
+        return {
+          date,
+          name: format(date, "EEEE", { locale: it }),
+          shortName: format(date, "EEE", { locale: it }),
+          formattedDate: format(date, "dd/MM")
+        };
+      });
+    } catch (error) {
+      console.error("Errore nella generazione dei giorni", error);
+      return [];
+    }
+  })();
   
   // State per il giorno selezionato
   const [selectedDay, setSelectedDay] = useState(0);
