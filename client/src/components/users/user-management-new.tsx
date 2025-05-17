@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { navigateTo } from "@/lib/navigation";
 import { User } from "@shared/schema";
 import { Loader2, Search, Edit, UserPlus, CheckCircle, XCircle, Upload, Users, MoreVertical, Key } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -93,14 +94,14 @@ export function UserManagement() {
     currentPage * usersPerPage
   );
   
-  // Handle edit user - reindirizza alla pagina dedicata
+  // Handle edit user - reindirizza alla pagina dedicata usando la funzione di navigazione avanzata
   const handleEditUser = (user: User) => {
-    setLocation(`/users/edit?userId=${user.id}`);
+    navigateTo(`/users/edit?userId=${user.id}`, setLocation);
   };
   
-  // Handle change password - reindirizza alla pagina dedicata
+  // Handle change password - reindirizza alla pagina dedicata usando la funzione di navigazione avanzata
   const handleChangePassword = (user: User) => {
-    setLocation(`/users/change-password?userId=${user.id}`);
+    navigateTo(`/users/change-password?userId=${user.id}`, setLocation);
   };
   
   // Format last login date
@@ -133,7 +134,7 @@ export function UserManagement() {
               <Button 
                 className="flex items-center gap-1 text-xs sm:text-sm" 
                 variant="outline"
-                onClick={() => setLocation("/users/import")}
+                onClick={() => navigateTo("/users/import", setLocation)}
               >
                 <Upload className="h-4 w-4 mr-1 sm:mr-2" />
                 <span className="sm:inline hidden">Importa Multipli</span>
@@ -142,7 +143,7 @@ export function UserManagement() {
               
               <Button 
                 className="flex items-center gap-1 text-xs sm:text-sm"
-                onClick={() => setLocation("/users/new")}
+                onClick={() => navigateTo("/users/new", setLocation)}
               >
                 <UserPlus className="h-4 w-4 mr-1 sm:mr-2" />
                 <span className="sm:inline hidden">Nuovo Utente</span>
@@ -335,11 +336,11 @@ export function UserManagement() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                          <DropdownMenuItem onClick={() => navigateTo(`/users/edit?userId=${user.id}`, setLocation)}>
                             <Edit className="h-4 w-4 mr-2" />
                             Modifica
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleChangePassword(user)}>
+                          <DropdownMenuItem onClick={() => navigateTo(`/users/change-password?userId=${user.id}`, setLocation)}>
                             <Key className="h-4 w-4 mr-2" />
                             Cambia Password
                           </DropdownMenuItem>

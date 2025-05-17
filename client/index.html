@@ -10,6 +10,18 @@
     <meta property="og:title" content="Da Vittorino - Gestione Personale" />
     <meta property="og:description" content="Sistema avanzato di gestione personale, pianificazione turni, ferie e documentazione aziendale per il ristorante Da Vittorino." />
     <meta property="og:type" content="website" />
+    
+    <!-- Script per forzare lo scrolling all'inizio ad ogni caricamento di pagina -->
+    <script>
+      // Reset scroll position all'inizio ad ogni caricamento di pagina
+      window.onbeforeunload = function() {
+        window.scrollTo(0, 0);
+      }
+      // Garantisce che lo scroll funzioni anche in browser più vecchi
+      document.addEventListener('DOMContentLoaded', function() {
+        window.scrollTo(0, 0);
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
