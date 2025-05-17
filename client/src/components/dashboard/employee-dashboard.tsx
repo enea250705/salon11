@@ -119,8 +119,23 @@ export function EmployeeDashboard() {
           <CardContent className="p-4">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-gray-500 text-sm">Stato Settimanale</p>
-                <p className="text-2xl font-medium">{workingDays > 0 ? "In Servizio" : "Riposo"}</p>
+                <p className="text-gray-500 text-sm">Ore Settimanali</p>
+                <p className="text-2xl font-medium">
+                  {(() => {
+                    // Prendi l'informazione dai miei turni attuali
+                    const shiftsArray = myShifts ? Object.values(myShifts).flat() : [];
+                    const totalWeeklyHours = shiftsArray.reduce((total, shiftGroup) => {
+                      if (Array.isArray(shiftGroup)) {
+                        // Calcola le ore per ogni gruppo di turni
+                        return total + calculateTotalWorkHours(shiftGroup.filter(s => s.type === "work"));
+                      }
+                      return total;
+                    }, 0);
+                    
+                    // Formatta le ore totali
+                    return formatHours(totalWeeklyHours);
+                  })()}
+                </p>
               </div>
               <div className="bg-blue-100 p-2 rounded-lg">
                 <span className="material-icons text-primary">schedule</span>
