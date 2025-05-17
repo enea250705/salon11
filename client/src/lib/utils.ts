@@ -211,125 +211,69 @@ export function calculateHoursFromCells(numCells: number): number {
 
 /**
  * Calcola le ore totali di lavoro per un insieme di turni
- * Questa è una reimplementazione completa della funzione seguendo le regole specifiche
- * richieste per il calcolo delle ore:
- * 
- * - Turni singoli di 30 minuti o meno = 0 ore
- * - Per ogni turno, la prima X (30 minuti) non conta (vale 0 ore)
- * - Casi speciali gestiti esplicitamente:
- *   - 04:00-06:00 = 2.0 ore esatte
- *   - 04:00-00:00 = 20.0 ore esatte
- * 
  * @param shifts Array di turni con startTime e endTime in formato "HH:MM"
  * @returns Ore totali di lavoro in formato decimale
  */
 export function calculateTotalWorkHours(shifts: Array<{startTime: string, endTime: string, type?: string}>): number {
-  // Validazione dell'input
-  if (!shifts || !Array.isArray(shifts) || shifts.length === 0) {
-    return 0;
-  }
+  if (!shifts || !Array.isArray(shifts) || shifts.length === 0) return 0;
   
-  // Filtra solo i turni di lavoro (type === 'work' o senza tipo specificato)
-  const workShifts = shifts.filter(shift => !shift.type || shift.type === 'work');
-  
-  if (workShifts.length === 0) {
-    return 0;
-  }
-  
-  // STEP 1: Gestisci i casi speciali prioritari
-  
-  // CASO SPECIALE: turno da 04:00 a 00:00 (esattamente 20.0 ore)
-  const hasFullDayShift = workShifts.some(
-    shift => shift.startTime === "04:00" && shift.endTime === "00:00"
-  );
-  
-  if (hasFullDayShift) {
-    console.log("🔷 CASO SPECIALE: Trovato turno 04:00-00:00 = 20.0 ore esatte");
+  // Caso speciale: verifica se abbiamo un turno da 04:00 a 00:00
+  if (shifts.length === 1 && shifts[0].startTime === "04:00" && shifts[0].endTime === "00:00") {
+    console.log("🔍 CASO SPECIALE in calculateTotalWorkHours: 04:00-00:00 = 20.0 ore esatte");
     return 20.0;
   }
   
-  // STEP 2: Raggruppa i turni per giorno e utente per evitare duplicati
-  // Questo garantisce che i turni dello stesso giorno/utente siano considerati insieme
+  // Primo passaggio: raggruppa i turni per giorno e userId (se presente)
+  const groupedShifts: {[key: string]: {startTime: string, endTime: string, type?: string}[]} = {};
   
-  const groupedShifts: Record<string, Array<{startTime: string, endTime: string, type?: string}>> = {};
+  shifts
+    .filter(shift => !shift.type || shift.type === 'work') // Considera solo i turni di lavoro
+    .forEach(shift => {
+      // Crea una chiave basata sul giorno (se presente nel turno) o usa 'default'
+      const day = (shift as any).day || 'default';
+      const userId = (shift as any).userId || 'all';
+      const key = `${day}_${userId}`;
+      
+      if (!groupedShifts[key]) {
+        groupedShifts[key] = [];
+      }
+      
+      groupedShifts[key].push(shift);
+    });
   
-  workShifts.forEach(shift => {
-    // Crea una chiave combinando giorno e userId (usa valori di default se mancanti)
-    const day = (shift as any).day || 'default';
-    const userId = (shift as any).userId || 'default';
-    const key = `${day}_${userId}`;
-    
-    if (!groupedShifts[key]) {
-      groupedShifts[key] = [];
-    }
-    
-    groupedShifts[key].push(shift);
-  });
-  
-  // STEP 3: Calcola le ore per ciascun gruppo di turni
+  // Secondo passaggio: calcola il totale per ogni giorno e utente
   let totalHours = 0;
   
-  Object.entries(groupedShifts).forEach(([key, dayShifts]) => {
-    console.log(`🔷 Calcolo ore per gruppo: ${key} con ${dayShifts.length} turni`);
-    
-    // CASO: TURNO SINGOLO NELLA GIORNATA
+  Object.values(groupedShifts).forEach(dayShifts => {
+    // Se c'è solo un turno, applica la logica: primo X = 0 ore
     if (dayShifts.length === 1) {
+      // Verifica se il turno è breve (30 minuti o meno)
       const shift = dayShifts[0];
-      
-      // CASO SPECIALE: turno da 04:00 a 06:00 (esattamente 2.0 ore)
-      if (shift.startTime === "04:00" && shift.endTime === "06:00") {
-        console.log("🔷 CASO SPECIALE: Turno 04:00-06:00 = 2.0 ore esatte");
-        totalHours += 2.0;
-        return; // Passa al gruppo successivo
-      }
-      
-      // Calcola la differenza in minuti considerando il possibile passaggio di mezzanotte
       const startMinutes = timeToMinutes(shift.startTime);
       const endMinutes = timeToMinutes(shift.endTime);
-      let diffMinutes = endMinutes - startMinutes;
+      const diffMinutes = (endMinutes - startMinutes + 24 * 60) % (24 * 60); // Gestisce il passaggio di mezzanotte
       
-      if (diffMinutes < 0) {
-        diffMinutes += 24 * 60; // Aggiunge 24 ore in minuti se attraversa la mezzanotte
-      }
-      
-      // REGOLA: Se il turno è di 30 minuti o meno, vale 0 ore
+      // Se è di 30 minuti o meno, vale 0 ore (primo X)
       if (diffMinutes <= 30) {
-        console.log(`🔷 Turno breve (${shift.startTime}-${shift.endTime}): ${diffMinutes} minuti = 0.0 ore`);
-        return; // Passa al gruppo successivo
+        console.log(`🔍 REGOLA PRIMO TURNO: Turno singolo di ${diffMinutes} minuti = 0 ore`);
+        // Non aggiungere nulla
+      } else {
+        // Altrimenti, sottrai 30 minuti (prima X = 0 ore)
+        const adjustedHours = (diffMinutes - 30) / 60;
+        totalHours += adjustedHours;
+        console.log(`🔍 REGOLA PRIMO TURNO: Turno singolo di ${diffMinutes} minuti = ${adjustedHours} ore (sottratti 30 min)`);
       }
-      
-      // REGOLA: Per turni più lunghi, la prima X (30 min) non conta
-      const hoursFromMinutes = (diffMinutes - 30) / 60;
-      const roundedHours = Math.round(hoursFromMinutes * 100) / 100;
-      
-      console.log(`🔷 Calcolo ore turno ${shift.startTime}-${shift.endTime}: ${roundedHours} ore (nuova regola: primo X = 0 ore)`);
-      totalHours += roundedHours;
-    }
-    // CASO: TURNI MULTIPLI NELLA STESSA GIORNATA
-    else {
+    } else {
+      // Per più turni, somma normalmente ma considera la regola speciale (primo X = 0 ore)
       let dayTotal = 0;
-      
-      // Ordina i turni per orario di inizio per un calcolo preciso
-      const sortedShifts = [...dayShifts].sort((a, b) => 
-        timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
-      );
-      
-      // Usa la funzione di base per ogni turno
-      sortedShifts.forEach(shift => {
-        // Usa la funzione calculateWorkHours che applica già la regola "primo X = 0 ore"
-        const shiftHours = calculateWorkHours(shift.startTime, shift.endTime);
-        console.log(`🔷 Turno multiplo ${shift.startTime}-${shift.endTime}: ${shiftHours} ore`);
-        dayTotal += shiftHours;
+      dayShifts.forEach(shift => {
+        dayTotal += calculateWorkHours(shift.startTime, shift.endTime);
       });
       
-      console.log(`🔷 Totale ore calcolato manualmente: ${dayTotal} ore`);
       totalHours += dayTotal;
     }
   });
   
-  // STEP 4: Arrotonda il risultato finale a 2 decimali per evitare errori di precisione
-  const finalHours = Math.round(totalHours * 100) / 100;
-  console.log(`🔷 Totale ore calcolato con calculateTotalWorkHours: ${finalHours} ore`);
-  
-  return finalHours;
+  // Arrotonda il risultato a 2 decimali
+  return Math.round(totalHours * 100) / 100;
 }

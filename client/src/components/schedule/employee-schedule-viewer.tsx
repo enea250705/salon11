@@ -12,30 +12,11 @@ import jsPDF from "jspdf";
  * Rimuove 30 minuti dall'orario di fine per compensare l'offset introdotto dal sistema di celle
  */
 /**
- * Calcola le ore di lavoro effettive secondo tutte le regole specifiche
- * Questa funzione reimplementata applica:
- * - Prima X (30 min) non conta come ora
- * - Gestione casi speciali (04:00-06:00, 04:00-00:00)
- * - Arrotondamento corretto delle ore
- * 
- * @param startTime Orario di inizio in formato "HH:MM"
- * @param endTime Orario di fine in formato "HH:MM"
- * @returns Le ore calcolate secondo le regole specifiche
+ * Calcola le ore di lavoro effettive secondo la nuova regola (primo X = 0 ore)
+ * Questa funzione applica la regola che la prima mezz'ora non conta
  */
 function calculateActualHours(startTime: string, endTime: string): number {
-  // CASO SPECIALE 1: 04:00-06:00 deve essere esattamente 2.0 ore
-  if (startTime === "04:00" && endTime === "06:00") {
-    console.log("🔷 CASO SPECIALE: Turno 04:00-06:00 = 2.0 ore esatte");
-    return 2.0;
-  }
-  
-  // CASO SPECIALE 2: 04:00-00:00 deve essere esattamente 20.0 ore
-  if (startTime === "04:00" && endTime === "00:00") {
-    console.log("🔷 CASO SPECIALE: Turno 04:00-00:00 = 20.0 ore esatte");
-    return 20.0;
-  }
-  
-  // Calcolo standard: usiamo la funzione di calcolo che applica la regola "primo X = 0 ore"
+  // Usiamo la funzione di calcolo aggiornata che tiene conto della regola del primo X = 0 ore
   return calculateWorkHours(startTime, endTime);
 }
 
@@ -378,7 +359,7 @@ export function EmployeeScheduleViewer({ schedule, shifts, userShifts }: Employe
                                     {/* Mostra totale ore se ci sono turni di lavoro */}
                                     {workShifts.length > 0 && (
                                       <div className="font-medium text-sm mb-2">
-                                        Ore: {formatHours(Math.round(totalHours * 100) / 100)}
+                                        Ore: {manualTotal.toFixed(1)}h
                                       </div>
                                     )}
                                     
