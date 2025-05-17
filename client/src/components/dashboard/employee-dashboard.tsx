@@ -119,8 +119,8 @@ export function EmployeeDashboard() {
           <CardContent className="p-4">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-gray-500 text-sm">Ore Programmate</p>
-                <p className="text-2xl font-medium">{formatHours(totalHoursThisWeek)}</p>
+                <p className="text-gray-500 text-sm">Giorni Lavorativi</p>
+                <p className="text-2xl font-medium">{workingDays}</p>
               </div>
               <div className="bg-blue-100 p-2 rounded-lg">
                 <span className="material-icons text-primary">schedule</span>
@@ -136,15 +136,15 @@ export function EmployeeDashboard() {
           <CardContent className="p-4">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-gray-500 text-sm">Giorni Lavorativi</p>
-                <p className="text-2xl font-medium">{workingDays}</p>
+                <p className="text-gray-500 text-sm">Giornate</p>
+                <p className="text-2xl font-medium">{workingDays > 0 ? "Lavorative" : "Riposo"}</p>
               </div>
               <div className="bg-green-100 p-2 rounded-lg">
                 <span className="material-icons text-success">event_available</span>
               </div>
             </div>
             <div className="mt-4 text-xs text-gray-500">
-              Su 7 giorni
+              Questa settimana
             </div>
           </CardContent>
         </Card>
