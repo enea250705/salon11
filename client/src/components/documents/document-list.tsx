@@ -98,7 +98,7 @@ export function DocumentList() {
     },
   });
   
-  // Funzione per scaricare un documento o aprirlo in una nuova finestra
+  // Funzione per gestire l'apertura o il download di un documento
   const handleViewDocument = (document: DocumentData, mode: 'download' | 'open' = 'open') => {
     const { type, period, fileData, userId } = document;
     
@@ -129,16 +129,50 @@ export function DocumentList() {
     }
     
     try {
-      // Utilizziamo la nuova utility per gestire i PDF
-      downloadPdf(filename, fileData, mode);
+      // Costruisci l'URL dei dati PDF
+      const dataUrl = fileData.startsWith('data:') 
+        ? fileData 
+        : `data:application/pdf;base64,${fileData}`;
       
-      toast({
-        title: mode === 'download' ? "Download avviato" : "Documento aperto",
-        description: mode === 'download' 
-          ? "Il documento è stato scaricato con successo" 
-          : "Il documento è stato aperto in una nuova scheda",
-        duration: 3000,
-      });
+      if (mode === 'download') {
+        // Scarica il file
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: "Download avviato",
+          description: "Il documento è stato scaricato con successo",
+          duration: 3000,
+        });
+      } else {
+        // Apri in una nuova scheda senza usare il router
+        const win = window.open('', '_blank');
+        if (win) {
+          // Forza il caricamento diretto del PDF nella nuova finestra
+          win.document.write(`
+            <html>
+              <head>
+                <title>${filename}</title>
+              </head>
+              <body style="margin:0;padding:0;">
+                <embed width="100%" height="100%" src="${dataUrl}" type="application/pdf">
+              </body>
+            </html>
+          `);
+          win.document.close();
+        } else {
+          // Se il popup è bloccato, mostra un messaggio
+          toast({
+            title: "Popup bloccato",
+            description: "Il browser ha bloccato l'apertura del documento. Verifica le impostazioni del browser.",
+            variant: "destructive",
+          });
+        }
+      }
     } catch (error) {
       console.error(`Errore durante ${mode === 'download' ? 'il download' : "l'apertura"} del documento:`, error);
       toast({
