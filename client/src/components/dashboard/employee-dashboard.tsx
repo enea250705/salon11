@@ -119,37 +119,46 @@ export function EmployeeDashboard() {
           <CardContent className="p-4">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-gray-500 text-sm">Turni Settimanali</p>
+                <p className="text-gray-500 text-sm">Prossimo Turno</p>
                 <p className="text-2xl font-medium">
                   {(() => {
-                    // Conta il numero totale di turni di lavoro
-                    let totalWorkShifts = 0;
+                    // Trova il prossimo turno
+                    const today = new Date();
+                    const dayOfWeek = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+                    const currentDayIndex = today.getDay();
                     
-                    // Verifica se myShifts è definito e attraversa la struttura
+                    // Ordina i giorni della settimana a partire da oggi
+                    const orderedDays = [
+                      ...dayOfWeek.slice(currentDayIndex),
+                      ...dayOfWeek.slice(0, currentDayIndex)
+                    ];
+                    
+                    // Cerca il prossimo giorno con un turno
+                    let nextShiftDay = "Non disponibile";
+                    
                     if (myShifts) {
-                      Object.values(myShifts).forEach(dayShifts => {
-                        if (Array.isArray(dayShifts)) {
-                          dayShifts.forEach(shifts => {
-                            if (Array.isArray(shifts)) {
-                              // Conta i turni di tipo "work"
-                              totalWorkShifts += shifts.filter(s => s.type === "work").length;
-                            }
-                          });
+                      for (const day of orderedDays) {
+                        const shifts = myShifts[day];
+                        if (shifts && Array.isArray(shifts) && shifts.length > 0 && 
+                            shifts.some(dayShifts => Array.isArray(dayShifts) && 
+                                      dayShifts.some(s => s.type === "work"))) {
+                          // Capitalizza la prima lettera
+                          nextShiftDay = day.charAt(0).toUpperCase() + day.slice(1);
+                          break;
                         }
-                      });
+                      }
                     }
                     
-                    // Mostra il risultato
-                    return totalWorkShifts > 0 ? `${totalWorkShifts} turni` : "Nessun turno";
+                    return nextShiftDay;
                   })()}
                 </p>
               </div>
               <div className="bg-blue-100 p-2 rounded-lg">
-                <span className="material-icons text-primary">work_outline</span>
+                <span className="material-icons text-primary">event</span>
               </div>
             </div>
             <div className="mt-4 text-xs text-gray-500">
-              Questa settimana
+              Prossimo servizio
             </div>
           </CardContent>
         </Card>
