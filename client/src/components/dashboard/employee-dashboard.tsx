@@ -119,46 +119,42 @@ export function EmployeeDashboard() {
           <CardContent className="p-4">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-gray-500 text-sm">Prossimo Turno</p>
+                <p className="text-gray-500 text-sm">Area di Servizio</p>
                 <p className="text-2xl font-medium">
                   {(() => {
-                    // Trova il prossimo turno
-                    const today = new Date();
-                    const dayOfWeek = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
-                    const currentDayIndex = today.getDay();
-                    
-                    // Ordina i giorni della settimana a partire da oggi
-                    const orderedDays = [
-                      ...dayOfWeek.slice(currentDayIndex),
-                      ...dayOfWeek.slice(0, currentDayIndex)
-                    ];
-                    
-                    // Cerca il prossimo giorno con un turno
-                    let nextShiftDay = "Non disponibile";
-                    
+                    // Raccogli tutte le aree di servizio dai turni
+                    const areas = new Set();
                     if (myShifts) {
-                      for (const day of orderedDays) {
-                        const shifts = myShifts[day];
-                        if (shifts && Array.isArray(shifts) && shifts.length > 0 && 
-                            shifts.some(dayShifts => Array.isArray(dayShifts) && 
-                                      dayShifts.some(s => s.type === "work"))) {
-                          // Capitalizza la prima lettera
-                          nextShiftDay = day.charAt(0).toUpperCase() + day.slice(1);
-                          break;
+                      Object.values(myShifts).forEach(dayShifts => {
+                        if (Array.isArray(dayShifts)) {
+                          dayShifts.forEach(shifts => {
+                            if (Array.isArray(shifts)) {
+                              shifts.filter(s => s.type === "work" && s.area).forEach(s => {
+                                areas.add(s.area);
+                              });
+                            }
+                          });
                         }
-                      }
+                      });
                     }
                     
-                    return nextShiftDay;
+                    // Prepara il testo da mostrare
+                    if (areas.size === 0) {
+                      return "Non assegnata";
+                    } else if (areas.size === 1) {
+                      return Array.from(areas)[0];
+                    } else {
+                      return "Multiple";
+                    }
                   })()}
                 </p>
               </div>
               <div className="bg-blue-100 p-2 rounded-lg">
-                <span className="material-icons text-primary">event</span>
+                <span className="material-icons text-primary">room_service</span>
               </div>
             </div>
             <div className="mt-4 text-xs text-gray-500">
-              Prossimo servizio
+              Settore di lavoro
             </div>
           </CardContent>
         </Card>
