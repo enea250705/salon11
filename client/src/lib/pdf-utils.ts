@@ -11,23 +11,41 @@ import { it } from "date-fns/locale";
  * @param base64Data The base64 encoded PDF data
  */
 export function downloadPdf(filename: string, base64Data: string): void {
-  // Create a link element
-  const link = document.createElement("a");
+  // Verifica che i dati siano presenti
+  if (!base64Data || base64Data.trim() === '') {
+    console.error('Errore: dati PDF mancanti o vuoti');
+    throw new Error('Dati PDF mancanti o vuoti');
+  }
   
-  // Set the href attribute to a data URL that represents the PDF file
-  link.href = `data:application/pdf;base64,${base64Data}`;
-  
-  // Set the download attribute to specify the filename
-  link.download = filename;
-  
-  // Append the link to the document body (required for Firefox)
-  document.body.appendChild(link);
-  
-  // Programmatically click the link to trigger the download
-  link.click();
-  
-  // Remove the link from the document
-  document.body.removeChild(link);
+  try {
+    // Create a link element
+    const link = document.createElement("a");
+    
+    // Se i dati contengono già il prefisso, non aggiungerlo nuovamente
+    const dataUrl = base64Data.startsWith('data:') 
+      ? base64Data 
+      : `data:application/pdf;base64,${base64Data}`;
+    
+    // Set the href attribute to a data URL that represents the PDF file
+    link.href = dataUrl;
+    
+    // Set the download attribute to specify the filename
+    link.download = filename;
+    
+    // Append the link to the document body (required for Firefox)
+    document.body.appendChild(link);
+    
+    // Programmatically click the link to trigger the download
+    link.click();
+    
+    // Remove the link from the document
+    document.body.removeChild(link);
+    
+    console.log(`Download avviato: ${filename}`);
+  } catch (error) {
+    console.error('Errore durante il download del PDF:', error);
+    throw error;
+  }
 }
 
 /**

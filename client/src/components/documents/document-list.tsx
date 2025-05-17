@@ -18,21 +18,53 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
 
+// Definiamo interfaccia per i documenti
+interface DocumentData {
+  id: number;
+  type: string;
+  userId: number;
+  period: string;
+  filename: string;
+  fileData: string;
+  uploadedBy: number;
+  uploadedAt: string;
+}
+
+// Definiamo interfaccia per gli utenti
+interface UserData {
+  id: number;
+  username: string;
+  name: string;
+  email?: string;
+  role: string;
+}
+
+// Estendiamo l'interfaccia User dell'autenticazione
+declare module "@/hooks/use-auth" {
+  interface User {
+    id: number;
+    username: string;
+    name: string;
+    email?: string;
+    role: string;
+  }
+}
+
 export function DocumentList() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isAdmin = user?.role === 'admin';
-  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [selectedDocument, setSelectedDocument] = useState<DocumentData | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   
   // Carica documenti
-  const { data: documents = [], isLoading } = useQuery({
+  const { data: documents = [], isLoading } = useQuery<DocumentData[]>({
     queryKey: ["/api/documents"],
   });
   
   // Carica informazioni utenti per mostrare i nomi (solo per admin)
-  const { data: users = [] } = useQuery({
+  const { data: users = [] } = useQuery<UserData[]>({
     queryKey: ["/api/users"],
     enabled: isAdmin,
   });
@@ -40,10 +72,10 @@ export function DocumentList() {
   // Filtra documenti in base al ruolo
   const filteredDocuments = isAdmin
     ? documents
-    : documents.filter((doc: any) => doc.userId === user?.id);
+    : documents.filter((doc) => doc.userId === user?.id);
     
   // Ordina per data di caricamento (più recenti prima)
-  const sortedDocuments = [...filteredDocuments].sort((a: any, b: any) => 
+  const sortedDocuments = [...filteredDocuments].sort((a, b) => 
     new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
   );
   
@@ -67,7 +99,7 @@ export function DocumentList() {
   });
   
   // Funzione per scaricare un documento
-  const handleDownload = (document: any) => {
+  const handleDownload = (document: DocumentData) => {
     const { type, period, fileData, userId } = document;
     
     // Verifica se il documento ha dati
@@ -83,8 +115,8 @@ export function DocumentList() {
     
     // Ottieni il nome dipendente corretto
     const employeeName = isAdmin 
-      ? users.find((u: any) => u.id === userId)?.name || `Utente ${userId}`
-      : user?.fullName || user?.username || "";
+      ? users.find((u) => u.id === userId)?.name || `Utente ${userId}`
+      : user?.name || user?.username || "";
     
     console.log("Download documento:", { type, period, userId, employeeName, fileDataLength: fileData.length });
       
