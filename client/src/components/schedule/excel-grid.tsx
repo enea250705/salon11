@@ -557,10 +557,18 @@ export function ExcelGrid({
       const workBlocks: { start: number; end: number }[] = [];
       let blockStartIdx: number | null = null;
       
-      // Scorriamo le celle per trovare tutti i blocchi di celle contigue tipo "work"
+      // DEBUG: Logghiamo le celle per verificare il blocco prima di analizzarlo
       console.log(`🔍 Analisi celle per trovare blocchi contigui tipo "work". Totale celle: ${updatedCells.length}`);
-      console.log(`🔍 Mappa celle: ${updatedCells.map((c, idx) => `${idx}:${c.type || '-'}`).join(' ')}`);
       
+      // MIGLIORAMENTO: Creiamo una mappa più leggibile delle celle
+      let cellMap = updatedCells.map((c, idx) => {
+        // Mostriamo solo 'X' per celle di lavoro e '-' per celle vuote
+        let symbol = c.type === "work" ? "X" : c.type === "vacation" ? "F" : c.type === "leave" ? "P" : "-";
+        return `${idx}:${symbol}`;
+      }).join(' ');
+      console.log(`🔍 Mappa celle: ${cellMap}`);
+      
+      // ALGORITMO MIGLIORATO: Scansione più robusta per trovare blocchi contigui
       for (let i = 0; i < updatedCells.length; i++) {
         if (updatedCells[i].type === "work") {
           // Se non abbiamo ancora un indice di inizio, iniziamo un nuovo blocco
@@ -571,7 +579,7 @@ export function ExcelGrid({
           
           // Se siamo all'ultima cella e abbiamo un blocco in corso, lo chiudiamo
           if (i === updatedCells.length - 1 && blockStartIdx !== null) {
-            console.log(`🔍 Fine blocco all'ultima cella ${i}, orario ${timeSlots[i]}-${timeSlots[i+1]}`);
+            console.log(`🔍 Fine blocco all'ultima cella ${i}, orario ${timeSlots[i]}-${timeSlots[i+1] || '(fine)'}`);
             workBlocks.push({ start: blockStartIdx, end: i });
           }
         } else if (blockStartIdx !== null) {
@@ -586,43 +594,54 @@ export function ExcelGrid({
       console.log(`👀 Trovati ${workBlocks.length} blocchi di celle contigue tipo "work" in giorno ${day} per utente ${userId}`);
       
       for (const block of workBlocks) {
+        // Assicuriamoci che inizio e fine blocco siano validi
+        if (block.start < 0 || block.end >= updatedCells.length || block.start > block.end) {
+          console.error(`❌ ERRORE: indici blocco non validi: ${block.start}-${block.end}`);
+          continue;
+        }
+        
         // Numero di celle nel blocco
         const numCells = block.end - block.start + 1;
-        const startTime = timeSlots[block.start];
-        const endTime = timeSlots[block.end + 1]; // +1 perché l'ultima X è solo un marcatore
         
-        // CASO SPECIALE 1: Esattamente da 04:00 a 06:00 (5 celle) deve essere 2.0 ore
+        // Assicuriamoci che timeSlots contenga gli indici necessari
+        if (block.start >= timeSlots.length || (block.end + 1) >= timeSlots.length) {
+          console.error(`❌ ERRORE: indici timeSlots fuori range per blocco ${block.start}-${block.end}`);
+          continue;
+        }
+        
+        const startTime = timeSlots[block.start];
+        const endTime = timeSlots[block.end + 1] || "00:00"; // +1 perché l'ultima X è solo un marcatore, fallback a "00:00"
+        
+        console.log(`📊 Analisi blocco: da ${startTime} a ${endTime} (${numCells} celle)`);
+        
+        // Determiniamo il calcolo basato su diversi casi
+        let hoursForThisBlock = 0;
+        
+        // CASO SPECIALE 1: Esattamente da 04:00 a 06:00 (2 ore esatte)
         if (startTime === "04:00" && endTime === "06:00") {
           console.log("🔷 CASO SPECIALE TROVATO: 04:00-06:00 = 2.0 ore esatte");
-          totalHours += 2.0;
-          continue; // Passa al blocco successivo
+          hoursForThisBlock = 2.0;
         }
-        
-        // CASO SPECIALE 2: Da 04:00 a 00:00 deve essere esattamente 20.0 ore
-        if (startTime === "04:00" && endTime === "00:00") {
+        // CASO SPECIALE 2: Da 04:00 a 00:00 (20 ore esatte)
+        else if (startTime === "04:00" && endTime === "00:00") {
           console.log("🔷 CASO SPECIALE TROVATO: 04:00-00:00 = 20.0 ore esatte");
-          totalHours += 20.0;
-          continue; // Passa al blocco successivo
+          hoursForThisBlock = 20.0;
         }
-                
-        // UTILIZZO DELLA NUOVA FUNZIONE: Calcolo standard basato sul numero di celle
-        // NUOVA REGOLA BASE: 
-        // - 1 cella (X) = 0 ore (la prima X non conta)
-        // - 2 celle (X X) = 0.5 ore (2-1)*0.5
-        // - 3 celle (X X X) = 1.0 ora (3-1)*0.5
-        // - 4 celle (X X X X) = 1.5 ore (4-1)*0.5 
-        // - 5 celle (X X X X X) = 2.0 ore (caso speciale)
-        // - 6 celle (X X X X X X) = 2.5 ore (6-1)*0.5
-        const hoursFromCells = calculateHoursFromCells(numCells);
+        // Caso standard: utilizzo della funzione di calcolo basata sul numero di celle
+        else {
+          hoursForThisBlock = calculateHoursFromCells(numCells);
+        }
         
-        console.log(`📋 Blocco da ${startTime} a ${endTime} (${numCells} celle) = ${hoursFromCells} ore`);
-        console.log(`   Dettaglio: celle ${block.start}-${block.end}, orari ${timeSlots[block.start]}-${timeSlots[block.end + 1]}`);
+        console.log(`📋 Blocco da ${startTime} a ${endTime} (${numCells} celle) = ${hoursForThisBlock} ore`);
+        console.log(`   Dettaglio: celle ${block.start}-${block.end}, orari ${timeSlots[block.start]}-${endTime}`);
         
-        // Mostriamo le celle per verificare che il blocco sia corretto
+        // DEBUG: Verifica dettagliata del contenuto del blocco
         const cellsInBlock = updatedCells.slice(block.start, block.end + 1);
-        console.log(`   Celle nel blocco: ${cellsInBlock.map(c => c.type || '-').join('|')}`);
+        const blockContent = cellsInBlock.map(c => c.type === "work" ? "X" : c.type === "vacation" ? "F" : c.type === "leave" ? "P" : "-").join('|');
+        console.log(`   Celle nel blocco: ${blockContent}`);
         
-        totalHours += hoursFromCells;
+        // Aggiungiamo le ore di questo blocco al totale
+        totalHours += hoursForThisBlock;
       }
       
       // FASE 3: Se non abbiamo trovato blocchi, il totale è 0
