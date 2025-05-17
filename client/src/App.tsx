@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/auth-context";
+import { ScrollToTop } from "@/components/scroll-to-top";
 
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
@@ -50,6 +51,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ThemeProvider attribute="class" defaultTheme="light">
+          {/* Questo componente gestisce lo scroll verso l'alto della pagina per ogni cambio di rotta o refresh */}
+          <ScrollToTop />
           <Toaster />
           <Router />
         </ThemeProvider>
