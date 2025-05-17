@@ -1344,9 +1344,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
+      // Aggiungi un URL diretto al documento se non c'è già
+      if (!document.fileUrl) {
+        document.fileUrl = `/api/documents/${document.id}/pdf`;
+      }
+      
       res.json(document);
     } catch (err) {
       res.status(500).json({ message: "Failed to get document" });
+    }
+  });
+  
+  // Endpoint per visualizzare direttamente il PDF nel browser
+  app.get("/api/documents/:id/pdf", isAuthenticated, async (req, res) => {
+    try {
+      const documentId = parseInt(req.params.id);
+      const document = await storage.getDocument(documentId);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      // Solo admin o il proprietario del documento possono visualizzarlo
+      if ((req.user as any).role !== "admin" && (req.user as any).id !== document.userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // Controlla se il documento ha dati
+      if (!document.fileData) {
+        return res.status(404).json({ message: "Document data not found" });
+      }
+      
+      // Imposta le intestazioni corrette per visualizzare il PDF
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${document.filename}"`);
+      
+      // Converti la stringa base64 in un buffer
+      const pdfBuffer = Buffer.from(document.fileData, 'base64');
+      
+      // Invia il PDF direttamente al browser
+      res.send(pdfBuffer);
+    } catch (err) {
+      console.error("Errore nell'accesso al PDF:", err);
+      res.status(500).json({ message: "Failed to retrieve document" });
     }
   });
   

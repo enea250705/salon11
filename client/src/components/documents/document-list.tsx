@@ -26,6 +26,7 @@ interface DocumentData {
   period: string;
   filename: string;
   fileData: string;
+  fileUrl?: string;
   uploadedBy: number;
   uploadedAt: string;
 }
@@ -98,124 +99,64 @@ export function DocumentList() {
     },
   });
   
-  // Funzione per gestire l'apertura o il download di un documento
-  const handleViewDocument = (document: DocumentData, mode: 'download' | 'open' = 'open') => {
-    const { type, period, fileData, fileUrl, userId } = document;
+  // Funzione per aprire un documento PDF in una nuova scheda
+  const handleOpenPdf = (doc: DocumentData) => {
+    const directPdfUrl = `/api/documents/${doc.id}/pdf`;
     
-    // Se è disponibile un URL per il documento, lo utilizziamo direttamente
-    if (fileUrl) {
-      if (mode === 'open') {
-        // Apri il link in una nuova scheda
-        window.open(fileUrl, '_blank', 'noopener,noreferrer');
-        
-        toast({
-          title: "Documento aperto",
-          description: "Il documento è stato aperto in una nuova scheda",
-          duration: 3000,
-        });
-      } else {
-        // Per scaricare, utilizziamo una tecnica che funziona con URL esterni
-        const downloadWindow = window.open(fileUrl, '_blank');
-        if (downloadWindow) {
-          toast({
-            title: "Download avviato",
-            description: "Il documento è stato aperto per il download",
-            duration: 3000,
-          });
-        } else {
-          toast({
-            title: "Popup bloccato",
-            description: "Il browser ha bloccato l'apertura del documento. Verifica le impostazioni del browser.",
-            variant: "destructive",
-          });
-        }
-      }
-      return;
-    }
+    // Apri il PDF direttamente in una nuova finestra
+    window.open(directPdfUrl, '_blank', 'noopener,noreferrer');
     
-    // Fallback all'approccio base64 se non c'è un URL
-    if (!fileData) {
-      console.error("Errore: documento non disponibile - né fileUrl né fileData presenti:", document);
-      toast({
-        title: "Errore nella visualizzazione",
-        description: "Impossibile visualizzare il documento. Dati mancanti.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Ottieni il nome dipendente corretto
-    const employeeName = isAdmin 
-      ? users.find((u) => u.id === userId)?.name || `Utente ${userId}`
-      : user?.name || user?.username || "";
-    
-    // Prepara il nome del file in base al tipo di documento
-    let filename = "";
-    if (type === "payslip") {
-      filename = generatePayslipFilename(period, employeeName);
-    } else if (type === "tax_document") {
-      filename = generateTaxDocFilename(period, employeeName);
-    } else {
-      filename = `documento_${period}.pdf`;
-    }
-    
+    toast({
+      title: "Documento aperto",
+      description: "Il documento è stato aperto in una nuova scheda",
+      duration: 3000,
+    });
+  };
+  
+  // Funzione per scaricare un documento PDF
+  const handleDownload = (doc: DocumentData) => {
     try {
-      // Costruisci l'URL dei dati PDF
-      const dataUrl = fileData.startsWith('data:') 
-        ? fileData 
-        : `data:application/pdf;base64,${fileData}`;
+      // Utilizziamo l'URL diretto al PDF
+      const directPdfUrl = `/api/documents/${doc.id}/pdf`;
       
-      if (mode === 'download') {
-        // Scarica il file
-        const link = document.createElement('a');
-        link.href = dataUrl;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        toast({
-          title: "Download avviato",
-          description: "Il documento è stato scaricato con successo",
-          duration: 3000,
-        });
+      // Ottieni il nome dipendente corretto per il filename
+      const employeeName = isAdmin 
+        ? users.find((u) => u.id === doc.userId)?.name || `Utente ${doc.userId}`
+        : user?.name || user?.username || "";
+      
+      // Prepara il nome del file in base al tipo di documento
+      let filename = "";
+      if (doc.type === "payslip") {
+        filename = generatePayslipFilename(doc.period, employeeName);
+      } else if (doc.type === "tax_document") {
+        filename = generateTaxDocFilename(doc.period, employeeName);
       } else {
-        // Apri in una nuova scheda senza usare il router
-        const win = window.open('', '_blank');
-        if (win) {
-          // Forza il caricamento diretto del PDF nella nuova finestra
-          win.document.write(`
-            <html>
-              <head>
-                <title>${filename}</title>
-              </head>
-              <body style="margin:0;padding:0;">
-                <embed width="100%" height="100%" src="${dataUrl}" type="application/pdf">
-              </body>
-            </html>
-          `);
-          win.document.close();
-        } else {
-          // Se il popup è bloccato, mostra un messaggio
-          toast({
-            title: "Popup bloccato",
-            description: "Il browser ha bloccato l'apertura del documento. Verifica le impostazioni del browser.",
-            variant: "destructive",
-          });
-        }
+        filename = `documento_${doc.period}.pdf`;
       }
+      
+      // Creiamo un link con l'URL diretto al PDF
+      const link = window.document.createElement('a');
+      link.href = directPdfUrl;
+      link.download = filename;
+      link.target = '_blank';
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      
+      toast({
+        title: "Download avviato",
+        description: "Il documento è stato scaricato con successo",
+        duration: 3000,
+      });
     } catch (error) {
-      console.error(`Errore durante ${mode === 'download' ? 'il download' : "l'apertura"} del documento:`, error);
+      console.error("Errore durante il download del documento:", error);
       toast({
         title: "Errore",
-        description: `Si è verificato un problema durante ${mode === 'download' ? 'il download' : "l'apertura"} del documento`,
+        description: "Si è verificato un problema durante il download del documento",
         variant: "destructive",
       });
     }
   };
-  
-  // Alias per mantenere la compatibilità con il codice esistente
-  const handleDownload = (document: DocumentData) => handleViewDocument(document, 'download');
   
   // Funzione di supporto per convertire base64 in blob (non più utilizzata)
   function base64ToBlob(base64: string, mimeType: string): Blob {
