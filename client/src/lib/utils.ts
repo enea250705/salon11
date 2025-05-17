@@ -124,15 +124,13 @@ export function calculateWorkHours(startTime: string, endTime: string): number {
     diffMinutes += 24 * 60; // Aggiungi 24 ore in minuti
   }
   
-  // NUOVA REGOLA: Sottraiamo 30 minuti (la prima X = 0 ore)
-  // Ma se è meno di 30 minuti totali, restituisci direttamente 0
+  // REGOLA ORIGINALE: Se è meno di 30 minuti totali, restituisci direttamente 0
   if (diffMinutes <= 30) {
-    console.log(`🔍 NUOVA REGOLA: Turno di ${diffMinutes} minuti, meno di 30 minuti = 0.0 ore`);
+    console.log(`🔍 REGOLA: Turno di ${diffMinutes} minuti, meno di 30 minuti = 0.0 ore`);
     return 0.0;
   }
   
-  // NUOVA REGOLA: Sottraiamo 30 minuti dal totale (primo X = 0 ore)
-  diffMinutes -= 30;
+  // Non sottraiamo più 30 minuti - torniamo alla regola originale dove ogni cella conta
   
   // Conversione da minuti a ore decimali
   let hours = diffMinutes / 60;
@@ -145,7 +143,7 @@ export function calculateWorkHours(startTime: string, endTime: string): number {
     return 2.0;
   }
   
-  console.log(`🔍 Calcolo ore: da ${startTime} a ${endTime} = ${hours.toFixed(1)} ore (sottratti 30 min per la prima X)`);
+  console.log(`🔍 Calcolo ore: da ${startTime} a ${endTime} = ${hours.toFixed(1)} ore`);
   
   // Arrotondamento a 2 decimali
   return Math.round(hours * 100) / 100;
@@ -162,9 +160,9 @@ export function calculateHoursFromCells(numCells: number): number {
   // Nessuna cella = 0 ore
   if (numCells <= 0) return 0;
   
-  // 1 cella (X) deve essere esattamente 0 ore (REGOLA BASE)
+  // 1 cella (30 minuti) deve essere esattamente 0 ore (REGOLA BASE) 
   if (numCells === 1) {
-    console.log("🔍 REGOLA BASE: 1 cella (X) = 0.0 ore");
+    console.log("🔍 REGOLA BASE: 1 cella (30 min) = 0.0 ore");
     return 0.0;
   }
   
@@ -174,9 +172,8 @@ export function calculateHoursFromCells(numCells: number): number {
     return 2.0;
   }
   
-  // Altre celle seguono la regola normale: (numCells - 1) * 0.5 ore
-  // Sottraiamo 1 perché la prima X non conta (vale 0 ore)
-  const hours = (numCells - 1) * 0.5;
+  // Altre celle seguono la regola normale: numCells * 0.5 ore
+  const hours = numCells * 0.5;
   
   console.log(`🔍 REGOLA BASE: ${numCells} celle = ${hours} ore (prima cella X = 0 ore)`);
   return Math.round(hours * 100) / 100;
@@ -220,15 +217,15 @@ export function calculateTotalWorkHours(shifts: Array<{startTime: string, endTim
       const endMinutes = timeToMinutes(shift.endTime);
       const diffMinutes = (endMinutes - startMinutes + 24 * 60) % (24 * 60); // Gestisce il passaggio di mezzanotte
       
-      // Se è di 30 minuti o meno, vale 0 ore (primo X)
+      // Se è di 30 minuti o meno, vale 0 ore
       if (diffMinutes <= 30) {
-        console.log(`🔍 REGOLA PRIMO TURNO: Turno singolo di ${diffMinutes} minuti = 0 ore`);
+        console.log(`🔍 REGOLA TURNO: Turno singolo di ${diffMinutes} minuti = 0 ore`);
         // Non aggiungere nulla
       } else {
-        // Altrimenti, sottrai 30 minuti (prima X = 0 ore)
-        const adjustedHours = (diffMinutes - 30) / 60;
+        // Altrimenti, calcola le ore normalmente
+        const adjustedHours = diffMinutes / 60;
         totalHours += adjustedHours;
-        console.log(`🔍 REGOLA PRIMO TURNO: Turno singolo di ${diffMinutes} minuti = ${adjustedHours} ore (sottratti 30 min)`);
+        console.log(`🔍 REGOLA TURNO: Turno singolo di ${diffMinutes} minuti = ${adjustedHours} ore`);
       }
     } else {
       // Per più turni, somma normalmente ma considera la regola speciale (primo X = 0 ore)
