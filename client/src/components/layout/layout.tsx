@@ -23,9 +23,16 @@ export function Layout({ children }: PropsWithChildren) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
   
-  // Close mobile menu on location change
+  // Close mobile menu and scroll to top on location change
   useEffect(() => {
+    // Chiude il menu mobile
     setMobileMenuOpen(false);
+    
+    // Scrolla all'inizio della pagina
+    window.scrollTo({
+      top: 0,
+      behavior: 'instant' // Scrolling istantaneo invece di smooth per evitare scrolling visibili
+    });
   }, [location]);
 
   // Animazione per il contenitore principale
