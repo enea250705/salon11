@@ -463,6 +463,8 @@ export function ExcelGrid({
             return cell.type === "work";
           }).length;
           
+          console.log(`🧮 DEBUG CALCOLO ORE: ${workCells} celle di tipo "work" trovate`);
+          
           // Applica la formula: ore = (celle_work - 1) * 0.5, ma sempre minimo 0
           // Quindi primo X = 0 ore, due X = 0.5 ore, tre X = 1 ora, ecc.
           let hours = 0;
@@ -575,7 +577,7 @@ export function ExcelGrid({
       }
       
       // FASE 2: Calcola le ore per ogni blocco con regole specifiche
-      console.log(`Trovati ${workBlocks.length} blocchi di celle contigue tipo "work"`);
+      console.log(`👀 Trovati ${workBlocks.length} blocchi di celle contigue tipo "work" in giorno ${day} per utente ${userId}`);
       
       for (const block of workBlocks) {
         // Numero di celle nel blocco
@@ -607,7 +609,12 @@ export function ExcelGrid({
         // - 6 celle (X X X X X X) = 2.5 ore (6-1)*0.5
         const hoursFromCells = calculateHoursFromCells(numCells);
         
-        console.log(`Blocco da ${startTime} a ${endTime} (${numCells} celle) = ${hoursFromCells} ore`);
+        console.log(`📋 Blocco da ${startTime} a ${endTime} (${numCells} celle) = ${hoursFromCells} ore`);
+        console.log(`   Dettaglio: celle ${block.start}-${block.end}, orari ${timeSlots[block.start]}-${timeSlots[block.end + 1]}`);
+        
+        // Mostriamo le celle per verificare che il blocco sia corretto
+        const cellsInBlock = updatedCells.slice(block.start, block.end + 1);
+        console.log(`   Celle nel blocco: ${cellsInBlock.map(c => c.type || '-').join('|')}`);
         
         totalHours += hoursFromCells;
       }
