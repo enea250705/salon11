@@ -3,7 +3,7 @@ import { User } from '@shared/schema';
 
 // Modalità di sviluppo (non invia email effettivamente ma le mostra in console)
 // Imposta su false per inviare email reali con Nodemailer
-const DEV_MODE = false;
+const DEV_MODE = false; // Invio reale attivato
 
 // Configurazione per testing/sviluppo usando Ethereal (servizio gratuito per testing)
 // In produzione, sostituire con configurazione SMTP reale
@@ -35,13 +35,16 @@ async function initTransporter() {
   } else {
     // Configurazione del server SMTP personalizzato
     transporter = nodemailer.createTransport({
-      host: 'authsmtp.securemail.pro',
-      port: 465,
-      secure: true, // true per 465, false per altre porte
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false, // true per 465, false per altre porte come 587
       auth: {
         user: process.env.EMAIL_USER || '',
         pass: process.env.EMAIL_PASSWORD || '',
       },
+      tls: {
+        rejectUnauthorized: false // Accetta certificati autofirmati in ambiente di sviluppo
+      }
     });
     
     console.log('🔧 Server SMTP configurato con indirizzo:', process.env.EMAIL_USER);
