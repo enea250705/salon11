@@ -115,13 +115,22 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
           </button>
         </div>
         
-        <div id="user-profile" className="p-4 sm:p-5 border-b flex items-center space-x-3 sm:space-x-4">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full w-10 sm:w-12 h-10 sm:h-12 flex items-center justify-center shadow-md">
-            <span className="material-icons text-white text-base sm:text-lg">person</span>
+        <div id="user-profile" className="p-4 sm:p-5 border-b border-sidebar-border flex items-center space-x-3 sm:space-x-4">
+          <div className="relative">
+            <img 
+              src={user?.role === "admin" ? "/avatars/admin.svg" : "/avatars/employee.svg"} 
+              alt={user?.role === "admin" ? "Avatar amministratore" : "Avatar dipendente"}
+              className="w-12 sm:w-14 h-12 sm:h-14 rounded-full shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105"
+            />
+            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-sidebar-background p-0.5 rounded-full">
+              <div className={`w-3.5 h-3.5 rounded-full ${user ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+            </div>
           </div>
-          <div>
-            <p className="font-medium text-sm sm:text-base">{user?.name || "Utente"}</p>
-            <p className="text-xs sm:text-sm text-gray-600">{user?.role === "admin" ? "Amministratore" : "Dipendente"}</p>
+          <div className="animate-fadeIn" style={{ animationDelay: '0.2s' }}>
+            <p className="font-medium text-sm sm:text-base text-sidebar-foreground">{user?.name || "Utente"}</p>
+            <p className="text-xs sm:text-sm text-sidebar-foreground/70">
+              {user?.role === "admin" ? "Amministratore" : "Dipendente"}
+            </p>
           </div>
         </div>
         
