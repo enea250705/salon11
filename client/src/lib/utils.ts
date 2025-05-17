@@ -232,12 +232,38 @@ export function calculateTotalWorkHours(shifts: Array<{startTime: string, endTim
       }
     } else {
       // Per più turni, somma normalmente ma considera la regola speciale (primo X = 0 ore)
-      let dayTotal = 0;
-      dayShifts.forEach(shift => {
-        dayTotal += calculateWorkHours(shift.startTime, shift.endTime);
-      });
-      
-      totalHours += dayTotal;
+      // Invece di applicare la regola "primo X = 0 ore" a ogni turno, la applichiamo solo al primo turno
+      if (dayShifts.length > 0) {
+        // Ordina i turni per ora di inizio
+        dayShifts.sort((a, b) => a.startTime.localeCompare(b.startTime));
+        
+        // Calcola le ore per il primo turno con la regola "primo X = 0 ore"
+        const firstShift = dayShifts[0];
+        const firstShiftMinutes = timeToMinutes(firstShift.endTime) - timeToMinutes(firstShift.startTime);
+        let dayTotal = 0;
+        
+        // Per il primo turno, applica la regola "primo X = 0 ore"
+        if (firstShiftMinutes <= 30) {
+          // Se il primo turno è minore o uguale a 30 minuti, vale 0 ore
+          console.log(`🔍 REGOLA CORRETTA: Primo turno di ${firstShiftMinutes} minuti = 0 ore`);
+        } else {
+          // Altrimenti, sottrai 30 minuti dal primo turno
+          dayTotal += (firstShiftMinutes - 30) / 60;
+          console.log(`🔍 REGOLA CORRETTA: Primo turno di ${firstShiftMinutes} minuti = ${(firstShiftMinutes - 30) / 60} ore (sottratti 30 min)`);
+        }
+        
+        // Per i turni successivi, calcola normalmente (senza sottrarre 30 minuti)
+        for (let i = 1; i < dayShifts.length; i++) {
+          const shift = dayShifts[i];
+          const shiftMinutes = timeToMinutes(shift.endTime) - timeToMinutes(shift.startTime);
+          if (shiftMinutes > 0) {
+            dayTotal += shiftMinutes / 60;
+            console.log(`🔍 REGOLA CORRETTA: Turno successivo di ${shiftMinutes} minuti = ${shiftMinutes / 60} ore (senza sottrazione)`);
+          }
+        }
+        
+        totalHours += dayTotal;
+      }
     }
   });
   

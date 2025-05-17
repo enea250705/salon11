@@ -19,7 +19,12 @@ import { ExportToPdfDialog } from "@/components/schedule/export-to-pdf";
 // Date utilities
 import { format, startOfWeek, addDays, isBefore, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
-import { calculateWorkHours, formatHours } from "@/lib/utils";
+import { calculateWorkHours, formatHours, timeToMinutes } from "@/lib/utils";
+
+// Funzione per calcolare le ore correttamente con la regola "primo X = 0 ore"
+function calculateActualHours(startTime: string, endTime: string): number {
+  return calculateWorkHours(startTime, endTime);
+}
 
 export default function Schedule() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -619,10 +624,17 @@ export default function Schedule() {
               cellClass = 'working';
               daySummary = `${firstShift.startTime} - ${lastShift.endTime}`;
               
-              // Calculate hours for this day using utility function
+              // Calculate hours for this day using utility function with correct rule
               let dayHours = 0;
-              userShifts.forEach(shift => {
-                dayHours += calculateWorkHours(shift.startTime, shift.endTime);
+              userShifts.forEach((shift, index) => {
+                // Per il primo turno, applica la regola "primo X = 0 ore"
+                if (index === 0) {
+                  dayHours += calculateActualHours(shift.startTime, shift.endTime);
+                } else {
+                  // Per i turni successivi, calcola normalmente
+                  const shiftMinutes = timeToMinutes(shift.endTime) - timeToMinutes(shift.startTime);
+                  dayHours += shiftMinutes / 60;
+                }
               });
               
               // Add to total
