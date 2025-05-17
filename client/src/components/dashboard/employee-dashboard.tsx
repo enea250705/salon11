@@ -119,42 +119,41 @@ export function EmployeeDashboard() {
           <CardContent className="p-4">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-gray-500 text-sm">Area di Servizio</p>
+                <p className="text-gray-500 text-sm">Documenti</p>
                 <p className="text-2xl font-medium">
                   {(() => {
-                    // Raccogli tutte le aree di servizio dai turni
-                    const areas = new Set();
-                    if (myShifts) {
-                      Object.values(myShifts).forEach(dayShifts => {
-                        if (Array.isArray(dayShifts)) {
-                          dayShifts.forEach(shifts => {
-                            if (Array.isArray(shifts)) {
-                              shifts.filter(s => s.type === "work" && s.area).forEach(s => {
-                                areas.add(s.area);
-                              });
-                            }
-                          });
+                    // Raggruppa i documenti per tipo
+                    const docTypes = {
+                      contract: 0,
+                      payslip: 0,
+                      certification: 0,
+                      other: 0
+                    };
+                    
+                    if (myDocuments && Array.isArray(myDocuments)) {
+                      myDocuments.forEach(doc => {
+                        if (doc.type && docTypes.hasOwnProperty(doc.type)) {
+                          docTypes[doc.type]++;
+                        } else {
+                          docTypes.other++;
                         }
                       });
                     }
                     
-                    // Prepara il testo da mostrare
-                    if (areas.size === 0) {
-                      return "Non assegnata";
-                    } else if (areas.size === 1) {
-                      return Array.from(areas)[0];
-                    } else {
-                      return "Multiple";
-                    }
+                    // Conta il totale
+                    const totalDocs = Object.values(docTypes).reduce((a, b) => a + b, 0);
+                    
+                    // Mostra i risultati
+                    return totalDocs > 0 ? totalDocs : "Nessuno";
                   })()}
                 </p>
               </div>
               <div className="bg-blue-100 p-2 rounded-lg">
-                <span className="material-icons text-primary">room_service</span>
+                <span className="material-icons text-primary">description</span>
               </div>
             </div>
             <div className="mt-4 text-xs text-gray-500">
-              Settore di lavoro
+              Documenti disponibili
             </div>
           </CardContent>
         </Card>
