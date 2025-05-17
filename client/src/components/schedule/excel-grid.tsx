@@ -246,24 +246,29 @@ export function ExcelGrid({
               
               // Aggiorna le note
               newGridData[day][userId].notes = shift.notes || "";
-              
-              // Aggiorna il conteggio delle ore (solo per il tipo "work")
-              if (shift.type === "work") {
-                try {
-                  // Calcola correttamente la durata in ore (ad es. 4.5 per 4 ore e 30 minuti)
-                  const hours = calculateWorkHours(shift.startTime, shift.endTime);
-                  
-                  // Correggiamo il calcolo arrotondando a 2 decimali per evitare errori di approssimazione
-                  const roundedHours = Math.round(hours * 100) / 100;
-                  
-                  // Aggiorna il totale delle ore dell'utente per questo giorno
-                  newGridData[day][userId].total += roundedHours;
-                } catch (e) {
-                  console.error(`Errore nel calcolo delle ore per il turno ID ${shift.id}:`, e);
-                }
-              }
             }
           }
+        });
+        
+        // Fase 2.5: CALCOLO DELLE ORE PER OGNI GIORNO E DIPENDENTE
+        // Dopo aver impostato tutte le celle, ricalcola le ore per ogni dipendente e giorno
+        weekDays.forEach(day => {
+          const activeUsers = users.filter(u => u.role === "employee" && u.isActive === true && u.id !== undefined);
+          
+          activeUsers.forEach(user => {
+            if (newGridData[day.name] && newGridData[day.name][user.id]) {
+              // Conta quante celle "work" ci sono per questo utente in questo giorno
+              const workCells = newGridData[day.name][user.id].cells.filter(cell => cell.type === "work").length;
+              
+              // Calcola le ore usando la funzione corretta che implementa tutte le regole
+              const hours = calculateHoursFromCells(workCells);
+              
+              // Imposta il totale per questo giorno
+              newGridData[day.name][user.id].total = hours;
+              
+              console.log(`📊 [${day.name}] ${user.fullName || user.username}: ${workCells} celle work = ${hours} ore`);
+            }
+          });
         });
       }
       
@@ -449,25 +454,28 @@ export function ExcelGrid({
         // Invia l'aggiornamento al server
         updateShiftMutation.mutate(updateData);
         
-        // Aggiorna il conteggio delle ore
-        // Ricalcoliamo COMPLETAMENTE le ore lavorative per l'utente in questa giornata
-        if (currentCell.type === "work" || newType === "work") {
-          // Contiamo quante celle "work" ci sono nella giornata DOPO il cambiamento
-          const workCells = userDayData.cells.map((cell, idx) => 
-            idx === timeIndex ? newType : cell.type
-          ).filter(type => type === "work").length;
-          
-          // VERSIONE FINALE - REGOLA CORRETTA:
-          // Useremo la funzione utility dedicata che implementa tutte le regole
-          // richieste dal cliente in modo consistente
-          let hours = calculateHoursFromCells(workCells);
-          
-          // Aggiorna il totale con il nuovo calcolo
-          userDayData.total = hours;
-          
-          // Log dettagliati del calcolo per debugging
-          console.log(`🧮 CALCOLO ORE [FINALE]: ${workCells} celle work → ${hours} ore totali`);
-        }
+        // IMPORTANTE: Ricalcola SEMPRE le ore totali indipendentemente dal tipo di cella cambiata
+        // Questo assicura che il totale sia sempre aggiornato dopo ogni modifica
+        
+        // Contiamo quante celle "work" ci sono nella giornata DOPO il cambiamento
+        const workCells = userDayData.cells.map((cell, idx) => 
+          idx === timeIndex ? newType : cell.type
+        ).filter(type => type === "work").length;
+        
+        // Usa la funzione utility che implementa tutte le regole richieste
+        let hours = calculateHoursFromCells(workCells);
+        
+        // Aggiorna il totale delle ore per questa giornata
+        userDayData.total = hours;
+        
+        // Log dettagliati per il debugging
+        console.log(`🧮 CALCOLO ORE [${day}]: ${workCells} celle work → ${hours} ore totali`);
+        
+        // Aggiorna anche la UI per mostrare il cambiamento immediatamente
+        setTimeout(() => {
+          // Forza un rendering aggiornando lo stato
+          setGridData({...gridData});
+        }, 100);
         
         // Aggiorna lo stato della cella
         userDayData.cells[timeIndex] = { 
