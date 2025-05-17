@@ -19,6 +19,8 @@ import MyDocuments from "@/pages/my-documents";
 import Messages from "@/pages/messages";
 import NewUser from "@/pages/new-user";
 import ChangePassword from "@/pages/change-password";
+import EditUser from "@/pages/edit-user";
+import ImportUsers from "@/pages/import-users";
 
 function Router() {
   return (
@@ -30,6 +32,8 @@ function Router() {
       <Route path="/users" component={Users} />
       <Route path="/users/new" component={NewUser} />
       <Route path="/users/change-password" component={ChangePassword} />
+      <Route path="/users/edit" component={EditUser} />
+      <Route path="/users/import" component={ImportUsers} />
       <Route path="/documents" component={Documents} />
       <Route path="/requests" component={Requests} />
       <Route path="/time-off" component={TimeOff} />
