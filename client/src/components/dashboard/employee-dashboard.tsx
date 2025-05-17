@@ -245,8 +245,10 @@ export function EmployeeDashboard() {
                               <div className="flex justify-between items-center">
                                 <div>
                                   <p className="text-sm font-medium">
-                                    {/* Mostra solo il primo orario di inizio e l'ultimo orario di fine */}
-                                    {sortedWorkShifts[0]?.startTime} - {sortedWorkShifts[sortedWorkShifts.length - 1]?.endTime}
+                                    {/* Mostra gli orari dei turni consolidati */}
+                                    {consolidatedWorkShifts.length > 0 && 
+                                      `${consolidatedWorkShifts[0].startTime} - ${consolidatedWorkShifts[0].endTime}`
+                                    }
                                   </p>
                                   {/* Mostra tutte le aree coinvolte se diverse */}
                                   {(() => {
