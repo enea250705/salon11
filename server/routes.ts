@@ -7,6 +7,7 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { z } from "zod";
 import MemoryStore from "memorystore";
 import { addDays, parseISO, format } from "date-fns";
+import { maintenanceRoute } from "./routes/maintenance";
 import {
   insertUserSchema,
   insertScheduleSchema,
