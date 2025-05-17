@@ -100,14 +100,45 @@ export function DocumentList() {
   
   // Funzione per gestire l'apertura o il download di un documento
   const handleViewDocument = (document: DocumentData, mode: 'download' | 'open' = 'open') => {
-    const { type, period, fileData, userId } = document;
+    const { type, period, fileData, fileUrl, userId } = document;
     
-    // Verifica se il documento ha dati
+    // Se è disponibile un URL per il documento, lo utilizziamo direttamente
+    if (fileUrl) {
+      if (mode === 'open') {
+        // Apri il link in una nuova scheda
+        window.open(fileUrl, '_blank', 'noopener,noreferrer');
+        
+        toast({
+          title: "Documento aperto",
+          description: "Il documento è stato aperto in una nuova scheda",
+          duration: 3000,
+        });
+      } else {
+        // Per scaricare, utilizziamo una tecnica che funziona con URL esterni
+        const downloadWindow = window.open(fileUrl, '_blank');
+        if (downloadWindow) {
+          toast({
+            title: "Download avviato",
+            description: "Il documento è stato aperto per il download",
+            duration: 3000,
+          });
+        } else {
+          toast({
+            title: "Popup bloccato",
+            description: "Il browser ha bloccato l'apertura del documento. Verifica le impostazioni del browser.",
+            variant: "destructive",
+          });
+        }
+      }
+      return;
+    }
+    
+    // Fallback all'approccio base64 se non c'è un URL
     if (!fileData) {
-      console.error("Errore: document.fileData non disponibile:", document);
+      console.error("Errore: documento non disponibile - né fileUrl né fileData presenti:", document);
       toast({
         title: "Errore nella visualizzazione",
-        description: "Impossibile visualizzare il documento. Dati PDF mancanti.",
+        description: "Impossibile visualizzare il documento. Dati mancanti.",
         variant: "destructive",
       });
       return;

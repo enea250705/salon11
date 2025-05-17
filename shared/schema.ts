@@ -85,6 +85,7 @@ export const documents = pgTable("documents", {
   period: text("period").notNull(), // June 2023, 2022 (for tax docs)
   filename: text("filename").notNull(),
   fileData: text("file_data").notNull(), // Base64 encoded PDF
+  fileUrl: text("file_url"), // URL generato per accedere al documento
   uploadedBy: integer("uploaded_by").notNull(),
   uploadedAt: timestamp("uploaded_at").notNull(),
 });
