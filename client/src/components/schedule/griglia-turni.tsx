@@ -112,10 +112,7 @@ export function GrigliaTurni({
   // Mutation per salvare un turno
   const salvaTurnoMutation = useMutation({
     mutationFn: async (dati: any) => {
-      return await apiRequest('/api/shifts', {
-        method: 'POST',
-        data: dati
-      });
+      return await apiRequest(`/api/shifts`, 'POST', dati);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/schedules/${scheduleId}/shifts`] });
@@ -454,9 +451,9 @@ export function GrigliaTurni({
             <h2 className="text-2xl font-bold">
               Turni {format(dataInizio, "d MMMM", { locale: it })} - {format(dataFine, "d MMMM yyyy", { locale: it })}
             </h2>
-            <p className="text-muted-foreground">
+            <div className="text-muted-foreground">
               Pianificazione settimanale {pubblicato && <Badge>Pubblicato</Badge>}
-            </p>
+            </div>
           </div>
           
           {vistaAdmin && !pubblicato && (
