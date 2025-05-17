@@ -816,13 +816,13 @@ export function ExcelGrid({
                             let cellContent = "";
                             
                             if (cellType === "work") {
-                              cellStyle += " bg-blue-50 text-blue-700";
+                              cellStyle += " bg-blue-50 text-blue-700 font-semibold";
                               cellContent = "X";
                             } else if (cellType === "vacation") {
-                              cellStyle += " bg-red-50 text-red-700";
+                              cellStyle += " bg-red-50 text-red-700 font-semibold";
                               cellContent = "F";
                             } else if (cellType === "leave") {
-                              cellStyle += " bg-yellow-50 text-yellow-700";
+                              cellStyle += " bg-yellow-50 text-yellow-700 font-semibold";
                               cellContent = "P";
                             }
                             
@@ -831,8 +831,9 @@ export function ExcelGrid({
                                 key={idx}
                                 className={`p-0 text-center ${cellStyle}`}
                                 onClick={() => handleCellClick(user.id, idx, day.name)}
+                                style={{ height: "32px", minHeight: "32px", maxHeight: "32px" }}
                               >
-                                <div className="w-full h-full p-0 sm:p-1 text-xs sm:text-sm">
+                                <div className="flex items-center justify-center w-full h-full p-0 sm:p-1 text-xs sm:text-sm">
                                   {cellContent}
                                 </div>
                               </td>
