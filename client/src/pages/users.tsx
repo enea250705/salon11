@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout/layout";
-import { UserManagement } from "@/components/users/user-management-new";
+import { UserManagement } from "@/components/users/user-management";
 
 export default function Users() {
   const { user, isLoading, isAuthenticated } = useAuth();

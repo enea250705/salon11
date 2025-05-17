@@ -114,12 +114,6 @@ export function calculateWorkHours(startTime: string, endTime: string): number {
     return 2.0;
   }
   
-  // CASO SPECIALE 2: Da 04:00 a 00:00 (deve essere esattamente 20.0 ore)
-  if (startTime === "04:00" && endTime === "00:00") {
-    console.log("🔍 CASO SPECIALE: da 04:00 a 00:00 = 20.0 ore esatte");
-    return 20.0;
-  }
-  
   // Calcolo basato sui minuti totali
   const startMinutes = timeToMinutes(startTime);
   const endMinutes = timeToMinutes(endTime);
@@ -159,54 +153,33 @@ export function calculateWorkHours(startTime: string, endTime: string): number {
 
 /**
  * Calcola le ore di lavoro in base al numero di celle contigue
- * Implementa le regole speciali richieste dal cliente:
- * - 1 cella (X) = 0 ore (la prima X non conta come ora)
- * - 2 celle (X X) = 0.5 ore (30 minuti)
- * - 3 celle (X X X) = 1.0 ore (1 ora)
- * - 5 celle = 2.0 ore ESATTE (caso speciale)
- * - 04:00-00:00 = 20.0 ore ESATTE (caso speciale di 41 celle)
+ * Questa funzione implementa il requisito specifico del cliente per il calcolo delle ore
  * 
  * @param numCells Numero di celle contigue di tipo "work"
  * @returns Ore calcolate secondo la formula richiesta
  */
 export function calculateHoursFromCells(numCells: number): number {
-  // Controllo di validità: nessuna cella = 0 ore
-  if (numCells <= 0) {
-    console.log("⚠️ Errore: numero di celle non valido", numCells);
-    return 0;
-  }
+  // Nessuna cella = 0 ore
+  if (numCells <= 0) return 0;
   
-  // DEBUG: Traccia sempre il calcolo con il numero di celle
-  console.log(`🔢 Calcolo ore per blocco di ${numCells} celle...`);
-  
-  // REGOLA SPECIALE: 1 cella (X) deve essere esattamente 0 ore
+  // 1 cella (X) deve essere esattamente 0 ore (REGOLA BASE)
   if (numCells === 1) {
     console.log("🔍 REGOLA BASE: 1 cella (X) = 0.0 ore");
     return 0.0;
   }
   
-  // REGOLA SPECIALE: 5 celle (04:00-06:00) devono essere esattamente 2.0 ore
+  // 5 celle (04:00-06:00) devono essere esattamente 2.0 ore
   if (numCells === 5) {
     console.log("🔍 CORREZIONE SPECIALE: 5 celle = 2.0 ore (invece di 2.5)");
     return 2.0;
   }
   
-  // REGOLA SPECIALE: 04:00-00:00 deve essere esattamente 20.0 ore (40 o 41 celle)
-  // C'è un po' di flessibilità per gestire il caso anche con celle leggermente diverse
-  if (numCells >= 40 && numCells <= 41) { 
-    console.log(`🔍 CORREZIONE SPECIALE: ${numCells} celle (possibile 04:00-00:00) = 20.0 ore esatte`);
-    return 20.0;
-  }
-  
-  // REGOLA STANDARD: (numCells - 1) * 0.5 ore
+  // Altre celle seguono la regola normale: (numCells - 1) * 0.5 ore
   // Sottraiamo 1 perché la prima X non conta (vale 0 ore)
   const hours = (numCells - 1) * 0.5;
   
-  // Arrotondiamo a 2 decimali e garantiamo numeri precisi
-  const roundedHours = Math.round(hours * 100) / 100;
-  
-  console.log(`🔍 REGOLA BASE: ${numCells} celle = ${roundedHours} ore (prima cella X = 0 ore)`);
-  return roundedHours;
+  console.log(`🔍 REGOLA BASE: ${numCells} celle = ${hours} ore (prima cella X = 0 ore)`);
+  return Math.round(hours * 100) / 100;
 }
 
 /**
@@ -216,12 +189,6 @@ export function calculateHoursFromCells(numCells: number): number {
  */
 export function calculateTotalWorkHours(shifts: Array<{startTime: string, endTime: string, type?: string}>): number {
   if (!shifts || !Array.isArray(shifts) || shifts.length === 0) return 0;
-  
-  // Caso speciale: verifica se abbiamo un turno da 04:00 a 00:00
-  if (shifts.length === 1 && shifts[0].startTime === "04:00" && shifts[0].endTime === "00:00") {
-    console.log("🔍 CASO SPECIALE in calculateTotalWorkHours: 04:00-00:00 = 20.0 ore esatte");
-    return 20.0;
-  }
   
   // Primo passaggio: raggruppa i turni per giorno e userId (se presente)
   const groupedShifts: {[key: string]: {startTime: string, endTime: string, type?: string}[]} = {};

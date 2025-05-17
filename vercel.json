@@ -18,17 +18,5 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "api/**/*.ts": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  },
-  "crons": [
-    {
-      "path": "/api/maintenance",
-      "schedule": "0 0 * * *"
-    }
-  ]
+  }
 }

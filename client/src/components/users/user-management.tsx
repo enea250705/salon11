@@ -27,10 +27,17 @@ export function UserManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const [isNewUserDialogOpen, setIsNewUserDialogOpen] = useState(false);
+  const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
+  const [isBulkAddDialogOpen, setIsBulkAddDialogOpen] = useState(false);
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
   
   const usersPerPage = 10;
   
@@ -54,7 +61,7 @@ export function UserManagement() {
       apiRequest("PATCH", `/api/users/${userData.id}`, userData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-      // La variabile setIsEditUserDialogOpen è stata spostata in un altro componente
+      setIsEditUserDialogOpen(false);
       toast({
         title: "Utente aggiornato",
         description: "L'utente è stato aggiornato con successo.",
@@ -99,17 +106,56 @@ export function UserManagement() {
     currentPage * usersPerPage
   );
   
-  // Handle edit user - reindirizza alla pagina dedicata
+  // Handle edit user
   const handleEditUser = (user: User) => {
-    setLocation(`/users/edit?userId=${user.id}`);
+    // Pulisci prima di impostare
+    setSelectedUser(null);
+    setTimeout(() => {
+      setSelectedUser(user);
+      setIsEditUserDialogOpen(true);
+    }, 50);
   };
   
-  // Handle change password - reindirizza alla pagina dedicata
+  // Handle change password
   const handleChangePassword = (user: User) => {
-    setLocation(`/users/change-password?userId=${user.id}`);
+    // Pulisci prima di impostare
+    setSelectedUser(null);
+    setNewPassword("");
+    setTimeout(() => {
+      setSelectedUser(user);
+      setIsChangePasswordDialogOpen(true);
+    }, 50);
   };
   
-  // Nessuna mutation per cambio password poiché è stata spostata nella sua pagina dedicata
+  // Password change mutation
+  const changePasswordMutation = useMutation({
+    mutationFn: async ({ userId, password }: { userId: number, password: string }) => {
+      console.log("Changing password for user:", userId);
+      const response = await apiRequest("PATCH", `/api/users/${userId}`, { password });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to change password");
+      }
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      setIsChangePasswordDialogOpen(false);
+      setNewPassword("");
+      toast({
+        title: "Password modificata",
+        description: "La password dell'utente è stata modificata con successo.",
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to change password:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la modifica della password.",
+        variant: "destructive",
+      });
+    }
+  });
   
   // Format last login date
   const formatLastLogin = (lastLogin: string | Date | null | undefined) => {
@@ -138,15 +184,49 @@ export function UserManagement() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
             <h2 className="text-xl font-bold">Gestione Utenti</h2>
             <div className="flex flex-wrap gap-2">
-              <Button 
-                className="flex items-center gap-1 text-xs sm:text-sm" 
-                variant="outline"
-                onClick={() => setLocation("/users/import")}
+              <Dialog 
+                open={isBulkAddDialogOpen} 
+                onOpenChange={(open) => {
+                  // Reset il form quando viene chiuso
+                  if (!open) {
+                    setTimeout(() => {
+                      setIsBulkAddDialogOpen(false);
+                    }, 50);
+                  } else {
+                    setIsBulkAddDialogOpen(true);
+                  }
+                }}
               >
-                <Upload className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="sm:inline hidden">Importa Multipli</span>
-                <span className="sm:hidden inline">Importa</span>
-              </Button>
+                <DialogTrigger asChild>
+                  <Button className="flex items-center gap-1 text-xs sm:text-sm" variant="outline">
+                    <Users className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="sm:inline hidden">Importa Multipli</span>
+                    <span className="sm:hidden inline">Importa</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-xl w-[92%] md:w-full" aria-describedby="bulk-users-description">
+                  <DialogHeader className="pb-3 border-b">
+                    <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                      <Upload className="h-5 w-5 text-primary" />
+                      Importa Utenti in Blocco
+                    </DialogTitle>
+                    <DialogDescription id="bulk-users-description" className="text-sm text-gray-500 mt-1">
+                      Carica un elenco di utenti in formato CSV
+                    </DialogDescription>
+                  </DialogHeader>
+                  <BulkUsersForm 
+                    onSubmit={(result) => {
+                      setIsBulkAddDialogOpen(false);
+                      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+                      toast({
+                        title: "Utenti importati",
+                        description: `${result.createdCount} utenti sono stati creati con successo.`,
+                      });
+                    }}
+                    onCancel={() => setIsBulkAddDialogOpen(false)}
+                  />
+                </DialogContent>
+              </Dialog>
               
               <Button 
                 className="flex items-center gap-1 text-xs sm:text-sm"
@@ -245,21 +325,7 @@ export function UserManagement() {
                   <tbody className="divide-y">
                     {paginatedUsers.map((user: User) => (
                       <tr key={user.id}>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="relative flex-shrink-0">
-                              <img 
-                                src={user.role === "admin" ? "/avatars/admin.svg" : "/avatars/employee.svg"} 
-                                alt={user.role === "admin" ? "Avatar amministratore" : "Avatar dipendente"}
-                                className="w-8 h-8 rounded-full shadow-sm transition-all duration-300"
-                              />
-                              <div className="absolute -bottom-0.5 -right-0.5 bg-white dark:bg-sidebar-background p-0.5 rounded-full">
-                                <div className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                              </div>
-                            </div>
-                            <span>{user.name}</span>
-                          </div>
-                        </td>
+                        <td className="px-4 py-3">{user.name}</td>
                         <td className="px-4 py-3">{user.email}</td>
                         <td className="px-4 py-3">
                           <span className={`px-2 py-1 rounded-full text-xs ${
@@ -318,23 +384,11 @@ export function UserManagement() {
               {/* Mobile Cards (Visible only on mobile) */}
               <div className="md:hidden space-y-3">
                 {paginatedUsers.map((user: User) => (
-                  <div key={user.id} className="menu-card p-3 shadow-sm animate-fadeIn">
+                  <div key={user.id} className="bg-white border rounded-lg p-3 shadow-sm">
                     <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <img 
-                            src={user.role === "admin" ? "/avatars/admin.svg" : "/avatars/employee.svg"} 
-                            alt={user.role === "admin" ? "Avatar amministratore" : "Avatar dipendente"}
-                            className="w-10 h-10 rounded-full shadow-sm transition-all duration-300"
-                          />
-                          <div className="absolute -bottom-1 -right-1 bg-white dark:bg-sidebar-background p-0.5 rounded-full">
-                            <div className={`w-2.5 h-2.5 rounded-full ${user.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                          </div>
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-primary">{user.name}</h3>
-                          <p className="text-xs opacity-80">{user.email}</p>
-                        </div>
+                      <div>
+                        <h3 className="font-medium">{user.name}</h3>
+                        <p className="text-sm text-gray-500">{user.email}</p>
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

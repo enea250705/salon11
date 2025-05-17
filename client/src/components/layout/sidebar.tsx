@@ -14,7 +14,6 @@ type SidebarItem = {
 const adminItems: SidebarItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: "dashboard", role: "all" },
   { href: "/users", label: "Gestione Utenti", icon: "people", role: "admin" },
-  { href: "/turni", label: "Nuovi Turni", icon: "today", role: "admin" },
   { href: "/schedule", label: "Pianificazione Turni", icon: "event_note", role: "admin" },
   { href: "/requests", label: "Approvazioni", icon: "approval", badge: 0, role: "admin" },
   { href: "/documents", label: "Documenti", icon: "description", role: "admin" },
@@ -22,7 +21,6 @@ const adminItems: SidebarItem[] = [
 
 const employeeItems: SidebarItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: "dashboard", role: "all" },
-  { href: "/turni", label: "Nuovi Turni", icon: "today", role: "employee" },
   { href: "/my-schedule", label: "I Miei Turni", icon: "calendar_today", role: "employee" },
   { href: "/time-off", label: "Ferie e Permessi", icon: "beach_access", role: "employee" },
   { href: "/my-documents", label: "Documenti", icon: "description", role: "employee" },
@@ -95,17 +93,16 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
       <div 
         id="sidebar" 
         className={cn(
-          "bg-sidebar-background text-sidebar-foreground shadow-md w-full md:w-72 md:min-h-screen flex flex-col overflow-hidden",
+          "bg-white shadow-md w-full md:w-72 md:min-h-screen flex flex-col overflow-hidden",
           mobileMenuOpen 
             ? "fixed h-screen z-50 inset-0" 
             : "h-auto md:flex hidden",
-          "safari-fix", // Add Safari-specific class
         )}
       >
-        <div className="p-4 sm:p-5 border-b border-sidebar-border flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="material-icons text-primary text-xl sm:text-2xl animate-float">restaurant</span>
-            <h1 className="font-condensed text-xl sm:text-2xl font-bold gradient-text">Da Vittorino</h1>
+            <span className="material-icons text-primary text-xl sm:text-2xl">restaurant</span>
+            <h1 className="font-condensed text-xl sm:text-2xl font-bold text-primary">Da Vittorino</h1>
           </div>
           <button 
             id="mobile-menu-toggle" 
@@ -117,22 +114,13 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
           </button>
         </div>
         
-        <div id="user-profile" className="p-4 sm:p-5 border-b border-sidebar-border flex items-center space-x-3 sm:space-x-4">
-          <div className="relative">
-            <img 
-              src={user?.role === "admin" ? "/avatars/admin.svg" : "/avatars/employee.svg"} 
-              alt={user?.role === "admin" ? "Avatar amministratore" : "Avatar dipendente"}
-              className="w-12 sm:w-14 h-12 sm:h-14 rounded-full shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105"
-            />
-            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-sidebar-background p-0.5 rounded-full">
-              <div className={`w-3.5 h-3.5 rounded-full ${user ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-            </div>
+        <div id="user-profile" className="p-4 sm:p-5 border-b flex items-center space-x-3 sm:space-x-4">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full w-10 sm:w-12 h-10 sm:h-12 flex items-center justify-center shadow-md">
+            <span className="material-icons text-white text-base sm:text-lg">person</span>
           </div>
-          <div className="animate-fadeIn" style={{ animationDelay: '0.2s' }}>
-            <p className="font-medium text-sm sm:text-base text-sidebar-foreground">{user?.name || "Utente"}</p>
-            <p className="text-xs sm:text-sm text-sidebar-foreground/70">
-              {user?.role === "admin" ? "Amministratore" : "Dipendente"}
-            </p>
+          <div>
+            <p className="font-medium text-sm sm:text-base">{user?.name || "Utente"}</p>
+            <p className="text-xs sm:text-sm text-gray-600">{user?.role === "admin" ? "Amministratore" : "Dipendente"}</p>
           </div>
         </div>
         
@@ -145,9 +133,8 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
               {adminItems.map((item, index) => (
                 <div
                   key={item.href}
-                  style={{ animationDelay: `${index * 0.05}s` }}
                   className={cn(
-                    "sidebar-item rounded-md mb-1 animate-fadeIn menu-item-animate",
+                    "sidebar-item rounded-md mb-1",
                     location === item.href && "bg-blue-50"
                   )}
                 >
@@ -155,19 +142,19 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
                     href={item.href} 
                     onClick={() => setMobileMenuOpen(false)}
                     className={cn(
-                      "flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 transition-all duration-200",
+                      "flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700",
                       location === item.href && "text-primary font-medium"
                     )}
                   >
                     <span className={cn(
-                      "material-icons text-base sm:text-lg transition-transform duration-200",
-                      location === item.href ? "text-primary" : "text-gray-500 hover:scale-110"
+                      "material-icons text-base sm:text-lg",
+                      location === item.href ? "text-primary" : "text-gray-500"
                     )}>
                       {item.icon}
                     </span>
                     <span>{item.label}</span>
                     {item.badge !== undefined && item.badge > 0 && (
-                      <span className="ml-auto bg-primary text-white text-[10px] sm:text-xs rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 animate-pulse">
+                      <span className="ml-auto bg-primary text-white text-[10px] sm:text-xs rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1">
                         {item.badge}
                       </span>
                     )}
@@ -185,9 +172,8 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
               {employeeItems.map((item, index) => (
                 <div
                   key={item.href}
-                  style={{ animationDelay: `${index * 0.05}s` }}
                   className={cn(
-                    "sidebar-item rounded-md mb-1 animate-fadeIn menu-item-animate",
+                    "sidebar-item rounded-md mb-1",
                     location === item.href && "bg-blue-50"
                   )}
                 >
@@ -195,13 +181,13 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
                     href={item.href} 
                     onClick={() => setMobileMenuOpen(false)}
                     className={cn(
-                      "flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 transition-all duration-200",
+                      "flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700",
                       location === item.href && "text-primary font-medium"
                     )}
                   >
                     <span className={cn(
-                      "material-icons text-base sm:text-lg transition-transform duration-200",
-                      location === item.href ? "text-primary" : "text-gray-500 hover:scale-110"
+                      "material-icons text-base sm:text-lg",
+                      location === item.href ? "text-primary" : "text-gray-500"
                     )}>
                       {item.icon}
                     </span>
@@ -218,12 +204,12 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
           )}
         </nav>
         
-        <div className="p-4 sm:p-5 border-t pb-safe">
+        <div className="p-4 sm:p-5 border-t">
           <button 
             onClick={logout}
-            className="btn-animated flex items-center space-x-2 text-sm sm:text-base text-gray-700 hover:text-primary transition-all duration-300 w-full rounded-md py-2 px-3 hover:bg-gray-100 hover:shadow-sm"
+            className="flex items-center space-x-2 text-sm sm:text-base text-gray-700 hover:text-primary transition-colors w-full rounded-md py-2 px-3 hover:bg-gray-100"
           >
-            <span className="material-icons text-base sm:text-lg transition-transform duration-300 group-hover:rotate-6">logout</span>
+            <span className="material-icons text-base sm:text-lg">logout</span>
             <span>Logout</span>
           </button>
         </div>
