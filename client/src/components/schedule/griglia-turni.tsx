@@ -444,7 +444,6 @@ export function GrigliaTurni({
                           )}
                         </th>
                       ))}
-                      <th className="py-2 px-4 text-center text-sm font-medium whitespace-nowrap">Ore</th>
                       <th className="py-2 px-4 text-center text-sm font-medium whitespace-nowrap">Note</th>
                     </tr>
                   </thead>
