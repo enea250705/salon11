@@ -490,10 +490,6 @@ export function GrigliaTurni({
                               </td>
                             ))}
                             
-                            <td className="py-2 px-4 text-center text-sm font-medium">
-                              {datiUtente.totale}
-                            </td>
-                            
                             <td className="py-2 px-2">
                               <Input
                                 value={datiUtente.note}
