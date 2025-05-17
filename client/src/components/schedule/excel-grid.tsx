@@ -765,24 +765,28 @@ export function ExcelGrid({
             setSelectedDay(dayIndex);
           }
         }}>
-          <div className="overflow-x-auto pb-1 mb-3">
-            <TabsList className="mb-2 w-max min-w-full flex">
-              {weekDays.map((day, idx) => (
-                <TabsTrigger 
-                  key={day.name} 
-                  value={day.name} 
-                  className="flex-1 min-w-[3.5rem] px-2 py-1.5 h-auto"
-                >
-                  <div className="flex flex-col items-center justify-center">
-                    <span className="hidden sm:inline text-sm font-medium">{day.name}</span>
-                    <span className="sm:hidden text-xs font-semibold uppercase">{day.shortName}</span>
-                    <span className="text-xs text-muted-foreground mt-0.5">
-                      {format(day.date, "d/M")}
-                    </span>
-                  </div>
-                </TabsTrigger>
-              ))}
-            </TabsList>
+          <div className="mb-4">
+            <div className="overflow-x-auto">
+              <div className="w-full min-w-[460px]">
+                <TabsList className="w-full grid grid-cols-7 gap-x-1">
+                  {weekDays.map((day, idx) => (
+                    <TabsTrigger 
+                      key={day.name} 
+                      value={day.name} 
+                      className="px-1 py-2 h-auto text-center"
+                    >
+                      <div className="flex flex-col items-center">
+                        <span className="hidden xs:inline text-sm font-medium whitespace-nowrap">{day.name}</span>
+                        <span className="xs:hidden text-xs font-bold uppercase">{day.shortName}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {format(day.date, "d/M")}
+                        </span>
+                      </div>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+            </div>
           </div>
           
           {weekDays.map((day) => (
