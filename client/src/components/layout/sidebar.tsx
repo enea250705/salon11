@@ -14,7 +14,6 @@ type SidebarItem = {
 const adminItems: SidebarItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: "dashboard", role: "all" },
   { href: "/users", label: "Gestione Utenti", icon: "people", role: "admin" },
-  { href: "/turni", label: "Nuovi Turni", icon: "today", role: "admin" },
   { href: "/schedule", label: "Pianificazione Turni", icon: "event_note", role: "admin" },
   { href: "/requests", label: "Approvazioni", icon: "approval", badge: 0, role: "admin" },
   { href: "/documents", label: "Documenti", icon: "description", role: "admin" },
@@ -22,7 +21,6 @@ const adminItems: SidebarItem[] = [
 
 const employeeItems: SidebarItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: "dashboard", role: "all" },
-  { href: "/turni", label: "Nuovi Turni", icon: "today", role: "employee" },
   { href: "/my-schedule", label: "I Miei Turni", icon: "calendar_today", role: "employee" },
   { href: "/time-off", label: "Ferie e Permessi", icon: "beach_access", role: "employee" },
   { href: "/my-documents", label: "Documenti", icon: "description", role: "employee" },

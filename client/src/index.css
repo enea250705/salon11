@@ -2,25 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Applicazione globale dello scroll-behavior per un'esperienza utente più fluida */
-html {
-  scroll-behavior: smooth;
-  scroll-padding-top: 80px; /* Utile per tenere conto dell'altezza dell'header nelle ancore */
-  height: 100%;
-  overflow-x: hidden; /* Previene lo scroll orizzontale indesiderato */
-}
-
-/* Reset della posizione del scroll quando si cambia pagina */
-html, body {
-  overflow-anchor: none; /* Disabilita il blocco dell'ancora nativa del browser */
-}
-
-/* Reimposta la posizione dello scroll dopo il caricamento della pagina */
-body {
-  overflow-y: auto;
-  height: 100%;
-}
-
 :root {
   /* Palette ispirata alla cucina italiana - colori caldi e accoglienti */
   --background: 35 30% 98%;

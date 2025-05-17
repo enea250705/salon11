@@ -7,7 +7,6 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { z } from "zod";
 import MemoryStore from "memorystore";
 import { addDays, parseISO, format } from "date-fns";
-import { maintenanceRoute } from "./routes/maintenance";
 import {
   insertUserSchema,
   insertScheduleSchema,
@@ -16,9 +15,6 @@ import {
   insertDocumentSchema,
   insertNotificationSchema
 } from "@shared/schema";
-
-// Importa la configurazione ottimizzata per Vercel
-import { sessionConfig, isVercelProduction } from "./config/vercel";
 
 // Initialize session store
 const MemorySessionStore = MemoryStore(session);
@@ -192,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   };
   
-  // Setup session middleware ottimizzato per Vercel
+  // Setup session middleware
   app.use(
     session({
       secret: process.env.SESSION_SECRET || "keyboard cat",
@@ -200,9 +196,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       saveUninitialized: false,
       store: storage.sessionStore,
       cookie: {
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 giorni
-        secure: isVercelProduction, // Cookie sicuri solo in produzione
-        sameSite: isVercelProduction ? 'none' : 'lax' // Ottimizzato per deploy Vercel
+        maxAge: 86400000, // 24 ore
+        secure: false
       }
     })
   );
@@ -1579,9 +1574,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete message" });
     }
   });
-  
-  // Endpoint per la manutenzione pianificata (chiamato via cron da Vercel)
-  app.get("/api/maintenance", maintenanceRoute);
   
   return httpServer;
 }

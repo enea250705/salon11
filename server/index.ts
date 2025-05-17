@@ -1,20 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { sessionConfig, isVercelProduction } from "./config/vercel";
 
-// Creazione dell'app Express
 const app = express();
-
-// Configurazione base di Express
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// Aggiungi header per supportare Vercel
-app.use((req, res, next) => {
-  res.setHeader('Powered-By', 'Da Vittorino Ristorante');
-  next();
-});
 
 app.use((req, res, next) => {
   const start = Date.now();

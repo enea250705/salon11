@@ -54,7 +54,7 @@ export function UserManagement() {
       apiRequest("PATCH", `/api/users/${userData.id}`, userData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-      // La variabile setIsEditUserDialogOpen è stata spostata in un altro componente
+      setIsEditUserDialogOpen(false);
       toast({
         title: "Utente aggiornato",
         description: "L'utente è stato aggiornato con successo.",

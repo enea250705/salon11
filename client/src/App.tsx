@@ -5,13 +5,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/auth-context";
-import { ScrollToTop } from "@/components/scroll-to-top";
 
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import Schedule from "@/pages/schedule";
-import Turni from "@/pages/turni";
 import Users from "@/pages/users";
 import Documents from "@/pages/documents";
 import Requests from "@/pages/requests";
@@ -31,7 +29,6 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/schedule" component={Schedule} />
-      <Route path="/turni" component={Turni} />
       <Route path="/users" component={Users} />
       <Route path="/users/new" component={NewUser} />
       <Route path="/users/change-password" component={ChangePassword} />
@@ -53,8 +50,6 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ThemeProvider attribute="class" defaultTheme="light">
-          {/* Questo componente gestisce lo scroll verso l'alto della pagina per ogni cambio di rotta o refresh */}
-          <ScrollToTop />
           <Toaster />
           <Router />
         </ThemeProvider>
