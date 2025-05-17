@@ -41,13 +41,14 @@ export function generateTimeSlots(startHour: number, endHour: number, interval: 
 }
 
 /**
- * Formatta un numero di ore in una stringa leggibile
+ * Formatta un numero di ore in una stringa leggibile più completa e visibile
  * Es. 7.5 -> "7h 30m"
  * @param hours Ore da formattare
  * @returns Stringa formattata con ore e minuti
  */
 export function formatHours(hours: number): string {
-  if (isNaN(hours) || hours < 0) return "0h";
+  if (isNaN(hours) || hours === 0) return "0 ore";
+  if (hours < 0) return "0 ore";
   
   // Arrotonda a 2 decimali per evitare errori di precisione
   hours = Math.round(hours * 100) / 100;
@@ -55,13 +56,21 @@ export function formatHours(hours: number): string {
   const wholeHours = Math.floor(hours);
   const minutes = Math.round((hours - wholeHours) * 60);
   
-  if (minutes === 0) {
-    return `${wholeHours}h`;
+  // Formattazione più chiara e completa
+  if (wholeHours === 0 && minutes > 0) {
+    // Solo minuti
+    return `${minutes} min`;
+  } else if (minutes === 0) {
+    // Solo ore intere
+    return wholeHours === 1 ? `${wholeHours} ora` : `${wholeHours} ore`;
   } else if (minutes === 60) {
     // Gestisce il caso in cui i minuti arrotondati sono 60
-    return `${wholeHours + 1}h`;
+    const adjustedHours = wholeHours + 1;
+    return adjustedHours === 1 ? `${adjustedHours} ora` : `${adjustedHours} ore`;
   } else {
-    return `${wholeHours}h ${minutes}m`;
+    // Ore e minuti
+    const hourText = wholeHours === 1 ? `${wholeHours} ora` : `${wholeHours} ore`;
+    return `${hourText} ${minutes} min`;
   }
 }
 

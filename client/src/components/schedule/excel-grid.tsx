@@ -796,7 +796,7 @@ export function ExcelGrid({
                         )
                       ))}
                       <th className="p-2 text-left font-medium">Note</th>
-                      <th className="p-2 text-center font-medium bg-green-100 text-green-800">TOTALE ORE</th>
+                      <th className="p-2 text-center font-bold bg-green-700 text-white">TOTALE ORE</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -852,6 +852,14 @@ export function ExcelGrid({
                               disabled={isPublished}
                               className="text-xs sm:text-sm w-full"
                             />
+                          </td>
+                          
+                          {/* Cella con il totale delle ore */}
+                          <td className="p-2 text-center font-bold bg-green-100 border-l-2 border-green-300">
+                            <div className="text-xl text-green-800 flex items-center justify-center">
+                              <span className="material-icons mr-1 text-green-600">schedule</span>
+                              {formatHours(gridData[day.name]?.[user.id]?.total || 0)}
+                            </div>
                           </td>
                           
                         </tr>
