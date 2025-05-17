@@ -655,11 +655,7 @@ export function EmployeeScheduleViewer({ schedule, shifts, userShifts }: Employe
                                 )}
                               </div>
                               
-                              {shift.type === "work" && (
-                                <div className="text-xs sm:text-sm font-medium">
-                                  {formatHours(Number(shift.hours))}
-                                </div>
-                              )}
+                              {/* Rimuoviamo la visualizzazione delle ore per dipendenti */}
                             </div>
                           </div>
                         );
