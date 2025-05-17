@@ -325,7 +325,21 @@ export function UserManagement() {
                   <tbody className="divide-y">
                     {paginatedUsers.map((user: User) => (
                       <tr key={user.id}>
-                        <td className="px-4 py-3">{user.name}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="relative flex-shrink-0">
+                              <img 
+                                src={user.role === "admin" ? "/avatars/admin.svg" : "/avatars/employee.svg"} 
+                                alt={user.role === "admin" ? "Avatar amministratore" : "Avatar dipendente"}
+                                className="w-8 h-8 rounded-full shadow-sm transition-all duration-300"
+                              />
+                              <div className="absolute -bottom-0.5 -right-0.5 bg-white dark:bg-sidebar-background p-0.5 rounded-full">
+                                <div className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                              </div>
+                            </div>
+                            <span>{user.name}</span>
+                          </div>
+                        </td>
                         <td className="px-4 py-3">{user.email}</td>
                         <td className="px-4 py-3">
                           <span className={`px-2 py-1 rounded-full text-xs ${
@@ -384,11 +398,23 @@ export function UserManagement() {
               {/* Mobile Cards (Visible only on mobile) */}
               <div className="md:hidden space-y-3">
                 {paginatedUsers.map((user: User) => (
-                  <div key={user.id} className="bg-white border rounded-lg p-3 shadow-sm">
+                  <div key={user.id} className="menu-card p-3 shadow-sm animate-fadeIn">
                     <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="font-medium">{user.name}</h3>
-                        <p className="text-sm text-gray-500">{user.email}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <img 
+                            src={user.role === "admin" ? "/avatars/admin.svg" : "/avatars/employee.svg"} 
+                            alt={user.role === "admin" ? "Avatar amministratore" : "Avatar dipendente"}
+                            className="w-10 h-10 rounded-full shadow-sm transition-all duration-300"
+                          />
+                          <div className="absolute -bottom-1 -right-1 bg-white dark:bg-sidebar-background p-0.5 rounded-full">
+                            <div className={`w-2.5 h-2.5 rounded-full ${user.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-primary">{user.name}</h3>
+                          <p className="text-xs opacity-80">{user.email}</p>
+                        </div>
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
