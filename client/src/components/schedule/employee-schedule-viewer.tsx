@@ -12,11 +12,11 @@ import jsPDF from "jspdf";
  * Rimuove 30 minuti dall'orario di fine per compensare l'offset introdotto dal sistema di celle
  */
 /**
- * Calcola le ore di lavoro effettive secondo la nuova regola (primo X = 0 ore)
- * Questa funzione applica la regola che la prima mezz'ora non conta
+ * Calcola le ore di lavoro effettive
+ * Questa funzione utilizza il calcolo standard delle ore
  */
 function calculateActualHours(startTime: string, endTime: string): number {
-  // Usiamo la funzione di calcolo aggiornata che tiene conto della regola del primo X = 0 ore
+  // Usiamo la funzione di calcolo delle ore di lavoro
   return calculateWorkHours(startTime, endTime);
 }
 
@@ -339,7 +339,7 @@ export function EmployeeScheduleViewer({ schedule, shifts, userShifts }: Employe
                                 // Aggiungiamo log per debug
                                 const workHours = consolidatedWorkShifts.map(shift => {
                                   const hours = calculateActualHours(shift.startTime, shift.endTime);
-                                  console.log(`🔷 Calcolo ore turno ${shift.startTime}-${shift.endTime}: ${hours} ore (nuova regola: primo X = 0 ore)`);
+                                  console.log(`🔷 Calcolo ore turno ${shift.startTime}-${shift.endTime}: ${hours} ore`);
                                   return {
                                     ...shift,
                                     hours
