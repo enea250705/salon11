@@ -62,9 +62,9 @@ export function FooterNav() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="mt-16 border-t border-gray-200 pt-8 pb-4">
+    <div className="mt-16 border-t border-primary/10 pt-8 pb-4">
       <div className="max-w-4xl mx-auto">
-        <h3 className="text-lg font-medium text-gray-700 mb-4 px-4 animate-fadeIn">
+        <h3 className="text-lg font-medium text-primary mb-4 px-4 animate-fadeIn">
           <span className="relative inline-block">
             <span className="absolute -bottom-1 left-0 w-1/3 h-0.5 bg-primary/50 rounded"></span>
             Navigazione Rapida
@@ -113,9 +113,10 @@ export function FooterNav() {
           </button>
         </div>
         
-        <div className="text-center text-xs text-gray-500 mt-6 animate-fadeIn" style={{ animationDelay: '0.5s' }}>
-          <p className="animate-float">
-            &copy; {new Date().getFullYear()} Da Vittorino - Gestione Personale
+        <div className="text-center text-xs mt-6 animate-fadeIn" style={{ animationDelay: '0.5s' }}>
+          <p className="animate-float relative inline-block px-4 py-2 menu-card">
+            <span className="text-accent font-semibold">&copy; {new Date().getFullYear()} Ristorante Da Vittorino</span>
+            <span className="block text-xs opacity-70 mt-1">Gestione Personale</span>
           </p>
         </div>
       </div>

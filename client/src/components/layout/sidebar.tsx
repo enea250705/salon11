@@ -93,17 +93,17 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: {
       <div 
         id="sidebar" 
         className={cn(
-          "bg-white shadow-md w-full md:w-72 md:min-h-screen flex flex-col overflow-hidden",
+          "bg-sidebar-background text-sidebar-foreground shadow-md w-full md:w-72 md:min-h-screen flex flex-col overflow-hidden",
           mobileMenuOpen 
             ? "fixed h-screen z-50 inset-0" 
             : "h-auto md:flex hidden",
           "safari-fix", // Add Safari-specific class
         )}
       >
-        <div className="p-4 sm:p-5 border-b flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-sidebar-border flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="material-icons text-primary text-xl sm:text-2xl">restaurant</span>
-            <h1 className="font-condensed text-xl sm:text-2xl font-bold text-primary">Da Vittorino</h1>
+            <span className="material-icons text-primary text-xl sm:text-2xl animate-float">restaurant</span>
+            <h1 className="font-condensed text-xl sm:text-2xl font-bold gradient-text">Da Vittorino</h1>
           </div>
           <button 
             id="mobile-menu-toggle" 

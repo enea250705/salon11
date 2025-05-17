@@ -48,7 +48,7 @@ export function Layout({ children }: PropsWithChildren) {
         mobileMenuOpen && "hidden md:block"
       )}>
         <div className={cn(
-          "sticky top-0 z-30 transition-all duration-300 bg-white h-16 flex items-center px-4",
+          "sticky top-0 z-30 transition-all duration-300 bg-white/80 backdrop-blur-sm h-16 flex items-center px-4",
           scrolled && "shadow-md"
         )}>
           <MobileNav isMobileMenuOpen={mobileMenuOpen} toggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)} />
