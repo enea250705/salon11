@@ -263,43 +263,46 @@ export function GrigliaTurni({
     // Calcola il totale delle ore per ogni giorno/utente
     Object.keys(nuoviDatiGriglia).forEach(giorno => {
       Object.keys(nuoviDatiGriglia[giorno]).forEach(utenteIdStr => {
-        const utenteId = parseInt(utenteIdStr);
-        const datiUtente = nuoviDatiGriglia[giorno][utenteId];
-        
-        // Identifica blocchi di celle consecutive di tipo "work"
-        let totaleOre = 0;
-        let inizioBlocco: number | null = null;
-        
-        // Scan per blocchi di "work"
-        for (let i = 0; i < datiUtente.celle.length; i++) {
-          if (datiUtente.celle[i].tipo === "work") {
-            if (inizioBlocco === null) {
-              inizioBlocco = i;
-            }
-            
-            // Se siamo all'ultima cella e c'è un blocco aperto
-            if (i === datiUtente.celle.length - 1 && inizioBlocco !== null) {
-              // Calcola ore per questo blocco
-              const numCelle = i - inizioBlocco + 1;
+        try {
+          const utenteId = parseInt(utenteIdStr);
+          const datiUtente = nuoviDatiGriglia[giorno][utenteId];
+          
+          // Identifica blocchi di celle consecutive di tipo "work"
+          let totaleOre = 0;
+          let inizioBlocco: number | null = null;
+          
+          // Scan per blocchi di "work"
+          for (let i = 0; i < datiUtente.celle.length; i++) {
+            if (datiUtente.celle[i].tipo === "work") {
+              if (inizioBlocco === null) {
+                inizioBlocco = i;
+              }
+              
+              // Se siamo all'ultima cella e c'è un blocco aperto
+              if (i === datiUtente.celle.length - 1 && inizioBlocco !== null) {
+                // Calcola ore per questo blocco
+                const numCelle = i - inizioBlocco + 1;
+                const ore = calcolaOreDaCelle(numCelle);
+                totaleOre += ore;
+                
+                // Reset blocco
+                inizioBlocco = null;
+              }
+            } else if (inizioBlocco !== null) {
+              // Fine di un blocco, calcola ore
+              const numCelle = i - inizioBlocco;
               const ore = calcolaOreDaCelle(numCelle);
               totaleOre += ore;
               
               // Reset blocco
               inizioBlocco = null;
             }
-          } else if (inizioBlocco !== null) {
-            // Fine di un blocco, calcola ore
-            const numCelle = i - inizioBlocco;
-            const ore = calcolaOreDaCelle(numCelle);
-            totaleOre += ore;
-            
-            // Reset blocco
-            inizioBlocco = null;
           }
+          // Aggiorna il totale arrotondato a 1 decimale
+          nuoviDatiGriglia[giorno][utenteId].totale = Math.round(totaleOre * 10) / 10;
+        } catch (error) {
+          console.error("Errore nel calcolo delle ore:", error);
         }
-        
-        // Aggiorna il totale arrotondato a 1 decimale
-        nuoviDatiGriglia[giorno][utenteId].totale = Math.round(totaleOre * 10) / 10;
       });
     });
     
