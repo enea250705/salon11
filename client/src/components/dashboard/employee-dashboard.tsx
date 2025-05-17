@@ -192,67 +192,31 @@ export function EmployeeDashboard() {
                       {day.charAt(0).toUpperCase() + day.slice(1)}
                     </h3>
                     <div className="text-xs text-blue-600 font-medium">
-                      {formatHours(calculateTotalWorkHours(shifts.filter((shift: any) => shift.type === "work")))}
+                      {workingDays > 0 ? "In servizio" : "Riposo"}
                     </div>
                   </div>
                   
-                  {/* Raggruppa i turni per tipo */}
+                  {/* Semplice visualizzazione dei tipi di turni, senza orari */}
                   {(() => {
                     // Raggruppa i turni per tipo
                     const workShifts = shifts.filter(s => s.type === "work");
                     const vacationShifts = shifts.filter(s => s.type === "vacation");
                     const leaveShifts = shifts.filter(s => s.type === "leave");
                     
-                    // Ordina i turni di lavoro per orario di inizio
-                    const sortedWorkShifts = [...workShifts].sort((a, b) => {
-                      return convertToHours(a.startTime) - convertToHours(b.startTime);
-                    });
-                    
-                    // Consolida gli slot consecutivi in un unico turno
-                    const consolidatedWorkShifts = [];
-                    let currentShift = null;
-                    
-                    for (const shift of sortedWorkShifts) {
-                      if (!currentShift) {
-                        currentShift = {...shift};
-                        continue;
-                      }
-                      
-                      // Se questo slot inizia esattamente quando finisce quello precedente, sono consecutivi
-                      // Considerando che ogni slot è di 30 minuti
-                      if (shift.startTime === currentShift.endTime) {
-                        // Estendi l'orario di fine del turno corrente
-                        currentShift.endTime = shift.endTime;
-                      } else {
-                        // Se non è consecutivo, aggiungi il turno corrente e inizia uno nuovo
-                        consolidatedWorkShifts.push(currentShift);
-                        currentShift = {...shift};
-                      }
-                    }
-                    
-                    // Aggiungi l'ultimo turno se esiste
-                    if (currentShift) {
-                      consolidatedWorkShifts.push(currentShift);
-                    }
-                    
                     return (
                       <>
                         {/* Turni di lavoro */}
-                        {consolidatedWorkShifts.length > 0 && (
+                        {workShifts.length > 0 && (
                           <div className="mb-3">
-                            {/* Mostra un unico turno giornaliero complessivo */}
                             <div className="p-2 mb-2 rounded-md bg-blue-50 border border-blue-100">
                               <div className="flex justify-between items-center">
                                 <div>
                                   <p className="text-sm font-medium">
-                                    {/* Mostra gli orari dei turni consolidati */}
-                                    {consolidatedWorkShifts.length > 0 && 
-                                      `${consolidatedWorkShifts[0].startTime} - ${consolidatedWorkShifts[0].endTime}`
-                                    }
+                                    In servizio
                                   </p>
-                                  {/* Mostra tutte le aree coinvolte se diverse */}
+                                  {/* Mostra solo le aree se disponibili */}
                                   {(() => {
-                                    const uniqueAreas = [...new Set(sortedWorkShifts
+                                    const uniqueAreas = [...new Set(workShifts
                                       .filter(s => s.area)
                                       .map(s => s.area)
                                     )];
@@ -268,18 +232,6 @@ export function EmployeeDashboard() {
                                 </div>
                                 <span className="material-icons text-sm text-blue-500">work</span>
                               </div>
-                              
-                              {/* Se ci sono orari non consecutivi, mostrali come dettaglio */}
-                              {consolidatedWorkShifts.length > 1 && (
-                                <div className="mt-2 text-xs text-gray-500">
-                                  <p className="font-medium">Dettaglio turni:</p>
-                                  <ul className="list-disc pl-4 mt-1">
-                                    {consolidatedWorkShifts.map((shift, index) => (
-                                      <li key={index}>{shift.startTime} - {shift.endTime}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
                             </div>
                           </div>
                         )}
