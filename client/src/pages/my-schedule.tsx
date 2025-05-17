@@ -144,12 +144,7 @@ export default function MySchedule() {
                       Visualizza altri turni
                     </Button>
                     
-                    <div className="text-sm">
-                      <div className="font-medium">Totale ore settimanali:</div>
-                      <div>
-                        {formatHours(calculateTotalWorkHours(userShifts.filter(shift => shift.type === "work")))}
-                      </div>
-                    </div>
+
                   </div>
                 ) : (
                   <div className="text-sm text-gray-500">
@@ -192,10 +187,7 @@ export default function MySchedule() {
                     <div>{format(new Date(currentSchedule.startDate), "d MMM", { locale: it })} - {format(new Date(currentSchedule.endDate), "d MMM", { locale: it })}</div>
                   </div>
                   
-                  <div className="flex justify-between items-center">
-                    <div className="font-medium">Ore settimanali:</div>
-                    <div className="font-semibold text-blue-700">{formatHours(calculateTotalWorkHours(userShifts.filter(shift => shift.type === "work")))}</div>
-                  </div>
+
                 </div>
               ) : (
                 <div className="text-sm text-gray-500">
