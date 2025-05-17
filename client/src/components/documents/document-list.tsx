@@ -99,15 +99,15 @@ export function DocumentList() {
   });
   
   // Funzione per scaricare un documento o aprirlo in una nuova finestra
-  const handleDownload = (document: DocumentData) => {
+  const handleViewDocument = (document: DocumentData, mode: 'download' | 'open' = 'open') => {
     const { type, period, fileData, userId } = document;
     
     // Verifica se il documento ha dati
     if (!fileData) {
       console.error("Errore: document.fileData non disponibile:", document);
       toast({
-        title: "Errore nel download",
-        description: "Impossibile scaricare il documento. Dati PDF mancanti.",
+        title: "Errore nella visualizzazione",
+        description: "Impossibile visualizzare il documento. Dati PDF mancanti.",
         variant: "destructive",
       });
       return;
@@ -118,8 +118,7 @@ export function DocumentList() {
       ? users.find((u) => u.id === userId)?.name || `Utente ${userId}`
       : user?.name || user?.username || "";
     
-    console.log("Download documento:", { type, period, userId, employeeName, fileDataLength: fileData.length });
-      
+    // Prepara il nome del file in base al tipo di documento
     let filename = "";
     if (type === "payslip") {
       filename = generatePayslipFilename(period, employeeName);
@@ -130,25 +129,28 @@ export function DocumentList() {
     }
     
     try {
-      // Approccio semplificato: apri il PDF in una nuova finestra browser
-      // Questo è più compatibile con tutti i browser e il download può essere 
-      // fatto direttamente dal visualizzatore PDF del browser
-      const dataUrl = `data:application/pdf;base64,${fileData}`;
-      window.open(dataUrl, '_blank');
+      // Utilizziamo la nuova utility per gestire i PDF
+      downloadPdf(filename, fileData, mode);
       
       toast({
-        title: "Documento aperto",
-        description: "Il documento è stato aperto in una nuova finestra. Puoi scaricarlo da lì.",
+        title: mode === 'download' ? "Download avviato" : "Documento aperto",
+        description: mode === 'download' 
+          ? "Il documento è stato scaricato con successo" 
+          : "Il documento è stato aperto in una nuova scheda",
+        duration: 3000,
       });
     } catch (error) {
-      console.error("Errore durante l'apertura del documento:", error);
+      console.error(`Errore durante ${mode === 'download' ? 'il download' : "l'apertura"} del documento:`, error);
       toast({
-        title: "Errore nell'apertura",
-        description: "Si è verificato un problema durante l'apertura del documento",
+        title: "Errore",
+        description: `Si è verificato un problema durante ${mode === 'download' ? 'il download' : "l'apertura"} del documento`,
         variant: "destructive",
       });
     }
   };
+  
+  // Alias per mantenere la compatibilità con il codice esistente
+  const handleDownload = (document: DocumentData) => handleViewDocument(document, 'download');
   
   // Funzione di supporto per convertire base64 in blob (non più utilizzata)
   function base64ToBlob(base64: string, mimeType: string): Blob {

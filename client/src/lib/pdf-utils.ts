@@ -6,11 +6,15 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
 /**
- * Downloads a PDF file from a base64 encoded string
- * @param filename The name of the file to download
- * @param base64Data The base64 encoded PDF data
+ * Utility per gestire i PDF, con due modalità:
+ * 1. Download: Scarica il PDF sul dispositivo dell'utente
+ * 2. Open: Apre il PDF in una nuova scheda del browser
+ * 
+ * @param filename Il nome del file
+ * @param base64Data I dati PDF in formato base64
+ * @param mode La modalità: 'download' (scarica) o 'open' (apri in nuova scheda)
  */
-export function downloadPdf(filename: string, base64Data: string): void {
+export function downloadPdf(filename: string, base64Data: string, mode: 'download' | 'open' = 'download'): void {
   // Verifica che i dati siano presenti
   if (!base64Data || base64Data.trim() === '') {
     console.error('Errore: dati PDF mancanti o vuoti');
@@ -18,32 +22,33 @@ export function downloadPdf(filename: string, base64Data: string): void {
   }
   
   try {
-    // Create a link element
-    const link = document.createElement("a");
-    
-    // Se i dati contengono già il prefisso, non aggiungerlo nuovamente
+    // Costruisci l'URL dei dati PDF
     const dataUrl = base64Data.startsWith('data:') 
       ? base64Data 
       : `data:application/pdf;base64,${base64Data}`;
     
-    // Set the href attribute to a data URL that represents the PDF file
+    // Crea un elemento link
+    const link = document.createElement("a");
     link.href = dataUrl;
     
-    // Set the download attribute to specify the filename
-    link.download = filename;
-    
-    // Append the link to the document body (required for Firefox)
-    document.body.appendChild(link);
-    
-    // Programmatically click the link to trigger the download
-    link.click();
-    
-    // Remove the link from the document
-    document.body.removeChild(link);
-    
-    console.log(`Download avviato: ${filename}`);
+    if (mode === 'download') {
+      // Modalità download: scarica il file sul dispositivo
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      console.log(`Download avviato: ${filename}`);
+    } else {
+      // Modalità open: apri in una nuova scheda
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      console.log(`PDF aperto in nuova scheda: ${filename}`);
+    }
   } catch (error) {
-    console.error('Errore durante il download del PDF:', error);
+    console.error(`Errore durante ${mode === 'download' ? 'il download' : "l'apertura"} del PDF:`, error);
     throw error;
   }
 }
