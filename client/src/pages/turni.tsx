@@ -86,37 +86,37 @@ export default function PaginaTurni() {
   const fineSettimana = endOfWeek(oggi, { weekStartsOn: 1 });
   
   // Query per ottenere tutti gli schedules
-  const { data: schedules, isLoading: loadingSchedules } = useQuery({
+  const { data: schedules, isLoading: loadingSchedules } = useQuery<any[]>({
     queryKey: ['/api/schedules/all'],
     enabled: !!user,
   });
 
   // Query per ottenere uno schedule specifico in base alla data corrente o all'ID selezionato
-  const { data: currentSchedule, isLoading: loadingCurrentSchedule } = useQuery({
+  const { data: currentSchedule, isLoading: loadingCurrentSchedule } = useQuery<any>({
     queryKey: ['/api/schedules', selectedScheduleId ? { id: selectedScheduleId } : { startDate: format(inizioSettimana, 'yyyy-MM-dd') }],
     enabled: !!user,
   });
 
   // Query per ottenere gli utenti
-  const { data: users, isLoading: loadingUsers } = useQuery({
+  const { data: users, isLoading: loadingUsers } = useQuery<any[]>({
     queryKey: ['/api/users'],
     enabled: !!user,
   });
   
   // Query per ottenere le richieste di ferie
-  const { data: timeOffRequests, isLoading: loadingTimeOff } = useQuery({
+  const { data: timeOffRequests, isLoading: loadingTimeOff } = useQuery<any[]>({
     queryKey: ['/api/time-off-requests'],
     enabled: !!user,
   });
   
   // Query per ottenere i turni dello schedule corrente
-  const { data: shifts, isLoading: loadingShifts } = useQuery({
+  const { data: shifts, isLoading: loadingShifts } = useQuery<any[]>({
     queryKey: ['/api/schedules/' + (currentSchedule?.id || 0) + '/shifts'],
     enabled: !!currentSchedule?.id,
   });
   
   // Query per ottenere solo i turni dell'utente corrente
-  const { data: userShifts, isLoading: loadingUserShifts } = useQuery({
+  const { data: userShifts, isLoading: loadingUserShifts } = useQuery<any[]>({
     queryKey: ['/api/users/' + (user?.id || 0) + '/schedules/' + (currentSchedule?.id || 0) + '/shifts'],
     enabled: !!user?.id && !!currentSchedule?.id && user?.role === 'employee',
   });
@@ -177,11 +177,11 @@ export default function PaginaTurni() {
                 // Vista amministratore
                 <GrigliaTurni
                   scheduleId={currentSchedule?.id || null}
-                  utenti={users || []}
+                  utenti={Array.isArray(users) ? users : []}
                   dataInizio={currentSchedule ? new Date(currentSchedule.startDate) : inizioSettimana}
                   dataFine={currentSchedule ? new Date(currentSchedule.endDate) : fineSettimana}
-                  turni={shifts || []}
-                  richiesteFerie={timeOffRequests || []}
+                  turni={Array.isArray(shifts) ? shifts : []}
+                  richiesteFerie={Array.isArray(timeOffRequests) ? timeOffRequests : []}
                   pubblicato={currentSchedule?.isPublished || false}
                   onPubblica={handlePubblicaSchedule}
                   vistaAdmin={true}
@@ -190,8 +190,8 @@ export default function PaginaTurni() {
                 // Vista dipendente
                 <VistaTurniDipendente 
                   schedule={currentSchedule || null}
-                  turni={shifts || []}
-                  turniUtente={userShifts || []}
+                  turni={Array.isArray(shifts) ? shifts : []}
+                  turniUtente={Array.isArray(userShifts) ? userShifts : []}
                 />
               )}
             </>
@@ -201,7 +201,7 @@ export default function PaginaTurni() {
           <ScheduleSelectDialog
             open={scheduleDialogOpen}
             onOpenChange={setScheduleDialogOpen}
-            schedules={schedules || []}
+            schedules={Array.isArray(schedules) ? schedules : []}
             onSelectSchedule={setSelectedScheduleId}
           />
         </div>

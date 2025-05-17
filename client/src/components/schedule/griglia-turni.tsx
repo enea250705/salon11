@@ -5,12 +5,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  generaSlotOrari, 
-  calcolaOreLavoro, 
-  calcolaOreDaCelle, 
-  formatOre 
-} from "@/lib/turni-calculator";
-import { 
   Tabs, 
   TabsContent, 
   TabsList, 
@@ -71,8 +65,16 @@ interface GrigliaTurniProps {
 }
 
 /**
+ * Calcola le ore di lavoro in base al numero di celle (slot da 30 minuti)
+ */
+function calcolaOreLavoro(numCelle: number): number {
+  // Ogni cella è 30 minuti
+  return numCelle * 0.5;
+}
+
+/**
  * GrigliaTurni - Componente tabellare per la gestione dei turni 
- * Implementazione completamente nuova con calcolo ore corretto
+ * Implementazione semplificata con gestione errori migliorata
  */
 export function GrigliaTurni({
   scheduleId,
@@ -88,8 +90,12 @@ export function GrigliaTurni({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Generazione degli slot di tempo (ogni 30 minuti) dalle 4:00 alle 24:00
-  const slotOrari = generaSlotOrari(4, 24);
+  // Generazione slot orari
+  const slotOrari = Array.from({ length: 41 }, (_, i) => {
+    const ora = Math.floor(i / 2) + 4; // Parte dalle 4:00
+    const minuti = i % 2 === 0 ? "00" : "30";
+    return `${ora.toString().padStart(2, "0")}:${minuti}`;
+  });
   
   // Preparazione giorni della settimana
   const giorniSettimana = Array.from({ length: 7 }, (_, i) => {
@@ -133,181 +139,116 @@ export function GrigliaTurni({
     // Crea struttura dati vuota
     const nuoviDatiGriglia: DatiGriglia = {};
     
-    // Inizializza ogni giorno con una struttura vuota per ogni utente
-    giorniSettimana.forEach(giorno => {
-      nuoviDatiGriglia[giorno.nome] = {};
-      
-      utenti
-        .filter(utente => utente.role === "employee")
-        .forEach(utente => {
-          nuoviDatiGriglia[giorno.nome][utente.id] = {
-            celle: Array(slotOrari.length - 1).fill(null).map(() => ({ 
-              tipo: "", 
-              turnoId: null 
-            })),
-            note: "",
-            totale: 0
-          };
-        });
-    });
-    
-    // Popola la griglia con i turni esistenti
-    if (turni && turni.length > 0) {
-      turni.forEach(turno => {
-        // Gestiamo gli errori che potrebbero verificarsi con le date
-        try {
-          if (!turno.date) {
-            console.error("Turno senza data:", turno);
-            return; // Skip questo turno
-          }
-          
-          const nomeGiorno = format(new Date(turno.date), "EEEE", { locale: it });
-          
-          if (nuoviDatiGriglia[nomeGiorno] && nuoviDatiGriglia[nomeGiorno][turno.userId]) {
-            // Trova gli indici di inizio e fine del turno
-            const indiceInizio = slotOrari.findIndex(t => t === turno.startTime);
-            const indiceFine = slotOrari.findIndex(t => t === turno.endTime);
-            
-            if (indiceInizio !== -1 && indiceFine !== -1) {
-              // Imposta le celle come "work" o altro tipo
-              for (let i = indiceInizio; i < indiceFine; i++) {
-                if (i < nuoviDatiGriglia[nomeGiorno][turno.userId].celle.length) {
-                  nuoviDatiGriglia[nomeGiorno][turno.userId].celle[i] = {
-                    tipo: turno.type || "work",
-                    turnoId: turno.id
-                  };
-                }
-              }
-              
-              // Imposta le note
-              if (turno.notes) {
-                nuoviDatiGriglia[nomeGiorno][turno.userId].note = turno.notes;
-              }
-            }
-          }
-        } catch (error) {
-          console.error("Errore nel processare il turno:", turno, error);
-        }
+    try {
+      // Inizializza ogni giorno con una struttura vuota per ogni utente
+      giorniSettimana.forEach(giorno => {
+        nuoviDatiGriglia[giorno.nome] = {};
+        
+        utenti
+          .filter(utente => utente.role === "employee")
+          .forEach(utente => {
+            nuoviDatiGriglia[giorno.nome][utente.id] = {
+              celle: Array(slotOrari.length - 1).fill(null).map(() => ({ 
+                tipo: "", 
+                turnoId: null 
+              })),
+              note: "",
+              totale: 0
+            };
+          });
       });
-    }
-    
-    // Aggiungi le richieste di ferie/permessi approvate
-    if (richiesteFerie && richiesteFerie.length > 0) {
-      richiesteFerie
-        .filter(req => req.status === "approved")
-        .forEach(richiesta => {
+      
+      // Popola la griglia con i turni esistenti
+      if (turni && turni.length > 0) {
+        turni.forEach(turno => {
           try {
-            if (!richiesta.startDate || !richiesta.endDate) {
-              console.error("Richiesta ferie con date mancanti:", richiesta);
-              return; // Skip questa richiesta
+            if (!turno.date) {
+              console.log("Turno senza data:", turno);
+              return;
             }
             
-            const dataInizioRichiesta = new Date(richiesta.startDate);
-            const dataFineRichiesta = new Date(richiesta.endDate);
-          
-            // Per ogni giorno compreso nella richiesta
-            giorniSettimana.forEach(giorno => {
-              const dataCorrente = giorno.data;
-              if (dataCorrente >= dataInizioRichiesta && dataCorrente <= dataFineRichiesta) {
-                if (nuoviDatiGriglia[giorno.nome] && nuoviDatiGriglia[giorno.nome][richiesta.userId]) {
-                  // Se è richiesta per l'intera giornata
-                  if (richiesta.allDay) {
-                    for (let i = 0; i < nuoviDatiGriglia[giorno.nome][richiesta.userId].celle.length; i++) {
-                      nuoviDatiGriglia[giorno.nome][richiesta.userId].celle[i] = {
-                        tipo: richiesta.type === "vacation" ? "vacation" : "leave",
-                        turnoId: null,
-                        permesso: true
-                      };
-                    }
-                    
-                    nuoviDatiGriglia[giorno.nome][richiesta.userId].note = 
-                      `${richiesta.type === "vacation" ? "Ferie" : "Permesso"} giornata intera`;
-                  } 
-                  // Se è mezza giornata: mattina (prime metà delle celle)
-                  else if (richiesta.halfDay === "morning") {
-                    const metaGiorno = Math.floor(slotOrari.length / 2);
-                    for (let i = 0; i < metaGiorno; i++) {
-                      nuoviDatiGriglia[giorno.nome][richiesta.userId].celle[i] = {
-                        tipo: richiesta.type === "vacation" ? "vacation" : "leave",
-                        turnoId: null,
-                        permesso: true
-                      };
-                    }
-                    
-                    nuoviDatiGriglia[giorno.nome][richiesta.userId].note = 
-                      `${richiesta.type === "vacation" ? "Ferie" : "Permesso"} mattina`;
-                  } 
-                  // Se è mezza giornata: pomeriggio (seconda metà delle celle)
-                  else if (richiesta.halfDay === "afternoon") {
-                    const metaGiorno = Math.floor(slotOrari.length / 2);
-                    for (let i = metaGiorno; i < slotOrari.length - 1; i++) {
-                      nuoviDatiGriglia[giorno.nome][richiesta.userId].celle[i] = {
-                        tipo: richiesta.type === "vacation" ? "vacation" : "leave",
-                        turnoId: null,
-                        permesso: true
-                      };
-                    }
-                    
-                    nuoviDatiGriglia[giorno.nome][richiesta.userId].note = 
-                      `${richiesta.type === "vacation" ? "Ferie" : "Permesso"} pomeriggio`;
+            const dataDelTurno = new Date(turno.date);
+            const nomeGiorno = format(dataDelTurno, "EEEE", { locale: it });
+            
+            if (nuoviDatiGriglia[nomeGiorno] && nuoviDatiGriglia[nomeGiorno][turno.userId]) {
+              // Trova gli indici di inizio e fine del turno
+              const indiceInizio = slotOrari.findIndex(t => t === turno.startTime);
+              const indiceFine = slotOrari.findIndex(t => t === turno.endTime);
+              
+              if (indiceInizio !== -1 && indiceFine !== -1) {
+                // Imposta le celle come "work" o altro tipo
+                for (let i = indiceInizio; i < indiceFine; i++) {
+                  if (i < nuoviDatiGriglia[nomeGiorno][turno.userId].celle.length) {
+                    nuoviDatiGriglia[nomeGiorno][turno.userId].celle[i] = {
+                      tipo: turno.type || "work",
+                      turnoId: turno.id
+                    };
                   }
                 }
+                
+                // Imposta le note
+                if (turno.notes) {
+                  nuoviDatiGriglia[nomeGiorno][turno.userId].note = turno.notes;
+                }
               }
-            });
+            }
           } catch (error) {
-            console.error("Errore nel processare la richiesta di ferie:", richiesta, error);
+            console.error("Errore nel processare il turno:", turno, error);
           }
         });
-    }
-    
-    // Calcola il totale delle ore per ogni giorno/utente
-    Object.keys(nuoviDatiGriglia).forEach(giorno => {
-      Object.keys(nuoviDatiGriglia[giorno]).forEach(utenteIdStr => {
-        try {
-          const utenteId = parseInt(utenteIdStr);
-          const datiUtente = nuoviDatiGriglia[giorno][utenteId];
-          
-          // Identifica blocchi di celle consecutive di tipo "work"
-          let totaleOre = 0;
-          let inizioBlocco: number | null = null;
-          
-          // Scan per blocchi di "work"
-          for (let i = 0; i < datiUtente.celle.length; i++) {
-            if (datiUtente.celle[i].tipo === "work") {
-              if (inizioBlocco === null) {
-                inizioBlocco = i;
-              }
-              
-              // Se siamo all'ultima cella e c'è un blocco aperto
-              if (i === datiUtente.celle.length - 1 && inizioBlocco !== null) {
-                // Calcola ore per questo blocco
-                const numCelle = i - inizioBlocco + 1;
-                const ore = calcolaOreDaCelle(numCelle);
-                totaleOre += ore;
+      }
+      
+      // Calcola il totale delle ore per ogni giorno/utente
+      Object.keys(nuoviDatiGriglia).forEach(giorno => {
+        Object.keys(nuoviDatiGriglia[giorno]).forEach(utenteIdStr => {
+          try {
+            const utenteId = parseInt(utenteIdStr);
+            const utenteDati = nuoviDatiGriglia[giorno][utenteId];
+            
+            // Identifica blocchi di celle consecutive di tipo "work"
+            let oreTotali = 0;
+            let inizioBlocco: number | null = null;
+            
+            // Scan per blocchi di "work"
+            for (let i = 0; i < utenteDati.celle.length; i++) {
+              if (utenteDati.celle[i].tipo === "work") {
+                if (inizioBlocco === null) {
+                  inizioBlocco = i;
+                }
                 
-                // Reset blocco
+                // Se siamo all'ultima cella e c'è un blocco aperto
+                if (i === utenteDati.celle.length - 1 && inizioBlocco !== null) {
+                  // Calcola ore per questo blocco
+                  const numCelle = i - inizioBlocco + 1;
+                  oreTotali += calcolaOreLavoro(numCelle);
+                  inizioBlocco = null;
+                }
+              } else if (inizioBlocco !== null) {
+                // Fine di un blocco, calcola ore
+                const numCelle = i - inizioBlocco;
+                oreTotali += calcolaOreLavoro(numCelle);
                 inizioBlocco = null;
               }
-            } else if (inizioBlocco !== null) {
-              // Fine di un blocco, calcola ore
-              const numCelle = i - inizioBlocco;
-              const ore = calcolaOreDaCelle(numCelle);
-              totaleOre += ore;
-              
-              // Reset blocco
-              inizioBlocco = null;
             }
+            
+            // Aggiorna il totale arrotondato a 1 decimale
+            nuoviDatiGriglia[giorno][utenteId].totale = Math.round(oreTotali * 10) / 10;
+          } catch (error) {
+            console.error("Errore nel calcolo ore per utente:", utenteIdStr, error);
           }
-          // Aggiorna il totale arrotondato a 1 decimale
-          nuoviDatiGriglia[giorno][utenteId].totale = Math.round(totaleOre * 10) / 10;
-        } catch (error) {
-          console.error("Errore nel calcolo delle ore:", error);
-        }
+        });
       });
-    });
-    
-    setDatiGriglia(nuoviDatiGriglia);
-  }, [scheduleId, utenti, turni, richiesteFerie, giorniSettimana, slotOrari]);
+      
+      setDatiGriglia(nuoviDatiGriglia);
+    } catch (error) {
+      console.error("Errore generale nell'inizializzazione griglia:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'inizializzazione della griglia turni.",
+        variant: "destructive"
+      });
+    }
+  }, [scheduleId, utenti, turni, richiesteFerie, slotOrari, giorniSettimana, toast]);
   
   // GESTIONE CLICK SU CELLA (solo per admin)
   const handleClickCella = (utenteId: number, indiceOrario: number, giorno: string) => {
@@ -322,120 +263,96 @@ export function GrigliaTurni({
       return;
     }
     
-    // Crea copia dei dati
-    const nuoviDatiGriglia = structuredClone(datiGriglia);
-    if (!nuoviDatiGriglia[giorno] || !nuoviDatiGriglia[giorno][utenteId]) return;
-    
-    const datiUtente = nuoviDatiGriglia[giorno][utenteId];
-    const cellaCorrente = datiUtente.celle[indiceOrario];
-    
-    // Non permettere modifica delle celle di ferie/permessi approvati
-    if (cellaCorrente.permesso) {
-      toast({
-        title: "Azione non permessa",
-        description: "Non puoi modificare una cella che rappresenta ferie o permessi già approvati.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Cicla tra i tipi: "" -> "work" -> "vacation" -> "leave" -> ""
-    let nuovoTipo = "work";
-    
-    if (cellaCorrente.tipo) {
-      if (cellaCorrente.tipo === "work") nuovoTipo = "vacation";
-      else if (cellaCorrente.tipo === "vacation") nuovoTipo = "leave";
-      else if (cellaCorrente.tipo === "leave") nuovoTipo = "";
-    }
-    
-    // Aggiorna la cella
-    datiUtente.celle[indiceOrario].tipo = nuovoTipo;
-    
-    // Ricalcola il totale
-    let totaleOre = 0;
-    let inizioBlocco: number | null = null;
-    
-    // Scan per blocchi di "work"
-    for (let i = 0; i < datiUtente.celle.length; i++) {
-      if (datiUtente.celle[i].tipo === "work") {
-        if (inizioBlocco === null) {
-          inizioBlocco = i;
-        }
-        
-        // Se siamo all'ultima cella e c'è un blocco aperto
-        if (i === datiUtente.celle.length - 1 && inizioBlocco !== null) {
-          // Calcola ore per questo blocco
-          const numCelle = i - inizioBlocco + 1;
-          const oraInizio = slotOrari[inizioBlocco];
-          const oraFine = slotOrari[i + 1] || "00:00";
-          
-          // CASI SPECIALI
-          let ore;
-          if (oraInizio === "04:00" && oraFine === "06:00") {
-            ore = 2.0;
-          } else if (oraInizio === "04:00" && oraFine === "00:00") {
-            ore = 20.0;
-          } else {
-            ore = calcolaOreDaCelle(numCelle);
+    try {
+      // Crea copia dei dati
+      const nuoviDatiGriglia = JSON.parse(JSON.stringify(datiGriglia));
+      if (!nuoviDatiGriglia[giorno] || !nuoviDatiGriglia[giorno][utenteId]) return;
+      
+      const datiUtente = nuoviDatiGriglia[giorno][utenteId];
+      const cellaCorrente = datiUtente.celle[indiceOrario];
+      
+      // Non permettere modifica delle celle di ferie/permessi approvati
+      if (cellaCorrente.permesso) {
+        toast({
+          title: "Azione non permessa",
+          description: "Non puoi modificare una cella che rappresenta ferie o permessi già approvati.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Cicla tra i tipi: "" -> "work" -> "vacation" -> "leave" -> ""
+      let nuovoTipo = "work";
+      
+      if (cellaCorrente.tipo) {
+        if (cellaCorrente.tipo === "work") nuovoTipo = "vacation";
+        else if (cellaCorrente.tipo === "vacation") nuovoTipo = "leave";
+        else if (cellaCorrente.tipo === "leave") nuovoTipo = "";
+      }
+      
+      // Aggiorna la cella
+      datiUtente.celle[indiceOrario].tipo = nuovoTipo;
+      
+      // Ricalcola il totale
+      let oreTotali = 0;
+      let inizioBlocco: number | null = null;
+      
+      // Scan per blocchi di "work"
+      for (let i = 0; i < datiUtente.celle.length; i++) {
+        if (datiUtente.celle[i].tipo === "work") {
+          if (inizioBlocco === null) {
+            inizioBlocco = i;
           }
           
-          totaleOre += ore;
-          
-          // Reset blocco
+          // Se siamo all'ultima cella e c'è un blocco aperto
+          if (i === datiUtente.celle.length - 1 && inizioBlocco !== null) {
+            // Calcola ore per questo blocco
+            const numCelle = i - inizioBlocco + 1;
+            oreTotali += calcolaOreLavoro(numCelle);
+            inizioBlocco = null;
+          }
+        } else if (inizioBlocco !== null) {
+          // Fine di un blocco, calcola ore
+          const numCelle = i - inizioBlocco;
+          oreTotali += calcolaOreLavoro(numCelle);
           inizioBlocco = null;
         }
-      } else if (inizioBlocco !== null) {
-        // Fine di un blocco, calcola ore
-        const numCelle = i - inizioBlocco;
-        const oraInizio = slotOrari[inizioBlocco];
-        const oraFine = slotOrari[i];
-        
-        // CASI SPECIALI
-        let ore;
-        if (oraInizio === "04:00" && oraFine === "06:00") {
-          ore = 2.0;
-        } else if (oraInizio === "04:00" && oraFine === "00:00") {
-          ore = 20.0;
-        } else {
-          ore = calcolaOreDaCelle(numCelle);
-        }
-        
-        totaleOre += ore;
-        
-        // Reset blocco
-        inizioBlocco = null;
       }
+      
+      // Aggiorna il totale arrotondato a 1 decimale
+      datiUtente.totale = Math.round(oreTotali * 10) / 10;
+      
+      // Aggiorna lo stato
+      setDatiGriglia(nuoviDatiGriglia);
+      
+      // Conferma con un toast
+      toast({
+        title: "Cella aggiornata",
+        description: `Tipo: ${nuovoTipo || "nessuno"}, Ore totali: ${datiUtente.totale}`,
+      });
+    } catch (error) {
+      console.error("Errore nell'aggiornamento cella:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiornamento della cella.",
+        variant: "destructive"
+      });
     }
-    
-    // Aggiorna il totale arrotondato a 1 decimale
-    datiUtente.totale = Math.round(totaleOre * 10) / 10;
-    
-    // Aggiorna lo stato
-    setDatiGriglia(nuoviDatiGriglia);
-    
-    // Salva sul server (per la cella modificata)
-    // Identifica blocchi contigui dello stesso tipo che includono la cella modificata
-    const giornoDati = giorniSettimana[giornoSelezionato].data;
-    
-    // TODO: implementare il salvataggio sul server dei blocchi contigui
-    // Per ora, facciamo una simulazione con un toast di conferma
-    toast({
-      title: "Cella aggiornata",
-      description: `Tipo: ${nuovoTipo || "nessuno"}, Ore totali: ${datiUtente.totale}`,
-    });
   };
   
   // GESTIONE MODIFICA NOTE
   const handleCambioNote = (utenteId: number, giorno: string, nuoveNote: string) => {
     if (!vistaAdmin || !scheduleId || pubblicato) return;
     
-    const nuoviDatiGriglia = structuredClone(datiGriglia);
-    if (!nuoviDatiGriglia[giorno] || !nuoviDatiGriglia[giorno][utenteId]) return;
-    
-    nuoviDatiGriglia[giorno][utenteId].note = nuoveNote;
-    setDatiGriglia(nuoviDatiGriglia);
-    
-    // TODO: implementare il salvataggio delle note sul server
+    try {
+      const nuoviDatiGriglia = JSON.parse(JSON.stringify(datiGriglia));
+      if (!nuoviDatiGriglia[giorno] || !nuoviDatiGriglia[giorno][utenteId]) return;
+      
+      nuoviDatiGriglia[giorno][utenteId].note = nuoveNote;
+      setDatiGriglia(nuoviDatiGriglia);
+    } catch (error) {
+      console.error("Errore nell'aggiornamento note:", error);
+    }
   };
   
   // Se non c'è un turno selezionato, mostra messaggio informativo
@@ -493,138 +410,99 @@ export function GrigliaTurni({
           defaultValue={giorniSettimana[giornoSelezionato].nome} 
           onValueChange={(value) => {
             const indiceDiGiorno = giorniSettimana.findIndex(d => d.nome === value);
-            if (indiceDiGiorno !== -1) setGiornoSelezionato(indiceDiGiorno);
+            if (indiceDiGiorno !== -1) {
+              setGiornoSelezionato(indiceDiGiorno);
+            }
           }}
+          className="space-y-4"
         >
-          <TabsList className="mb-4 w-full">
-            {giorniSettimana.map((giorno, idx) => (
-              <TabsTrigger key={giorno.nome} value={giorno.nome} className="flex-1">
-                <span className="hidden md:inline">{giorno.nome}</span>
-                <span className="md:hidden text-xs">{giorno.nomeCorto}</span>
-                <span className="ml-1 text-xs text-muted-foreground">
-                  {giorno.formatoData}
-                </span>
+          <TabsList className="flex flex-wrap w-full">
+            {giorniSettimana.map((giorno, index) => (
+              <TabsTrigger
+                key={giorno.nome}
+                value={giorno.nome}
+                className="flex-1 min-w-[3rem] text-xs sm:text-sm"
+              >
+                <span className="hidden sm:inline">{giorno.nome}</span>
+                <span className="sm:hidden">{giorno.nomeCorto}</span>
+                <span className="text-xs ml-1 opacity-70">{giorno.formatoData}</span>
               </TabsTrigger>
             ))}
           </TabsList>
           
           {giorniSettimana.map((giorno) => (
-            <TabsContent key={giorno.nome} value={giorno.nome}>
-              <div className="overflow-auto border rounded-md">
+            <TabsContent key={giorno.nome} value={giorno.nome} className="space-y-4">
+              <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="border-b bg-muted/50">
-                      <th className="p-2 text-left font-medium">Dipendente</th>
-                      {slotOrari.map((slot, idx) => (
-                        idx < slotOrari.length - 1 && (
-                          <th key={idx} className="p-1 text-center text-xs font-medium">
-                            {slot}
-                          </th>
-                        )
+                    <tr className="bg-muted/50">
+                      <th className="py-2 px-4 text-left text-sm font-medium sticky left-0 bg-muted/50 min-w-[150px]">Dipendente</th>
+                      {slotOrari.slice(0, -1).map((ora, i) => (
+                        <th key={i} className="py-2 px-1 text-center text-xs font-normal">
+                          {i % 2 === 0 && (
+                            <span>{ora.split(':')[0]}</span>
+                          )}
+                        </th>
                       ))}
-                      <th className="p-2 text-left font-medium">Note</th>
-                      <th className="p-2 text-center font-medium">Totale</th>
+                      <th className="py-2 px-4 text-center text-sm font-medium whitespace-nowrap">Ore</th>
+                      <th className="py-2 px-4 text-center text-sm font-medium whitespace-nowrap">Note</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {utenti
-                      .filter(utente => utente.role === "employee" && utente.isActive)
-                      .map((utente) => {
-                        // Ottieni i dati di questo utente per il giorno corrente
-                        const datiUtente = datiGriglia[giorno.nome]?.[utente.id];
-                        if (!datiUtente) return null;
+                    {datiGriglia[giorno.nome] && Object.entries(datiGriglia[giorno.nome])
+                      .map(([utenteIdStr, datiUtente]) => {
+                        const utenteId = parseInt(utenteIdStr);
+                        const utente = utenti.find(u => u.id === utenteId);
+                        if (!utente) return null;
                         
                         return (
-                          <tr key={utente.id} className="border-b hover:bg-muted/20">
-                            <td className="p-2 text-left font-medium text-xs sm:text-sm">
-                              {utente.fullName || utente.username}
+                          <tr key={utenteId} className="border-b hover:bg-muted/20">
+                            <td className="py-2 px-4 text-sm sticky left-0 bg-white dark:bg-background z-10">
+                              {utente.name}
                             </td>
                             
-                            {slotOrari.map((slot, idx) => {
-                              if (idx >= slotOrari.length - 1) return null;
-                              
-                              // Ottieni dati della cella
-                              const cella = datiUtente.celle[idx];
-                              const tipo = cella?.tipo || "";
-                              const permesso = cella?.permesso || false;
-                              
-                              // Determina classe CSS in base al tipo
-                              let cellaCss = "w-5 h-5 cursor-pointer";
-                              let bgColor = "bg-white";
-                              let contenuto = "";
-                              
-                              if (tipo === "work") {
-                                bgColor = "bg-blue-500";
-                                contenuto = "X";
-                              } else if (tipo === "vacation") {
-                                bgColor = "bg-red-500";
-                                contenuto = "F";
-                              } else if (tipo === "leave") {
-                                bgColor = "bg-amber-500";
-                                contenuto = "P";
-                              } else if (tipo === "sick") {
-                                bgColor = "bg-purple-500";
-                                contenuto = "M";
-                              }
-                              
-                              return (
-                                <td 
-                                  key={idx} 
-                                  className="p-1 text-center text-xs border"
-                                  onClick={() => handleClickCella(utente.id, idx, giorno.nome)}
-                                >
-                                  <div className="flex justify-center">
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <div 
-                                            className={`${cellaCss} ${bgColor} rounded flex items-center justify-center ${
-                                              permesso ? "ring-2 ring-orange-400" : ""
-                                            } ${
-                                              tipo ? "text-white" : "text-transparent"
-                                            }`}
-                                          >
-                                            {contenuto}
-                                          </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="bottom">
-                                          <p>
-                                            {tipo === "work" && "Turno di lavoro"}
-                                            {tipo === "vacation" && "Ferie"}
-                                            {tipo === "leave" && "Permesso"}
-                                            {tipo === "sick" && "Malattia"}
-                                            {!tipo && "Nessun turno"}
-                                            {permesso && " (approvato)"}
-                                          </p>
-                                          <p className="text-xs">
-                                            Orario: {slot} - {slotOrari[idx + 1]}
-                                          </p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  </div>
-                                </td>
-                              );
-                            })}
+                            {datiUtente.celle.map((cella, indiceOrario) => (
+                              <td 
+                                key={indiceOrario} 
+                                className={`py-1 px-1 text-center text-xs cursor-pointer border-r border-gray-100 dark:border-gray-800 ${
+                                  cella.tipo === 'work' 
+                                    ? 'bg-primary/20' 
+                                    : cella.tipo === 'vacation' 
+                                    ? 'bg-green-100 dark:bg-green-900/20' 
+                                    : cella.tipo === 'leave' 
+                                    ? 'bg-yellow-100 dark:bg-yellow-900/20' 
+                                    : ''
+                                }`}
+                                onClick={() => handleClickCella(utenteId, indiceOrario, giorno.nome)}
+                              >
+                                {cella.tipo && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="w-full h-6"></div>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>{cella.tipo === 'work' ? 'Lavoro' : cella.tipo === 'vacation' ? 'Ferie' : 'Permesso'}</p>
+                                        <p>{slotOrari[indiceOrario]} - {slotOrari[indiceOrario + 1]}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </td>
+                            ))}
                             
-                            <td className="p-2 text-left">
+                            <td className="py-2 px-4 text-center text-sm font-medium">
+                              {datiUtente.totale}
+                            </td>
+                            
+                            <td className="py-2 px-2">
                               <Input
-                                type="text"
-                                value={datiUtente.note || ""}
-                                onChange={(e) => handleCambioNote(utente.id, giorno.nome, e.target.value)}
+                                value={datiUtente.note}
+                                onChange={(e) => handleCambioNote(utenteId, giorno.nome, e.target.value)}
                                 placeholder="Note..."
                                 disabled={!vistaAdmin || pubblicato}
-                                className="h-8 text-xs"
+                                className="text-sm h-8"
                               />
-                            </td>
-                            
-                            <td className="p-2 text-center">
-                              <div className="font-semibold">
-                                {formatOre(datiUtente.totale)}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                {datiUtente.totale} h
-                              </div>
                             </td>
                           </tr>
                         );
