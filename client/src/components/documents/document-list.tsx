@@ -98,7 +98,7 @@ export function DocumentList() {
     },
   });
   
-  // Funzione per scaricare un documento
+  // Funzione per scaricare un documento o aprirlo in una nuova finestra
   const handleDownload = (document: DocumentData) => {
     const { type, period, fileData, userId } = document;
     
@@ -130,45 +130,41 @@ export function DocumentList() {
     }
     
     try {
-      // Metodo alternativo di download che funziona meglio per i PDF
-      const blob = base64ToBlob(fileData, 'application/pdf');
-      const url = URL.createObjectURL(blob);
-      
-      // Crea un link e avvia il download
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      
-      // Pulizia
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 100);
+      // Approccio semplificato: apri il PDF in una nuova finestra browser
+      // Questo è più compatibile con tutti i browser e il download può essere 
+      // fatto direttamente dal visualizzatore PDF del browser
+      const dataUrl = `data:application/pdf;base64,${fileData}`;
+      window.open(dataUrl, '_blank');
       
       toast({
-        title: "Download avviato",
-        description: "Il documento viene scaricato sul tuo dispositivo",
+        title: "Documento aperto",
+        description: "Il documento è stato aperto in una nuova finestra. Puoi scaricarlo da lì.",
       });
     } catch (error) {
-      console.error("Errore durante il download:", error);
+      console.error("Errore durante l'apertura del documento:", error);
       toast({
-        title: "Errore nel download",
-        description: "Si è verificato un problema durante il download del documento",
+        title: "Errore nell'apertura",
+        description: "Si è verificato un problema durante l'apertura del documento",
         variant: "destructive",
       });
     }
   };
   
-  // Funzione di supporto per convertire base64 in blob
-  const base64ToBlob = (base64: string, mimeType: string): Blob => {
-    // Rimuovi prefisso data:application/pdf;base64, se presente
-    const base64Data = base64.startsWith('data:') 
-      ? base64.split(',')[1] 
-      : base64;
-    
+  // Funzione di supporto per convertire base64 in blob (non più utilizzata)
+  function base64ToBlob(base64: string, mimeType: string): Blob {
     try {
+      // Log per debug
+      console.log("Tentativo di conversione base64 in blob");
+      console.log("Tipo di dato ricevuto:", typeof base64);
+      console.log("Lunghezza dati:", base64.length);
+      
+      // Rimuovi qualsiasi prefisso data:xxx;base64, se presente
+      let base64Data = base64;
+      if (base64.includes(',')) {
+        base64Data = base64.split(',')[1];
+      }
+      
+      // Converti il base64 in blob manualmente
       const byteCharacters = atob(base64Data);
       const byteArrays = [];
       
@@ -189,7 +185,7 @@ export function DocumentList() {
       console.error('Errore durante la conversione da base64 a blob:', error);
       throw new Error('Impossibile convertire i dati del documento');
     }
-  };
+  }
   
   // Funzione per eliminare un documento (solo admin)
   const handleDelete = (id: number) => {
