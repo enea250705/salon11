@@ -167,28 +167,45 @@ export function calculateWorkHours(startTime: string, endTime: string): number {
  */
 export function calculateHoursFromCells(numCells: number): number {
   // Nessuna cella = 0 ore
-  if (numCells <= 0) return 0;
-  
-  // Formula corretta: ogni cella vale 0.5 ore, ma il primo X non conta
-  let hours = 0;
-  
-  if (numCells > 1) {
-    hours = (numCells - 1) * 0.5;
+  if (numCells <= 0) {
+    console.log("🔍 REGOLA: Nessuna cella = 0.0 ore");
+    return 0.0;
   }
   
   // 1 cella (30 minuti) deve essere esattamente 0 ore (REGOLA BASE) 
   if (numCells === 1) {
-    console.log("🔍 REGOLA TURNO: Turno di 30 minuti, meno di 30 minuti = 0.0 ore");
+    console.log("🔍 REGOLA: Turno di 30 minuti = 0.0 ore");
     return 0.0;
   }
   
-  // 5 celle (04:00-06:00) devono essere esattamente 2.0 ore
+  // 2 celle (1 ora) deve essere esattamente 0.5 ore
+  if (numCells === 2) {
+    console.log("🔍 REGOLA: 2 celle (1 ora) = 0.5 ore");
+    return 0.5;
+  }
+  
+  // 3 celle (1 ora e 30 minuti) deve essere esattamente 1.0 ore
+  if (numCells === 3) {
+    console.log("🔍 REGOLA: 3 celle (1 ora e 30 min) = 1.0 ore");
+    return 1.0;
+  }
+  
+  // 4 celle (2 ore) deve essere esattamente 1.5 ore
+  if (numCells === 4) {
+    console.log("🔍 REGOLA: 4 celle (2 ore) = 1.5 ore");
+    return 1.5;
+  }
+  
+  // 5 celle (2 ore e 30 minuti) devono essere esattamente 2.0 ore (CASO SPECIALE)
   if (numCells === 5) {
-    console.log("🔍 REGOLA SPECIALE: 5 celle = 2.0 ore (invece di 2.0)");
+    console.log("🔍 REGOLA SPECIALE: 5 celle (2 ore e 30 min) = 2.0 ore (invece di 2.0)");
     return 2.0;
   }
   
-  console.log(`🔍 CALCOLO ORE: ${numCells} celle (primo X = 0 ore) = ${hours} ore`);
+  // Formula per altre celle: (numCells - 1) * 0.5
+  let hours = (numCells - 1) * 0.5;
+  
+  console.log(`🔍 REGOLA GENERALE: ${numCells} celle = ${hours} ore (primo X = 0 ore)`);
   
   // Arrotondamento a 2 decimali
   return Math.round(hours * 100) / 100;
