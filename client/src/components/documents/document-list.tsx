@@ -220,10 +220,10 @@ export function DocumentList() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {sortedDocuments.map((doc: any) => (
+            {sortedDocuments.map((doc) => (
               <div 
                 key={doc.id} 
-                className="p-4 border rounded-md"
+                className="p-4 border rounded-md hover:shadow-md transition-shadow"
               >
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
                   <div>
@@ -246,6 +246,10 @@ export function DocumentList() {
                     <div className="mt-1 text-xs text-gray-500">
                       Caricato il {format(parseISO(doc.uploadedAt), "d MMMM yyyy", { locale: it })}
                     </div>
+                    {/* Debug info per vedere se fileData esiste */}
+                    <div className="mt-1 text-xs text-gray-400">
+                      {doc.fileData ? `PDF: ${doc.fileData.substring(0, 20)}...` : "Dati PDF mancanti"}
+                    </div>
                   </div>
                   <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 self-start sm:self-auto mt-2 sm:mt-0">
                     PDF
@@ -259,6 +263,7 @@ export function DocumentList() {
                     size="sm"
                     className="text-blue-600 border-blue-300 hover:bg-blue-50 text-xs"
                     onClick={() => handlePreview(doc)}
+                    disabled={!doc.fileData}
                   >
                     <span className="material-icons text-sm mr-1">visibility</span>
                     Anteprima
@@ -268,6 +273,7 @@ export function DocumentList() {
                     size="sm"
                     className="text-green-600 border-green-300 hover:bg-green-50 text-xs"
                     onClick={() => handleDownload(doc)}
+                    disabled={!doc.fileData}
                   >
                     <span className="material-icons text-sm mr-1">download</span>
                     Scarica
@@ -295,11 +301,17 @@ export function DocumentList() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="center" className="w-[180px]">
-                      <DropdownMenuItem onClick={() => handlePreview(doc)}>
+                      <DropdownMenuItem 
+                        onClick={() => handlePreview(doc)}
+                        disabled={!doc.fileData}
+                      >
                         <span className="material-icons text-sm mr-2 text-blue-600">visibility</span>
                         Anteprima
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDownload(doc)}>
+                      <DropdownMenuItem 
+                        onClick={() => handleDownload(doc)}
+                        disabled={!doc.fileData}
+                      >
                         <span className="material-icons text-sm mr-2 text-green-600">download</span>
                         Scarica
                       </DropdownMenuItem>
