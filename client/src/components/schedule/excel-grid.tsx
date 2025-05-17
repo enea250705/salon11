@@ -463,20 +463,27 @@ export function ExcelGrid({
             return cell.type === "work";
           }).length;
           
-          // Applica la formula: ore = (celle_work - 1) * 0.5, ma sempre minimo 0
-          // Quindi primo X = 0 ore, due X = 0.5 ore, tre X = 1 ora, ecc.
-          let hours = 0;
-          if (workCells > 1) {
-            hours = (workCells - 1) * 0.5;
+          // Calcolo migliorato: ogni cella di tipo "work" vale 0.5 ore
+          let hours = workCells * 0.5;
+          
+          // Regola speciale: il primo "X" (work) non conta come ore
+          if (workCells > 0) {
+            hours -= 0.5;
           }
+          
+          // Assicurati che non sia negativo
+          hours = Math.max(0, hours);
           
           // Caso speciale: 5 celle devono essere esattamente 2.0 ore
           if (workCells === 5) {
             hours = 2.0;
           }
           
-          // Aggiorna il totale con il nuovo calcolo
+          // Aggiorna il totale con il nuovo calcolo (arrotondato a 2 decimali)
           userDayData.total = Math.round(hours * 100) / 100;
+          
+          // Log dettagliati del calcolo per debugging
+          console.log(`🧮 CALCOLO ORE: ${workCells} celle work → ${hours} ore totali`);
           
           console.log(`🕒 Ricalcolo ore: ${workCells} celle di tipo 'work' = ${hours} ore`);
         }
