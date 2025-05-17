@@ -115,7 +115,7 @@ export function FooterNav() {
         
         <div className="text-center text-xs mt-6 animate-fadeIn" style={{ animationDelay: '0.5s' }}>
           <p className="animate-float relative inline-block px-4 py-2 menu-card">
-            <span className="text-accent font-semibold">&copy; {new Date().getFullYear()} Ristorante Da Vittorino</span>
+            <span className="text-accent font-semibold">&copy; {new Date().getFullYear()} Da Vittorino</span>
             <span className="block text-xs opacity-70 mt-1">Gestione Personale</span>
           </p>
         </div>
