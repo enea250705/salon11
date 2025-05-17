@@ -765,29 +765,17 @@ export function ExcelGrid({
             setSelectedDay(dayIndex);
           }
         }}>
-          <div className="mb-4">
-            <div className="overflow-x-auto">
-              <div className="w-full min-w-[460px]">
-                <TabsList className="w-full grid grid-cols-7 gap-x-1">
-                  {weekDays.map((day, idx) => (
-                    <TabsTrigger 
-                      key={day.name} 
-                      value={day.name} 
-                      className="px-1 py-2 h-auto text-center"
-                    >
-                      <div className="flex flex-col items-center">
-                        <span className="hidden xs:inline text-sm font-medium whitespace-nowrap">{day.name}</span>
-                        <span className="xs:hidden text-xs font-bold uppercase">{day.shortName}</span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {format(day.date, "d/M")}
-                        </span>
-                      </div>
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </div>
-            </div>
-          </div>
+          <TabsList className="mb-4 w-full">
+            {weekDays.map((day, idx) => (
+              <TabsTrigger key={day.name} value={day.name} className="flex-1">
+                <span className="hidden md:inline">{day.name}</span>
+                <span className="md:hidden text-xs sm:text-sm">{day.shortName}</span>
+                <span className="ml-1 text-xs text-muted-foreground hidden md:inline">
+                  {format(day.date, "d/M")}
+                </span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
           
           {weekDays.map((day) => (
             <TabsContent key={day.name} value={day.name} className="relative">
