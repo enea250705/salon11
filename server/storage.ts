@@ -1,12 +1,13 @@
 import {
-  users, schedules, shifts, timeOffRequests, documents, notifications, messages,
+  users, schedules, shifts, timeOffRequests, documents, notifications, messages, scheduleTemplates,
   type User, type InsertUser,
   type Schedule, type InsertSchedule,
   type Shift, type InsertShift,
   type TimeOffRequest, type InsertTimeOffRequest,
   type Document, type InsertDocument,
   type Notification, type InsertNotification,
-  type Message, type InsertMessage
+  type Message, type InsertMessage,
+  type ScheduleTemplate, type InsertScheduleTemplate
 } from "@shared/schema";
 
 export interface IStorage {
@@ -32,6 +33,13 @@ export interface IStorage {
   updateShift(id: number, shiftData: Partial<InsertShift>): Promise<Shift | undefined>;
   deleteShift(id: number): Promise<boolean>;
   deleteAllShiftsForSchedule?(scheduleId: number): Promise<boolean>; // Funzione per eliminare tutti i turni di uno schedule
+  
+  // Schedule Templates management
+  createScheduleTemplate(template: InsertScheduleTemplate): Promise<ScheduleTemplate>;
+  getScheduleTemplate(id: number): Promise<ScheduleTemplate | undefined>;
+  getAllScheduleTemplates(): Promise<ScheduleTemplate[]>;
+  applyScheduleTemplate(templateId: number, scheduleId: number): Promise<boolean>;
+  deleteScheduleTemplate(id: number): Promise<boolean>;
   
   // TimeOff requests
   createTimeOffRequest(request: InsertTimeOffRequest): Promise<TimeOffRequest>;
