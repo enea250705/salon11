@@ -1349,23 +1349,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Se l'utente ha già turni in questo giorno, aggiorna il tipo invece di creare nuovi
           if (userDayShifts.length > 0) {
-            for (const shift of userDayShifts) {
-              await storage.updateShift(shift.id, { 
+            // Se la richiesta è per orario specifico, aggiorna anche gli orari
+            if (request.duration === "specific_hours" && request.startTime && request.endTime) {
+              // Per orari specifici, elimina i turni esistenti e crea un nuovo turno con l'orario specifico
+              for (const shift of userDayShifts) {
+                await storage.deleteShift(shift.id);
+                console.log(`Eliminato turno esistente ID ${shift.id} per sostituirlo con orario specifico`);
+              }
+              
+              // Crea un nuovo turno con l'orario specifico
+              const shiftData = {
+                scheduleId: schedule.id,
+                userId: request.userId,
+                day: dayName,
+                startTime: request.startTime,
+                endTime: request.endTime,
                 type: shiftType,
-                notes: `Assenza automatica: ${request.type}` 
-              });
-              console.log(`Aggiornato turno esistente ID ${shift.id} per l'utente ${request.userId} in ${dayName} come ${shiftType}`);
+                notes: `Assenza automatica: ${request.type} (${request.startTime}-${request.endTime})`,
+                area: "Assenza"
+              };
+              
+              await storage.createShift(shiftData);
+              console.log(`Creato nuovo turno di assenza con orario specifico ${request.startTime}-${request.endTime} per l'utente ${request.userId} in ${dayName}`);
+            } else {
+              // Per richieste normali (non orario specifico), aggiorna solo il tipo di turno
+              for (const shift of userDayShifts) {
+                await storage.updateShift(shift.id, { 
+                  type: shiftType,
+                  notes: `Assenza automatica: ${request.type}` 
+                });
+                console.log(`Aggiornato turno esistente ID ${shift.id} per l'utente ${request.userId} in ${dayName} come ${shiftType}`);
+              }
             }
           } else {
-            // Crea nuovi turni di assenza per l'intera giornata
+            // Determina gli orari in base al tipo di durata (giornata intera, mattina, pomeriggio o orari specifici)
+            let startTime = "09:00";
+            let endTime = "18:00";
+            
+            // Se la richiesta è per orario specifico, usa gli orari forniti dal dipendente
+            if (request.duration === "specific_hours" && request.startTime && request.endTime) {
+              startTime = request.startTime;
+              endTime = request.endTime;
+              console.log(`🕒 Usando orario specifico: ${startTime} - ${endTime} per la richiesta di permesso ID ${request.id}`);
+            } else if (request.duration === "morning") {
+              // Mattina: 09:00 - 13:00
+              startTime = "09:00";
+              endTime = "13:00";
+            } else if (request.duration === "afternoon") {
+              // Pomeriggio: 14:00 - 18:00
+              startTime = "14:00";
+              endTime = "18:00";
+            }
+            
             const shiftData = {
               scheduleId: schedule.id,
               userId: request.userId,
               day: dayName,
-              startTime: "09:00",
-              endTime: "18:00",
+              startTime: startTime,
+              endTime: endTime,
               type: shiftType,
-              notes: `Assenza automatica: ${request.type}`,
+              notes: `Assenza automatica: ${request.type}${request.duration === "specific_hours" ? ` (${startTime}-${endTime})` : ""}`,
               area: "Assenza"
             };
             
