@@ -265,6 +265,31 @@ export default function Schedule() {
       });
     },
   });
+  
+  // Unpublish schedule mutation (ritira dalla pubblicazione)
+  const unpublishScheduleMutation = useMutation({
+    mutationFn: (scheduleId: number) =>
+      apiRequest("POST", `/api/schedules/${scheduleId}/unpublish`, { 
+        scheduleId 
+      }),
+    onSuccess: () => {
+      toast({
+        title: "Turni ritirati dalla pubblicazione",
+        description: "La pianificazione è stata ritirata dalla pubblicazione e può essere modificata.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/schedules"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/schedules/all"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/schedules/${existingSchedule?.id}/shifts`] });
+    },
+    onError: (err) => {
+      console.error("Errore ritiro dalla pubblicazione:", err);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante il ritiro della pianificazione dalla pubblicazione.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // State for showing auto-generate modal
   const [showAutoGenerator, setShowAutoGenerator] = useState(false);

@@ -26,6 +26,7 @@ export interface IStorage {
   getScheduleByDateRange(startDate: Date, endDate: Date): Promise<Schedule | undefined>;
   getAllSchedules(): Promise<Schedule[]>;
   publishSchedule(id: number): Promise<Schedule | undefined>;
+  updateSchedule(id: number, scheduleData: Partial<InsertSchedule>): Promise<Schedule | undefined>; // Funzione per aggiornare uno schedule
   deleteSchedule?(id: number): Promise<boolean>; // Nuova funzione opzionale per eliminare uno schedule
   
   // Schedule Templates management
