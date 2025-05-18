@@ -842,14 +842,13 @@ export function ExcelGrid({
                             );
                           })}
                           
-                          <td className="p-1">
+                          <td className="p-1" style={{ minWidth: "200px" }}>
                             <Input
-                              size={20}
                               placeholder="Note..."
                               value={gridData[day.name]?.[user.id]?.notes || ""}
                               onChange={(e) => handleNotesChange(user.id, day.name, e.target.value)}
                               disabled={isPublished}
-                              className="text-xs sm:text-sm w-full"
+                              className="text-xs sm:text-sm w-full min-w-[200px]"
                             />
                           </td>
                           
