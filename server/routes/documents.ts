@@ -7,7 +7,7 @@ const router = Router();
 
 // Schema di validazione per il caricamento di un documento
 const uploadDocumentSchema = z.object({
-  type: z.enum(["payslip", "tax_document"]),
+  type: z.string().min(1, "Il tipo di documento è obbligatorio"),
   userId: z.number().int().positive(),
   period: z.string().min(1),
   filename: z.string().min(1),

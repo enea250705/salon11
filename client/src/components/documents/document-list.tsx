@@ -223,7 +223,8 @@ export function DocumentList() {
       case "tax_document":
         return "CUD";
       default:
-        return type;
+        // Formatta custom type con prima lettera maiuscola
+        return type.charAt(0).toUpperCase() + type.slice(1);
     }
   };
   
@@ -279,7 +280,9 @@ export function DocumentList() {
                   <div>
                     <div className="flex items-center">
                       <span className="material-icons text-primary mr-2">
-                        {doc.type === "payslip" ? "receipt" : "description"}
+                        {doc.type === "payslip" ? "receipt" : 
+                         doc.type === "tax_document" ? "receipt_long" : 
+                         "description"}
                       </span>
                       <span className="font-medium">
                         {formatDocumentType(doc.type)}

@@ -22,7 +22,15 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const formSchema = z.object({
   type: z.string(),
-  customType: z.string().optional(),
+  customType: z.string()
+    .optional()
+    .refine((val, ctx) => {
+      // Se il tipo è 'custom', allora customType deve esistere e non essere vuoto
+      if (ctx.path[0] === 'customType' && ctx.data.type === 'custom') {
+        return val && val.length > 0;
+      }
+      return true;
+    }, "La tipologia personalizzata è obbligatoria"),
   userId: z.coerce.number().min(1, "Seleziona un dipendente"),
   period: z.string().min(1, "Il periodo è obbligatorio"),
   file: z
@@ -192,6 +200,26 @@ export function DocumentUpload({ users }: { users: any[] }) {
                 )}
               />
             </div>
+            
+            {/* Campo per la tipologia personalizzata che appare solo quando è selezionato "custom" */}
+            {form.watch("type") === "custom" && (
+              <FormField
+                control={form.control}
+                name="customType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipologia documento personalizzata</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="es. Contratto, Certificato, ecc."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
