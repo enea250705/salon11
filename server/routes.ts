@@ -200,23 +200,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Crea il template
-      const template = await storage.createScheduleTemplate({
+      const template = await db.insert(scheduleTemplates).values({
         name,
         type,
-        description: description || "",
-        createdBy: (req.user as any).id
-      });
+        createdBy: (req.user as any).id,
+        createdAt: new Date(),
+        lastUsed: null
+      }).returning();
+      
+      console.log("✅ Template creato:", template);
       
       // Ottieni i turni dallo schedule
       const shifts = await storage.getShifts(scheduleId);
+      console.log(`🔍 Recuperati ${shifts.length} turni dallo schedule`);
       
       // Crea i turni del template basati sui turni dello schedule
       for (const shift of shifts) {
-        await storage.createTemplateShift({
-          templateId: template.id,
+        await db.insert(templateShifts).values({
+          templateId: template[0].id,
           userId: shift.userId,
           day: shift.day,
           startTime: shift.startTime,
+          endTime: shift.endTime,
+          type: shift.type || "work",
+          notes: shift.notes,
+          area: shift.area
+        });
+      }
+      
+      console.log("✅ Turni template creati con successo");
+      
+      return res.status(201).json(template[0]);startTime,
           endTime: shift.endTime,
           type: shift.type || "regular",
           notes: shift.notes,
