@@ -15,11 +15,7 @@ import { WeekSelectorDialog } from "@/components/schedule/week-selector-dialog";
 import { ScheduleAutoGenerator } from "@/components/schedule/auto-generator/auto-generator";
 import { ExcelGrid } from "@/components/schedule/excel-grid";
 import { TemplateManager } from "@/components/schedule/templates/template-manager";
-
-// PDF Export utilities
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import { Save, FileDown, Upload, Download } from "lucide-react";
+import { ExportToPdfDialog } from "@/components/schedule/export-to-pdf";
 
 // Date utilities
 import { format, startOfWeek, addDays, isBefore, parseISO } from "date-fns";
@@ -305,6 +301,8 @@ export default function Schedule() {
   const [forceResetGrid, setForceResetGrid] = useState(false);
   // Flag per stabilire se stiamo caricando uno schedule nuovo o esistente
   const [isLoadingNewSchedule, setIsLoadingNewSchedule] = useState(false);
+  // State per mostrare la dialog di esportazione PDF
+  const [showPdfExport, setShowPdfExport] = useState(false);
   
   // State for creating a new schedule
   const [creatingNewSchedule, setCreatingNewSchedule] = useState(false);
@@ -379,231 +377,6 @@ export default function Schedule() {
         unpublishScheduleMutation.mutate(existingSchedule.id);
       }
     }
-  };
-  
-  // Funzione per esportare gli orari settimanali in PDF
-  const handleExportPDF = () => {
-    if (!existingSchedule || !shifts || !users || users.length === 0) {
-      toast({
-        title: "Impossibile esportare",
-        description: "Non ci sono dati da esportare o l'orario settimanale non è stato ancora creato.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Creazione del documento PDF in formato landscape per avere più spazio
-    const doc = new jsPDF({
-      orientation: 'landscape',
-      unit: 'mm',
-      format: 'a4'
-    });
-    
-    // Estrai i giorni della settimana dalla data di inizio
-    const startDate = new Date(existingSchedule.startDate);
-    const days = [];
-    const dayNames = [];
-    
-    for (let i = 0; i < 7; i++) {
-      const currentDate = addDays(startDate, i);
-      days.push(format(currentDate, "EEEE dd/MM", { locale: it }));
-      dayNames.push(format(currentDate, "EEEE", { locale: it }));
-    }
-    
-    // Titolo del documento
-    const title = `Pianificazione Turni: ${format(new Date(existingSchedule.startDate), "dd/MM/yyyy", { locale: it })} - ${format(new Date(existingSchedule.endDate), "dd/MM/yyyy", { locale: it })}`;
-    doc.setFontSize(16);
-    doc.text(title, 14, 15);
-    
-    // Sottotitolo
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    const status = existingSchedule.isPublished ? "Pubblicato" : "Bozza";
-    doc.text(`Stato: ${status}`, 14, 20);
-    
-    // TABELLA PRINCIPALE DEGLI ORARI - ESATTAMENTE COME NELLA INTERFACCIA
-    const scheduleTableData = [];
-    
-    // Per ogni dipendente, creiamo una riga con i turni per ogni giorno
-    users.forEach(user => {
-      const row = [user.name]; // Prima colonna: nome dipendente
-      let totalWeeklyHours = 0;
-      
-      // Per ogni giorno della settimana, aggiungiamo i turni
-      dayNames.forEach(dayName => {
-        const userDayShifts = shifts.filter(
-          (shift: any) => shift.userId === user.id && shift.day.toLowerCase() === dayName.toLowerCase()
-        );
-        
-        // Se l'utente ha turni per questo giorno
-        if (userDayShifts.length > 0) {
-          // Prendiamo il primo turno come riferimento (in caso di più turni nello stesso giorno)
-          const shift = userDayShifts[0];
-          const shiftHours = calculateWorkHours(shift.startTime, shift.endTime);
-          totalWeeklyHours += shiftHours;
-          
-          // Formato: orario inizio - orario fine
-          row.push(`${shift.startTime} - ${shift.endTime}`);
-        } else {
-          // Se non ci sono turni, mettiamo un trattino
-          row.push('-');
-        }
-      });
-      
-      // Aggiungiamo il totale ore alla fine della riga
-      row.push(formatHours(totalWeeklyHours));
-      
-      scheduleTableData.push(row);
-    });
-    
-    // Ottieni i giorni della settimana in italiano
-    const weekDays = dayNames.map(day => {
-      // Capitalizza la prima lettera di ogni giorno
-      return day.charAt(0).toUpperCase() + day.slice(1);
-    });
-    
-    // Genera la tabella principale come appare nell'applicazione
-    autoTable(doc, {
-      head: [['Dipendente', ...weekDays, 'Ore Totali']],
-      body: scheduleTableData,
-      startY: 25,
-      theme: 'grid',
-      styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [240, 240, 240] },
-      margin: { top: 25 }
-    });
-    
-    // Aggiungiamo una seconda pagina con i dettagli per turno
-    doc.addPage();
-    
-    // Titolo della seconda pagina
-    doc.setFontSize(16);
-    doc.setTextColor(0);
-    doc.text("Dettaglio Turni Individuali", 14, 15);
-    
-    // Tabella dettagliata con tutti i turni
-    const detailedShiftsData = [];
-    
-    users.forEach(user => {
-      const userShifts = shifts.filter((shift: any) => shift.userId === user.id);
-      
-      if (userShifts.length > 0) {
-        userShifts.forEach((shift: any) => {
-          const hours = calculateWorkHours(shift.startTime, shift.endTime);
-          
-          detailedShiftsData.push([
-            user.name,
-            shift.day.charAt(0).toUpperCase() + shift.day.slice(1),
-            shift.startTime,
-            shift.endTime,
-            formatHours(hours),
-            shift.type || "",
-            shift.notes || "",
-            shift.area || ""
-          ]);
-        });
-      }
-    });
-    
-    // Genera la tabella dettagliata
-    autoTable(doc, {
-      head: [['Dipendente', 'Giorno', 'Inizio', 'Fine', 'Ore', 'Tipo', 'Note', 'Area']],
-      body: detailedShiftsData,
-      startY: 25,
-      theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-      alternateRowStyles: { fillColor: [240, 240, 240] },
-      margin: { top: 25 }
-    });
-    
-    // Aggiungiamo una terza pagina con il conteggio del personale per fascia oraria
-    doc.addPage();
-    
-    // Titolo della terza pagina
-    doc.setFontSize(16);
-    doc.setTextColor(0);
-    doc.text("Conteggio Personale per Fascia Oraria", 14, 15);
-    
-    // Definizione delle fasce orarie (timeslots)
-    const timeSlots = [
-      "6:00", "6:30", "7:00", "7:30", "8:00", "8:30", "9:00", "9:30",
-      "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30",
-      "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
-      "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30",
-      "22:00", "22:30", "23:00", "23:30"
-    ];
-    
-    // Inizializziamo il conteggio del personale
-    const staffCount = {};
-    weekDays.forEach((day, dayIndex) => {
-      staffCount[dayIndex] = {};
-      timeSlots.forEach((timeSlot) => {
-        staffCount[dayIndex][timeSlot] = 0;
-      });
-    });
-    
-    // Contiamo il personale per ogni fascia oraria
-    shifts.forEach((shift: any) => {
-      const dayIndex = dayNames.findIndex(day => day.toLowerCase() === shift.day.toLowerCase());
-      if (dayIndex !== -1) {
-        const startTimeIndex = timeSlots.indexOf(shift.startTime);
-        const endTimeIndex = timeSlots.indexOf(shift.endTime);
-        
-        if (startTimeIndex !== -1 && endTimeIndex !== -1) {
-          for (let i = startTimeIndex; i < endTimeIndex; i++) {
-            staffCount[dayIndex][timeSlots[i]]++;
-          }
-        }
-      }
-    });
-    
-    // Prepariamo i dati per la tabella
-    const staffCountData = [];
-    timeSlots.forEach((timeSlot) => {
-      const row = [timeSlot];
-      weekDays.forEach((day, dayIndex) => {
-        row.push(staffCount[dayIndex][timeSlot].toString());
-      });
-      staffCountData.push(row);
-    });
-    
-    // Genera la tabella del conteggio
-    autoTable(doc, {
-      head: [['Orario', ...weekDays]],
-      body: staffCountData,
-      startY: 25,
-      theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-      columnStyles: {
-        0: { cellWidth: 15 }
-      },
-      alternateRowStyles: { fillColor: [240, 240, 240] },
-      margin: { top: 25 }
-    });
-    
-    // Data di generazione su tutte le pagine
-    const today = format(new Date(), "dd/MM/yyyy HH:mm", { locale: it });
-    const pageCount = doc.getNumberOfPages();
-    
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(150);
-      doc.text(`Generato il: ${today}`, 14, doc.internal.pageSize.height - 10);
-      doc.text(`Pagina ${i} di ${pageCount}`, doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 10);
-    }
-    
-    // Salva il PDF
-    doc.save(`turni_${format(new Date(existingSchedule.startDate), "yyyyMMdd")}-${format(new Date(existingSchedule.endDate), "yyyyMMdd")}.pdf`);
-    
-    toast({
-      title: "Esportazione completata",
-      description: "Gli orari settimanali sono stati esportati in PDF con successo.",
-      variant: "default",
-    });
   };
   
   // Handle new weekly schedule
@@ -861,31 +634,6 @@ export default function Schedule() {
                 <span className="material-icons text-xs sm:text-sm mr-1">add</span>
                 Nuovo turno settimanale
               </Button>
-              
-              {/* Pulsante per esportare in PDF */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportPDF}
-                className="text-xs sm:text-sm"
-                disabled={!existingSchedule?.id || shifts?.length === 0}
-              >
-                <Download className="h-4 w-4 mr-1" />
-                Esporta PDF
-              </Button>
-              
-              {/* Pulsante per ritirare dalla pubblicazione (visibile solo se lo schedule è pubblicato) */}
-              {existingSchedule?.isPublished && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleUnpublish}
-                  className="text-xs sm:text-sm text-amber-600 hover:text-amber-700 border-amber-200 hover:border-amber-300 hover:bg-amber-50"
-                >
-                  <Upload className="h-4 w-4 mr-1" />
-                  Ritira pubblicazione
-                </Button>
-              )}
             </div>
             
             {/* Componente per gestire i template di orario */}
