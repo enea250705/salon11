@@ -730,30 +730,69 @@ export default function Schedule() {
       staffCountData.push(row);
     });
     
-    // Genera la tabella del conteggio
-    autoTable(doc, {
-      head: [['Orario', ...weekDays]],
-      body: staffCountData,
-      startY: 25,
-      theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-      columnStyles: {
-        0: { cellWidth: 15 }
-      },
-      alternateRowStyles: { fillColor: [240, 240, 240] },
-      margin: { top: 25 }
+    // Genera la tabella del conteggio con intestazioni personalizzate
+    const headerCells = ['Orario', ...weekDays].map((header, index) => {
+      return {
+        content: header,
+        styles: {
+          halign: index === 0 ? 'left' : 'center',
+          fontStyle: 'bold'
+        }
+      };
     });
     
-    // Data di generazione su tutte le pagine
+    autoTable(doc, {
+      head: [headerCells],
+      body: staffCountData,
+      startY: 30,
+      theme: 'grid',
+      styles: { fontSize: 9, cellPadding: 3 },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+      columnStyles: {
+        0: { cellWidth: 25, halign: 'left' }, // Orario
+        1: { cellWidth: 20, halign: 'center' }, // Lunedì
+        2: { cellWidth: 20, halign: 'center' }, // Martedì
+        3: { cellWidth: 20, halign: 'center' }, // Mercoledì
+        4: { cellWidth: 20, halign: 'center' }, // Giovedì
+        5: { cellWidth: 20, halign: 'center' }, // Venerdì
+        6: { cellWidth: 20, halign: 'center' }, // Sabato
+        7: { cellWidth: 20, halign: 'center' }  // Domenica
+      },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      didDrawPage: (data) => {
+        // Aggiunge l'intestazione sulle pagine successive
+        if (data.pageCount > 1 && data.cursor.y === data.startY) {
+          doc.setFontSize(16);
+          doc.setFont("helvetica", "bold");
+          doc.setTextColor(41, 128, 185);
+          doc.text("Conteggio Personale per Fascia Oraria (continua)", 14, 15);
+          doc.setFontSize(12);
+          doc.setFont("helvetica", "normal"); 
+          doc.setTextColor(0);
+          doc.text(`Periodo: ${dateRange}`, 14, 21);
+        }
+      }
+    });
+    
+    // Data di generazione e piè di pagina su tutte le pagine
     const today = format(new Date(), "dd/MM/yyyy HH:mm", { locale: it });
     const pageCount = doc.getNumberOfPages();
     
+    // Aggiungi data e numero di pagina a tutte le pagine con grafica migliorata
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
+      
+      // Aggiungi linea divisoria in fondo alla pagina
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.line(14, doc.internal.pageSize.height - 15, doc.internal.pageSize.width - 14, doc.internal.pageSize.height - 15);
+      
+      // Info piè di pagina con stile migliorato
       doc.setFontSize(8);
-      doc.setTextColor(150);
-      doc.text(`Generato il: ${today}`, 14, doc.internal.pageSize.height - 10);
+      doc.setTextColor(100, 100, 100);
+      doc.setFont("helvetica", "italic");
+      doc.text(`Ristorante "Da Vittorino" - Generato il: ${today}`, 14, doc.internal.pageSize.height - 10);
+      doc.setFont("helvetica", "normal");
       doc.text(`Pagina ${i} di ${pageCount}`, doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 10);
     }
     
