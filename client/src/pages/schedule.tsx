@@ -616,12 +616,16 @@ export default function Schedule() {
           sortedShifts.forEach((shift: any) => {
             const hours = calculateWorkHours(shift.startTime, shift.endTime);
             
+            // Aggiunta di una condizione più esplicita per il calcolo delle ore
+            // Per assicurarsi che le ore siano visualizzate correttamente anche nel PDF
+            const formattedHours = hours > 0 ? formatHours(hours) : "0 ore";
+            
             detailedShiftsData.push([
               user.name || user.username,
               shift.day.charAt(0).toUpperCase() + shift.day.slice(1),
               shift.startTime,
               shift.endTime,
-              formatHours(hours),
+              formattedHours,
               shift.type || "",
               shift.notes || "",
               shift.area || ""
