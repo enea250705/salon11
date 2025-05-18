@@ -182,9 +182,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint per salvare un orario come modello (template)
   app.post("/api/schedules/:scheduleId/save-as-template", (req, res, next) => {
     if (req.isAuthenticated()) {
-      return next();
+      next();
+    } else {
+      res.status(401).json({ message: "Unauthorized" });
     }
-    res.status(401).json({ message: "Unauthorized" });
   }, async (req, res) => {
     try {
       console.log("🔄 Richiesta salvataggio template", req.body);
