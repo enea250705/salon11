@@ -781,11 +781,11 @@ export function ExcelGrid({
           
           {weekDays.map((day) => (
             <TabsContent key={day.name} value={day.name} className="relative">
-              <div className="overflow-auto border rounded-md">
+              <div className="overflow-auto border rounded-md relative">
                 <table className="w-full border-collapse">
-                  <thead>
+                  <thead className="sticky top-0 z-10">
                     <tr className="border-b bg-muted/50">
-                      <th className="p-1 sm:p-2 text-left font-medium">Dipendente</th>
+                      <th className="p-1 sm:p-2 text-left font-medium sticky left-0 bg-muted/50 z-20">Dipendente</th>
                       {timeSlots.map((slot, idx) => (
                         idx < timeSlots.length - 1 && (
                           <th key={idx} className="p-1 sm:p-2 text-center text-xs sm:text-sm font-medium">
@@ -794,7 +794,7 @@ export function ExcelGrid({
                         )
                       ))}
                       <th className="p-2 text-left font-medium">Note</th>
-                      <th className="p-2 text-center font-bold bg-green-700 text-white">TOTALE ORE</th>
+                      <th className="p-2 text-center font-bold bg-green-700 text-white sticky right-0 z-20">TOTALE ORE</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -802,7 +802,7 @@ export function ExcelGrid({
                       .filter(user => user.role === "employee" && user.isActive)
                       .map((user) => (
                         <tr key={user.id} className="border-b hover:bg-muted/20">
-                          <td className="p-2 text-left font-medium text-xs sm:text-sm">
+                          <td className="p-2 text-left font-medium text-xs sm:text-sm sticky left-0 bg-white z-10">
                             {user.fullName || user.username}
                           </td>
                           
