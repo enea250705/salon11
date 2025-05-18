@@ -469,7 +469,7 @@ export async function sendDocumentNotification(user: User, documentType: string,
 /**
  * Invia una notifica per richiesta ferie/permesso approvata
  */
-export async function sendTimeOffApprovalNotification(user: User, type: string, startDate: string, endDate: string, duration?: string, startTime?: string, endTime?: string): Promise<boolean> {
+export async function sendTimeOffApprovalNotification(user: User, type: string, startDate: string, endDate: string): Promise<boolean> {
   // Formatta le date per la visualizzazione (dd/mm/yyyy)
   const formattedStartDate = new Date(startDate).toLocaleDateString('it-IT');
   const formattedEndDate = new Date(endDate).toLocaleDateString('it-IT');
@@ -478,22 +478,12 @@ export async function sendTimeOffApprovalNotification(user: User, type: string, 
   let typeTranslated = '';
   if (type === 'vacation') {
     typeTranslated = 'ferie';
-  } else if (type === 'personal') {
+  } else if (type === 'leave') {
     typeTranslated = 'permesso';
   } else if (type === 'sick') {
     typeTranslated = 'malattia';
   } else {
     typeTranslated = type;
-  }
-  
-  // Gestione durata e orari specifici
-  let durationText = '';
-  if (duration === 'specific_hours' && startTime && endTime) {
-    durationText = `<p>Per l'orario: <strong>${startTime} - ${endTime}</strong></p>`;
-  } else if (duration === 'morning') {
-    durationText = '<p>Per la <strong>mattina</strong></p>';
-  } else if (duration === 'afternoon') {
-    durationText = '<p>Per il <strong>pomeriggio</strong></p>';
   }
   
   // Crea il contenuto HTML dell'email
@@ -504,7 +494,6 @@ export async function sendTimeOffApprovalNotification(user: User, type: string, 
         </div>
         <p>Gentile ${user.name},</p>
         <p>Ti informiamo che la tua richiesta di <strong>${typeTranslated}</strong> per il periodo <strong>${formattedStartDate} - ${formattedEndDate}</strong> è stata <span style="color: green;"><strong>approvata</strong></span>.</p>
-        ${durationText}
         <p>Puoi visualizzare lo stato di tutte le tue richieste accedendo alla piattaforma Da Vittorino.</p>
         <div style="text-align: center; margin-top: 30px;">
           <a href="https://davittorino.vercel.app/time-off" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Le Mie Richieste</a>
@@ -532,7 +521,7 @@ export async function sendTimeOffApprovalNotification(user: User, type: string, 
 /**
  * Invia una notifica per richiesta ferie/permesso rifiutata
  */
-export async function sendTimeOffRejectionNotification(user: User, type: string, startDate: string, endDate: string, duration?: string, startTime?: string, endTime?: string): Promise<boolean> {
+export async function sendTimeOffRejectionNotification(user: User, type: string, startDate: string, endDate: string): Promise<boolean> {
   // Formatta le date per la visualizzazione (dd/mm/yyyy)
   const formattedStartDate = new Date(startDate).toLocaleDateString('it-IT');
   const formattedEndDate = new Date(endDate).toLocaleDateString('it-IT');
@@ -541,22 +530,12 @@ export async function sendTimeOffRejectionNotification(user: User, type: string,
   let typeTranslated = '';
   if (type === 'vacation') {
     typeTranslated = 'ferie';
-  } else if (type === 'personal') {
+  } else if (type === 'leave') {
     typeTranslated = 'permesso';
   } else if (type === 'sick') {
     typeTranslated = 'malattia';
   } else {
     typeTranslated = type;
-  }
-  
-  // Gestione durata e orari specifici
-  let durationText = '';
-  if (duration === 'specific_hours' && startTime && endTime) {
-    durationText = `<p>Per l'orario: <strong>${startTime} - ${endTime}</strong></p>`;
-  } else if (duration === 'morning') {
-    durationText = '<p>Per la <strong>mattina</strong></p>';
-  } else if (duration === 'afternoon') {
-    durationText = '<p>Per il <strong>pomeriggio</strong></p>';
   }
   
   // Crea il contenuto HTML dell'email
@@ -567,7 +546,6 @@ export async function sendTimeOffRejectionNotification(user: User, type: string,
         </div>
         <p>Gentile ${user.name},</p>
         <p>Ti informiamo che la tua richiesta di <strong>${typeTranslated}</strong> per il periodo <strong>${formattedStartDate} - ${formattedEndDate}</strong> è stata <span style="color: red;"><strong>rifiutata</strong></span>.</p>
-        ${durationText}
         <p>Per maggiori informazioni, contatta il tuo responsabile.</p>
         <p>Puoi visualizzare lo stato di tutte le tue richieste accedendo alla piattaforma Da Vittorino.</p>
         <div style="text-align: center; margin-top: 30px;">

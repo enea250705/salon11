@@ -127,11 +127,6 @@ export function TimeOffRequestForm() {
   });
   
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Se è una richiesta con orario specifico, mettiamo gli orari nel campo reason
-    if (values.duration === "specific_hours" && values.startTime && values.endTime) {
-      const originalReason = values.reason || "";
-      values.reason = `Orario: ${values.startTime} - ${values.endTime}${originalReason ? '. ' + originalReason : ''}`;
-    }
     createTimeOffRequest.mutate(values);
   }
   

@@ -1142,7 +1142,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/time-off-requests", isAuthenticated, async (req, res) => {
     try {
-      // Gestisci i dati della richiesta
       const requestData = insertTimeOffRequestSchema.parse({
         ...req.body,
         userId: (req.user as any).id
@@ -1189,57 +1188,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const formattedStartDate = new Date(request.startDate).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
           const formattedEndDate = new Date(request.endDate).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
           
-          // Estrai l'orario dal motivo se è un orario specifico
-          let durataText = '';
-          let motivoText = '';
-          
-          // Separa il motivo dall'orario specifico
-          if (request.reason) {
-            const reasonText = request.reason;
-            
-            if (request.duration === 'specific_hours' && reasonText.startsWith('Orario:')) {
-              // Estrai l'orario (es. "09:00 - 13:00")
-              const orarioMatch = reasonText.match(/Orario: ([0-9:]{5} - [0-9:]{5})/);
-              
-              if (orarioMatch && orarioMatch[1]) {
-                durataText = `Orario specifico: ${orarioMatch[1]}`;
-                
-                // Rimuovi la parte dell'orario dal motivo
-                const remainingText = reasonText.replace(/Orario: [0-9:]{5} - [0-9:]{5}\.?\s*/, '');
-                motivoText = remainingText || 'Nessun motivo specificato';
-              } else {
-                durataText = 'Orario specifico';
-                motivoText = reasonText;
-              }
-            } else {
-              // Non è un orario specifico o non ha il formato atteso
-              if (request.duration === 'full_day') {
-                durataText = 'Giornata intera';
-              } else if (request.duration === 'morning') {
-                durataText = 'Mattina';
-              } else if (request.duration === 'afternoon') {
-                durataText = 'Pomeriggio';
-              } else {
-                durataText = 'Orario specifico';
-              }
-              
-              motivoText = reasonText;
-            }
-          } else {
-            // Non c'è un motivo specificato
-            if (request.duration === 'full_day') {
-              durataText = 'Giornata intera';
-            } else if (request.duration === 'morning') {
-              durataText = 'Mattina';
-            } else if (request.duration === 'afternoon') {
-              durataText = 'Pomeriggio';
-            } else {
-              durataText = 'Orario specifico';
-            }
-            
-            motivoText = 'Nessun motivo specificato';
-          }
-          
           const emailParams = {
             to: "admin@ilirionai.it", // Indirizzo email fisso dell'amministratore
             subject: `Nuova richiesta di ${typeLabel.toLowerCase()} da ${requester.name}`,
@@ -1256,8 +1204,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   <ul style="margin-bottom: 0;">
                     <li><strong>Tipo:</strong> ${typeLabel}</li>
                     <li><strong>Periodo:</strong> ${formattedStartDate} - ${formattedEndDate}</li>
-                    <li><strong>Durata:</strong> ${durataText}</li>
-                    <li><strong>Motivo:</strong> ${motivoText}</li>
+                    <li><strong>Durata:</strong> ${request.duration === 'full_day' ? 'Giornata intera' : request.duration === 'morning' ? 'Mattina' : 'Pomeriggio'}</li>
+                    <li><strong>Motivo:</strong> ${request.reason || 'Nessun motivo specificato'}</li>
                   </ul>
                 </div>
                 
@@ -1329,16 +1277,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Import del servizio email
           const { sendTimeOffApprovalNotification } = await import('./services/nodemailer-service');
           
-          // Invia email di notifica con gli orari specifici se presenti
-          await sendTimeOffApprovalNotification(
-            user, 
-            request.type, 
-            request.startDate, 
-            request.endDate, 
-            request.duration,
-            (request as any).startTime,
-            (request as any).endTime
-          );
+          // Invia email di notifica
+          await sendTimeOffApprovalNotification(user, request.type, request.startDate, request.endDate);
           console.log(`📧 Email di notifica approvazione inviata a ${user.name} (${user.email})`);
         } catch (emailError) {
           console.error(`❌ Errore nell'invio email a ${user.email}:`, emailError);
@@ -1471,18 +1411,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (user && user.email) {
         try {
           // Import del servizio email
-          const { sendTimeOffRejectionNotification } = await import('./services/nodemailer-service');
+          const { sendTimeOffRejectionNotification } = await import('./services/email-service');
           
-          // Invia email di notifica con gli orari specifici se presenti
-          await sendTimeOffRejectionNotification(
-            user, 
-            request.type, 
-            request.startDate, 
-            request.endDate,
-            request.duration,
-            (request as any).startTime,
-            (request as any).endTime
-          );
+          // Invia email di notifica
+          await sendTimeOffRejectionNotification(user, request.type, request.startDate, request.endDate);
           console.log(`📧 Email di notifica rifiuto inviata a ${user.name} (${user.email})`);
         } catch (emailError) {
           console.error(`❌ Errore nell'invio email a ${user.email}:`, emailError);
