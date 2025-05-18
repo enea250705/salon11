@@ -1189,6 +1189,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const formattedStartDate = new Date(request.startDate).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
           const formattedEndDate = new Date(request.endDate).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
           
+          // Estrai l'orario dal motivo se è un orario specifico
+          let durataText = '';
+          let motivoText = request.reason || 'Nessun motivo specificato';
+          
+          if (request.duration === 'specific_hours' && motivoText.startsWith('Orario:')) {
+            const orarioParte = motivoText.split('.')[0].replace('Orario:', '').trim();
+            durataText = `Orario specifico: ${orarioParte}`;
+            
+            // Rimuovi la parte dell'orario dal motivo se c'è altro testo
+            if (motivoText.split('.').length > 1) {
+              motivoText = motivoText.split('.').slice(1).join('.').trim();
+            } else {
+              motivoText = 'Nessun motivo specificato';
+            }
+          } else if (request.duration === 'full_day') {
+            durataText = 'Giornata intera';
+          } else if (request.duration === 'morning') {
+            durataText = 'Mattina';
+          } else if (request.duration === 'afternoon') {
+            durataText = 'Pomeriggio';
+          } else {
+            durataText = 'Orario specifico';
+          }
+          
           const emailParams = {
             to: "admin@ilirionai.it", // Indirizzo email fisso dell'amministratore
             subject: `Nuova richiesta di ${typeLabel.toLowerCase()} da ${requester.name}`,
@@ -1205,24 +1229,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   <ul style="margin-bottom: 0;">
                     <li><strong>Tipo:</strong> ${typeLabel}</li>
                     <li><strong>Periodo:</strong> ${formattedStartDate} - ${formattedEndDate}</li>
-                    <li><strong>Durata:</strong> ${
-                      request.duration === 'full_day' 
-                        ? 'Giornata intera' 
-                        : request.duration === 'morning' 
-                          ? 'Mattina' 
-                          : request.duration === 'afternoon' 
-                            ? 'Pomeriggio' 
-                            : request.reason && request.reason.startsWith('Orario:') 
-                              ? `Orario specifico: ${request.reason.split('.')[0].replace('Orario:', '').trim()}`
-                              : 'Orario specifico'
-                    }</li>
-                    <li><strong>Motivo:</strong> ${
-                      request.reason && request.reason.startsWith('Orario:') 
-                      ? (request.reason.split('.').length > 1 
-                         ? request.reason.split('.').slice(1).join('.').trim() 
-                         : 'Nessun motivo specificato') 
-                      : (request.reason || 'Nessun motivo specificato')
-                    }</li>
+                    <li><strong>Durata:</strong> ${durataText}</li>
+                    <li><strong>Motivo:</strong> ${motivoText}</li>
                   </ul>
                 </div>
                 
