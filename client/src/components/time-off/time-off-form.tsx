@@ -31,12 +31,24 @@ const formSchema = z.object({
     required_error: "Seleziona una data di fine",
   }),
   duration: z.string(),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
   reason: z.string().optional(),
 }).refine(data => {
   return data.startDate <= data.endDate;
 }, {
   message: "La data di fine deve essere successiva o uguale alla data di inizio",
   path: ["endDate"],
+}).refine(data => {
+  // Verifica che l'orario di fine sia successivo all'orario di inizio
+  // solo se è selezionata la durata con orari specifici
+  if (data.duration === "specific_hours" && data.startTime && data.endTime) {
+    return data.startTime < data.endTime;
+  }
+  return true;
+}, {
+  message: "L'orario di fine deve essere successivo all'orario di inizio",
+  path: ["endTime"],
 });
 
 export function TimeOffRequestForm() {
@@ -50,6 +62,8 @@ export function TimeOffRequestForm() {
     defaultValues: {
       type: "vacation",
       duration: "full_day",
+      startTime: "09:00",
+      endTime: "13:00",
       reason: "",
     },
   });
@@ -335,7 +349,14 @@ export function TimeOffRequestForm() {
                       <FormLabel>Durata giornaliera</FormLabel>
                       <FormControl>
                         <RadioGroup
-                          onValueChange={field.onChange}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            // Se è selezionato specific_hours, inizializza i campi di ora
+                            if (value === "specific_hours" && !form.getValues("startTime")) {
+                              form.setValue("startTime", "09:00");
+                              form.setValue("endTime", "13:00");
+                            }
+                          }}
                           value={field.value}
                           className="flex flex-col space-y-1"
                         >
@@ -349,24 +370,79 @@ export function TimeOffRequestForm() {
                           </FormItem>
                           <FormItem className="flex items-center space-x-3 space-y-0">
                             <FormControl>
-                              <RadioGroupItem value="morning" />
+                              <RadioGroupItem value="specific_hours" />
                             </FormControl>
                             <FormLabel className="font-normal">
-                              Solo mattina
-                            </FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="afternoon" />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              Solo pomeriggio
+                              Orario specifico
                             </FormLabel>
                           </FormItem>
                         </RadioGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
+                    
+                    {/* Campi per orari specifici che appaiono solo quando è selezionato "specific_hours" */}
+                    {form.watch("duration") === "specific_hours" && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="mt-3 grid grid-cols-2 gap-4"
+                      >
+                        <FormField
+                          control={form.control}
+                          name="startTime"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Ora inizio</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Ora inizio" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {Array.from({ length: 24 }).map((_, i) => {
+                                    const hour = i.toString().padStart(2, '0');
+                                    return (
+                                      <SelectItem key={`${hour}:00`} value={`${hour}:00`}>{`${hour}:00`}</SelectItem>
+                                    );
+                                  })}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="endTime"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Ora fine</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Ora fine" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {Array.from({ length: 24 }).map((_, i) => {
+                                    const hour = i.toString().padStart(2, '0');
+                                    return (
+                                      <SelectItem key={`${hour}:00`} value={`${hour}:00`}>{`${hour}:00`}</SelectItem>
+                                    );
+                                  })}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </motion.div>
+                    )}
                   </motion.div>
                 );
               }}
