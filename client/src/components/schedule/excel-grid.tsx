@@ -506,8 +506,8 @@ export function ExcelGrid({
         isTimeOff: false
       };
       
-      // Crea un nuovo turno nel database
-      createShiftMutation.mutate(createData, {
+      // Crea un nuovo turno nel database utilizzando la mutation esistente
+      updateShiftMutation.mutate(createData, {
         onSuccess: (data) => {
           // Ora la risposta è già un oggetto JSON grazie alla mutationFn migliorata
           // che converte automaticamente la risposta in JSON
