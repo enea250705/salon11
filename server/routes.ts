@@ -19,8 +19,7 @@ import {
 } from "@shared/schema";
 
 // Import dei moduli di route personalizzati
-import templatesRoutes from "./routes/templates";
-import schedulesTemplatesRoutes from "./routes/schedules-templates";
+import { templatesRouter } from "./routes/templates";
 
 // Initialize session store
 const MemorySessionStore = MemoryStore(session);
@@ -178,10 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
   // Registriamo le rotte per i modelli di orario
-  app.use("/api/templates", templatesRoutes);
-  
-  // Registrazione corretta del router per i template di orari con il percorso giusto
-  app.use("/api/schedules", schedulesTemplatesRoutes);
+  app.use("/api/templates", templatesRouter);
   
   // Function to create a database notification (senza WebSocket)
   const sendNotification = async (userId: number, notification: any) => {
