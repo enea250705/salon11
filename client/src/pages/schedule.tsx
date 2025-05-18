@@ -340,6 +340,17 @@ export default function Schedule() {
     }
   };
   
+  // Handle unpublish schedule (ritira dalla pubblicazione)
+  const handleUnpublish = () => {
+    if (existingSchedule?.id) {
+      // Chiedi conferma prima di ritirare dalla pubblicazione
+      if (window.confirm("Sei sicuro di voler ritirare questo orario dalla pubblicazione? I dipendenti non potranno più vederlo finché non verrà ripubblicato.")) {
+        // Ritira lo schedule dalla pubblicazione
+        unpublishScheduleMutation.mutate(existingSchedule.id);
+      }
+    }
+  };
+  
   // Handle new weekly schedule
   const handleNewWeeklySchedule = () => {
     console.log("Creazione nuovo turno settimanale");
@@ -523,14 +534,27 @@ export default function Schedule() {
               )}
             </p>
           </div>
-          {existingSchedule?.id && !existingSchedule.isPublished && (
-            <Button
-              onClick={handlePublish}
-              disabled={publishScheduleMutation.isPending}
-              className="mt-4 md:mt-0 w-full md:w-auto"
-            >
-              {publishScheduleMutation.isPending ? "Pubblicazione..." : "Pubblica Turni"}
-            </Button>
+          {existingSchedule?.id && (
+            <>
+              {!existingSchedule.isPublished ? (
+                <Button
+                  onClick={handlePublish}
+                  disabled={publishScheduleMutation.isPending}
+                  className="mt-4 md:mt-0 w-full md:w-auto"
+                >
+                  {publishScheduleMutation.isPending ? "Pubblicazione..." : "Pubblica Turni"}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleUnpublish}
+                  variant="outline"
+                  className="mt-4 md:mt-0 w-full md:w-auto"
+                >
+                  <span className="material-icons text-sm mr-1">unpublished</span>
+                  Ritira dalla pubblicazione
+                </Button>
+              )}
+            </>
           )}
         </div>
 
