@@ -1059,12 +1059,12 @@ class MemStorageWithTemplates extends MemStorage {
     const id = this.scheduleTemplateCurrentId++;
     const now = new Date();
     
-    // Adattato alla struttura effettiva del database
     const template: ScheduleTemplate = {
       ...templateData,
       id,
       createdAt: templateData.createdAt || now,
-      lastUsed: templateData.lastUsed || null
+      lastUsed: templateData.lastUsed || null,
+      timesUsed: templateData.timesUsed || 0
     };
     
     this.scheduleTemplates.set(id, template);
@@ -1086,14 +1086,14 @@ class MemStorageWithTemplates extends MemStorage {
     return this.scheduleTemplates.delete(id);
   }
 
-  // Aggiorna l'ultimo utilizzo di un template
+  // Aggiorna le statistiche di utilizzo di un template
   async updateScheduleTemplateUsage(id: number): Promise<ScheduleTemplate | undefined> {
     const template = this.scheduleTemplates.get(id);
     if (!template) return undefined;
     
-    // Solo aggiorna lastUsed, non usiamo il campo timesUsed che non esiste nel database
     const updatedTemplate: ScheduleTemplate = {
       ...template,
+      timesUsed: template.timesUsed + 1,
       lastUsed: new Date()
     };
     
@@ -1200,9 +1200,9 @@ DatabaseStorage.prototype.updateScheduleTemplateUsage = async function(id: numbe
   const [template] = await db.select().from(scheduleTemplates).where(eq(scheduleTemplates.id, id));
   if (!template) return undefined;
   
-  // Aggiorniamo solo il campo lastUsed perché il campo timesUsed non esiste nel database
   const [updatedTemplate] = await db.update(scheduleTemplates)
     .set({ 
+      timesUsed: template.timesUsed + 1,
       lastUsed: new Date()
     })
     .where(eq(scheduleTemplates.id, id))

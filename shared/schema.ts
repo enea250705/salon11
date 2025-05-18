@@ -95,11 +95,11 @@ export const insertDocumentSchema = createInsertSchema(documents).omit({
   uploadedAt: true,
 });
 
-// Schedule Templates schema - Allineato con la struttura effettiva del database
+// Schedule Templates schema
 export const scheduleTemplates = pgTable("schedule_templates", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  type: text("type").notNull(), // even, odd, custom
+  type: text("type").notNull(), // even_week, odd_week, custom
   createdBy: integer("created_by").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   lastUsed: timestamp("last_used"),

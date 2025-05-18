@@ -16,6 +16,7 @@ function requireAuth(req: any, res: any, next: any) {
 const saveAsTemplateSchema = z.object({
   name: z.string().min(3),
   type: z.enum(["even", "odd", "custom"]),
+  description: z.string().optional(),
   scheduleId: z.number(),
 });
 
@@ -35,11 +36,15 @@ router.post("/:scheduleId/save-as-template", requireAuth, async (req, res) => {
       return res.status(404).json({ message: "Orario non trovato" });
     }
     
-    // Crea il template - adattato alla struttura attuale del database
+    // Crea il template
     const template = await storage.createScheduleTemplate({
       name: validatedData.name,
       type: validatedData.type,
-      createdBy: req.session.user.id
+      description: validatedData.description || "",
+      createdBy: req.session.user.id,
+      createdAt: new Date(),
+      lastUsed: null,
+      timesUsed: 0,
     });
     
     // Ottieni i turni dallo schedule
