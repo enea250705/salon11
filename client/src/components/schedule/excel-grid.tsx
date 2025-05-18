@@ -451,10 +451,15 @@ export function ExcelGrid({
         // IMPORTANTE: Ricalcola SEMPRE le ore totali indipendentemente dal tipo di cella cambiata
         // Questo assicura che il totale sia sempre aggiornato dopo ogni modifica
         
+        // Aggiorna la cella localmente
+        userDayData.cells[timeIndex] = {
+          type: newType,
+          shiftId: currentCell.shiftId,
+          isTimeOff: false
+        };
+        
         // Contiamo quante celle "work" ci sono nella giornata DOPO il cambiamento
-        const workCells = userDayData.cells.map((cell, idx) => 
-          idx === timeIndex ? newType : cell.type
-        ).filter(type => type === "work").length;
+        const workCells = userDayData.cells.filter(cell => cell.type === "work").length;
         
         // Usa la funzione utility che implementa tutte le regole richieste
         let hours = calculateHoursFromCells(workCells);
@@ -494,8 +499,15 @@ export function ExcelGrid({
         area: null // Area opzionale
       };
       
+      // Aggiorniamo immediatamente la cella locale per feedback visivo
+      userDayData.cells[timeIndex] = {
+        type: newType,
+        shiftId: null, // Sarà aggiornato dopo la risposta dal server
+        isTimeOff: false
+      };
+      
       // Crea un nuovo turno nel database
-      updateShiftMutation.mutate(createData, {
+      createShiftMutation.mutate(createData, {
         onSuccess: (data) => {
           // Ora la risposta è già un oggetto JSON grazie alla mutationFn migliorata
           // che converte automaticamente la risposta in JSON
