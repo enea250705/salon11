@@ -35,21 +35,32 @@ export function UnifiedTimeOffApproval() {
   };
   
   // Funzione per formattare le date
-  const formatDateRange = (startDate: string, endDate: string, duration: string) => {
+  const formatDateRange = (startDate: string, endDate: string, duration: string, request: any) => {
     const start = parseISO(startDate);
     const end = parseISO(endDate);
     
     if (startDate === endDate) {
       let durationType = "";
-      switch (duration) {
-        case "morning":
-          durationType = " (mattina)";
-          break;
-        case "afternoon":
-          durationType = " (pomeriggio)";
-          break;
-        default:
-          durationType = " (giornata intera)";
+      
+      if (duration === "specific_hours") {
+        if (request?.startTime && request?.endTime) {
+          // Mostra orario specifico quando è un permesso con orario personalizzato
+          durationType = ` (${request.startTime} - ${request.endTime})`;
+        } else {
+          // Per retrocompatibilità, nel caso di richieste vecchie senza orari specifici salvati
+          durationType = " (orario specifico)";
+        }
+      } else {
+        switch (duration) {
+          case "morning":
+            durationType = " (mattina)";
+            break;
+          case "afternoon":
+            durationType = " (pomeriggio)";
+            break;
+          default:
+            durationType = " (giornata intera)";
+        }
       }
       
       return format(start, "d MMMM yyyy", { locale: it }) + durationType;
