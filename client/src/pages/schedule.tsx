@@ -16,6 +16,11 @@ import { ScheduleAutoGenerator } from "@/components/schedule/auto-generator/auto
 import { ExcelGrid } from "@/components/schedule/excel-grid";
 import { TemplateManager } from "@/components/schedule/templates/template-manager";
 
+// PDF Export utilities
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { Save, FileDown, Upload, Download } from "lucide-react";
+
 // Date utilities
 import { format, startOfWeek, addDays, isBefore, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
@@ -374,6 +379,100 @@ export default function Schedule() {
         unpublishScheduleMutation.mutate(existingSchedule.id);
       }
     }
+  };
+  
+  // Funzione per esportare gli orari settimanali in PDF
+  const handleExportPDF = () => {
+    if (!existingSchedule || !shifts || shifts.length === 0 || !users || users.length === 0) {
+      toast({
+        title: "Impossibile esportare",
+        description: "Non ci sono dati da esportare o l'orario settimanale non è stato ancora creato.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Creazione del documento PDF
+    const doc = new jsPDF();
+    
+    // Titolo del documento
+    const title = `Pianificazione Turni: ${format(new Date(existingSchedule.startDate), "dd/MM/yyyy", { locale: it })} - ${format(new Date(existingSchedule.endDate), "dd/MM/yyyy", { locale: it })}`;
+    doc.setFontSize(18);
+    doc.text(title, 14, 22);
+    
+    // Sottotitolo
+    doc.setFontSize(12);
+    doc.setTextColor(100);
+    const status = existingSchedule.isPublished ? "Pubblicato" : "Bozza";
+    doc.text(`Stato: ${status}`, 14, 30);
+    
+    // Genera la tabella con i turni
+    const tableData = [];
+    
+    // Intestazione della tabella
+    const days = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+    const dayKeys = days.map(day => day.toLowerCase());
+    
+    // Dati per ogni dipendente
+    users.forEach(user => {
+      const userShifts = shifts.filter((shift: any) => shift.userId === user.id);
+      if (userShifts.length === 0) return; // Salta dipendenti senza turni
+      
+      const row = [user.name];
+      
+      // Aggiungi i turni per ogni giorno della settimana
+      dayKeys.forEach(dayKey => {
+        const dayShifts = userShifts.filter((shift: any) => shift.day.toLowerCase() === dayKey);
+        if (dayShifts.length === 0) {
+          row.push('-');
+        } else {
+          // Considera solo il primo turno per semplicità (o potremmo concatenarli)
+          const shift = dayShifts[0];
+          row.push(`${shift.startTime}-${shift.endTime}`);
+        }
+      });
+      
+      // Calcolo ore totali
+      const totalHours = userShifts.reduce((total: number, shift: any) => {
+        const hours = calculateWorkHours(shift.startTime, shift.endTime);
+        return total + hours;
+      }, 0);
+      
+      row.push(formatHours(totalHours));
+      
+      tableData.push(row);
+    });
+    
+    // Crea tabella
+    autoTable(doc, {
+      head: [['Dipendente', ...days, 'Ore Totali']],
+      body: tableData,
+      startY: 40,
+      theme: 'grid',
+      styles: { fontSize: 10, cellPadding: 3 },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+      alternateRowStyles: { fillColor: [240, 240, 240] }
+    });
+    
+    // Data di generazione
+    const today = format(new Date(), "dd/MM/yyyy HH:mm", { locale: it });
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.setTextColor(150);
+      doc.text(`Generato il: ${today}`, 14, doc.internal.pageSize.height - 10);
+      doc.text(`Pagina ${i} di ${pageCount}`, doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 10);
+    }
+    
+    // Salva il PDF
+    doc.save(`turni_${format(new Date(existingSchedule.startDate), "yyyyMMdd")}-${format(new Date(existingSchedule.endDate), "yyyyMMdd")}.pdf`);
+    
+    toast({
+      title: "Esportazione completata",
+      description: "Gli orari settimanali sono stati esportati in PDF con successo.",
+      variant: "default",
+    });
   };
   
   // Handle new weekly schedule
