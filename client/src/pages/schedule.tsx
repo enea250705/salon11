@@ -383,7 +383,7 @@ export default function Schedule() {
   
   // Funzione per esportare gli orari settimanali in PDF
   const handleExportPDF = () => {
-    if (!existingSchedule || !shifts || shifts.length === 0 || !users || users.length === 0) {
+    if (!existingSchedule || !shifts || !users || users.length === 0) {
       toast({
         title: "Impossibile esportare",
         description: "Non ci sono dati da esportare o l'orario settimanale non è stato ancora creato.",
@@ -392,74 +392,188 @@ export default function Schedule() {
       return;
     }
     
-    // Creazione del documento PDF
-    const doc = new jsPDF();
+    // Creazione del documento PDF in formato landscape per avere più spazio
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    // Definizione dei tempi in formato orario (timeslots)
+    const timeSlots = [
+      "6:00", "6:30", "7:00", "7:30", "8:00", "8:30", "9:00", "9:30",
+      "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30",
+      "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
+      "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30",
+      "22:00", "22:30", "23:00", "23:30"
+    ];
+    
+    // Estrai i giorni dalla data di inizio
+    const startDate = new Date(existingSchedule.startDate);
+    const days = [];
+    const dayAbbreviations = [];
+    
+    for (let i = 0; i < 7; i++) {
+      const currentDate = addDays(startDate, i);
+      days.push(format(currentDate, "EEEE dd/MM", { locale: it }));
+      dayAbbreviations.push(format(currentDate, "EE", { locale: it }).toUpperCase());
+    }
     
     // Titolo del documento
-    const title = `Pianificazione Turni: ${format(new Date(existingSchedule.startDate), "dd/MM/yyyy", { locale: it })} - ${format(new Date(existingSchedule.endDate), "dd/MM/yyyy", { locale: it })}`;
-    doc.setFontSize(18);
-    doc.text(title, 14, 22);
+    const title = `Turni: ${format(new Date(existingSchedule.startDate), "dd/MM/yyyy", { locale: it })} - ${format(new Date(existingSchedule.endDate), "dd/MM/yyyy", { locale: it })}`;
+    doc.setFontSize(16);
+    doc.text(title, 14, 15);
     
     // Sottotitolo
-    doc.setFontSize(12);
+    doc.setFontSize(10);
     doc.setTextColor(100);
     const status = existingSchedule.isPublished ? "Pubblicato" : "Bozza";
-    doc.text(`Stato: ${status}`, 14, 30);
+    doc.text(`Stato: ${status}`, 14, 20);
     
-    // Genera la tabella con i turni
-    const tableData = [];
+    // Creiamo due tavole separate:
+    // 1. La prima tabella con il dettaglio completo degli orari per ogni dipendente
+    const detailedTableData = [];
     
-    // Intestazione della tabella
-    const days = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
-    const dayKeys = days.map(day => day.toLowerCase());
+    // 2. La seconda tabella con il conteggio del personale per ogni fascia oraria
+    const staffCountData = [];
     
-    // Dati per ogni dipendente
+    // Inizializziamo il conteggio del personale per ogni giorno e fascia oraria
+    const staffCount = {};
+    days.forEach((day, dayIndex) => {
+      staffCount[dayIndex] = {};
+      timeSlots.forEach((timeSlot) => {
+        staffCount[dayIndex][timeSlot] = 0;
+      });
+    });
+    
+    // Preparazione dati dettagliati per ogni dipendente
     users.forEach(user => {
       const userShifts = shifts.filter((shift: any) => shift.userId === user.id);
-      if (userShifts.length === 0) return; // Salta dipendenti senza turni
       
-      const row = [user.name];
-      
-      // Aggiungi i turni per ogni giorno della settimana
-      dayKeys.forEach(dayKey => {
-        const dayShifts = userShifts.filter((shift: any) => shift.day.toLowerCase() === dayKey);
-        if (dayShifts.length === 0) {
-          row.push('-');
-        } else {
-          // Considera solo il primo turno per semplicità (o potremmo concatenarli)
-          const shift = dayShifts[0];
-          row.push(`${shift.startTime}-${shift.endTime}`);
+      // Creiamo una riga per ogni giorno della settimana
+      days.forEach((day, dayIndex) => {
+        const dayName = format(addDays(startDate, dayIndex), "EEEE", { locale: it }).toLowerCase();
+        const dayShifts = userShifts.filter((shift: any) => shift.day.toLowerCase() === dayName);
+        
+        if (dayShifts.length > 0) {
+          dayShifts.forEach((shift: any) => {
+            // Calcola le ore totali per questo turno
+            const hours = calculateWorkHours(shift.startTime, shift.endTime);
+            
+            // Aggiungi una riga per questo turno
+            detailedTableData.push([
+              user.name, 
+              days[dayIndex], 
+              shift.startTime, 
+              shift.endTime, 
+              formatHours(hours),
+              shift.type || "",
+              shift.notes || "",
+              shift.area || ""
+            ]);
+            
+            // Aggiorniamo il conteggio del personale
+            const startTimeIndex = timeSlots.indexOf(shift.startTime);
+            const endTimeIndex = timeSlots.indexOf(shift.endTime);
+            
+            if (startTimeIndex !== -1 && endTimeIndex !== -1) {
+              for (let i = startTimeIndex; i < endTimeIndex; i++) {
+                staffCount[dayIndex][timeSlots[i]]++;
+              }
+            }
+          });
         }
       });
-      
-      // Calcolo ore totali
+    });
+    
+    // Creazione della tabella di conteggio del personale
+    timeSlots.forEach((timeSlot) => {
+      const row = [timeSlot];
+      days.forEach((day, dayIndex) => {
+        row.push(staffCount[dayIndex][timeSlot].toString());
+      });
+      staffCountData.push(row);
+    });
+    
+    // Somma delle ore per dipendente
+    const employeeTotals = {};
+    users.forEach(user => {
+      const userShifts = shifts.filter((shift: any) => shift.userId === user.id);
       const totalHours = userShifts.reduce((total: number, shift: any) => {
         const hours = calculateWorkHours(shift.startTime, shift.endTime);
         return total + hours;
       }, 0);
-      
-      row.push(formatHours(totalHours));
-      
-      tableData.push(row);
+      employeeTotals[user.name] = formatHours(totalHours);
     });
     
-    // Crea tabella
+    // Aggiungiamo il riepilogo ore per dipendente
+    const employeeSummary = [];
+    Object.entries(employeeTotals).forEach(([name, hours]) => {
+      employeeSummary.push([name, hours]);
+    });
+    
+    // Genera la prima tabella con i turni dettagliati
     autoTable(doc, {
-      head: [['Dipendente', ...days, 'Ore Totali']],
-      body: tableData,
-      startY: 40,
+      head: [['Dipendente', 'Giorno', 'Inizio', 'Fine', 'Ore', 'Tipo', 'Note', 'Area']],
+      body: detailedTableData,
+      startY: 25,
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+      alternateRowStyles: { fillColor: [240, 240, 240] },
+      margin: { top: 25 }
+    });
+    
+    // Aggiungiamo una pagina per la tabella di conteggio del personale
+    doc.addPage();
+    
+    // Titolo della seconda pagina
+    doc.setFontSize(16);
+    doc.setTextColor(0);
+    doc.text("Conteggio Personale per Fascia Oraria", 14, 15);
+    
+    // Genera la tabella di conteggio del personale
+    autoTable(doc, {
+      head: [['Orario', ...dayAbbreviations]],
+      body: staffCountData,
+      startY: 25,
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+      columnStyles: {
+        0: { cellWidth: 20 }
+      },
+      alternateRowStyles: { fillColor: [240, 240, 240] },
+      margin: { top: 25 }
+    });
+    
+    // Aggiungiamo una terza pagina per il riepilogo ore per dipendente
+    doc.addPage();
+    
+    // Titolo della terza pagina
+    doc.setFontSize(16);
+    doc.setTextColor(0);
+    doc.text("Riepilogo Ore Settimanali per Dipendente", 14, 15);
+    
+    // Genera la tabella di riepilogo ore per dipendente
+    autoTable(doc, {
+      head: [['Dipendente', 'Ore Totali']],
+      body: employeeSummary,
+      startY: 25,
       theme: 'grid',
       styles: { fontSize: 10, cellPadding: 3 },
       headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-      alternateRowStyles: { fillColor: [240, 240, 240] }
+      alternateRowStyles: { fillColor: [240, 240, 240] },
+      margin: { top: 25 }
     });
     
-    // Data di generazione
+    // Data di generazione su tutte le pagine
     const today = format(new Date(), "dd/MM/yyyy HH:mm", { locale: it });
     const pageCount = doc.getNumberOfPages();
+    
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
-      doc.setFontSize(10);
+      doc.setFontSize(8);
       doc.setTextColor(150);
       doc.text(`Generato il: ${today}`, 14, doc.internal.pageSize.height - 10);
       doc.text(`Pagina ${i} di ${pageCount}`, doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 10);
