@@ -19,7 +19,8 @@ import {
 } from "@shared/schema";
 
 // Import dei moduli di route personalizzati
-import { templatesRouter } from "./routes/templates";
+import templatesRoutes from "./routes/templates";
+import schedulesTemplatesRoutes from "./routes/schedules-templates";
 
 // Initialize session store
 const MemorySessionStore = MemoryStore(session);
@@ -176,74 +177,11 @@ async function generateAutomaticSchedule(
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
-  // Registrazione dei router personalizzati
-  app.use("/api/templates", templatesRouter);
+  // Registriamo le rotte per i modelli di orario
+  app.use("/api/templates", templatesRoutes);
   
-  // Endpoint per salvare un orario come modello (template)
-  app.post("/api/schedules/:scheduleId/save-as-template", (req, res, next) => {
-    if (req.isAuthenticated()) {
-      next();
-    } else {
-      res.status(401).json({ message: "Unauthorized" });
-    }
-  }, async (req, res) => {
-    try {
-      console.log("🔄 Richiesta salvataggio template", req.body);
-      
-      const scheduleId = parseInt(req.params.scheduleId);
-      const { name, type, description } = req.body;
-      
-      // Verifica che lo schedule esista
-      const schedule = await storage.getSchedule(scheduleId);
-      if (!schedule) {
-        return res.status(404).json({ message: "Orario non trovato" });
-      }
-      
-      // Crea il template
-      const template = await db.insert(scheduleTemplates).values({
-        name,
-        type,
-        createdBy: (req.user as any).id,
-        createdAt: new Date(),
-        lastUsed: null
-      }).returning();
-      
-      console.log("✅ Template creato:", template);
-      
-      // Ottieni i turni dallo schedule
-      const shifts = await storage.getShifts(scheduleId);
-      console.log(`🔍 Recuperati ${shifts.length} turni dallo schedule`);
-      
-      // Crea i turni del template basati sui turni dello schedule
-      for (const shift of shifts) {
-        await db.insert(templateShifts).values({
-          templateId: template[0].id,
-          userId: shift.userId,
-          day: shift.day,
-          startTime: shift.startTime,
-          endTime: shift.endTime,
-          type: shift.type || "work",
-          notes: shift.notes,
-          area: shift.area
-        });
-      }
-      
-      console.log("✅ Turni template creati con successo");
-      
-      return res.status(201).json(template[0]);startTime,
-          endTime: shift.endTime,
-          type: shift.type || "regular",
-          notes: shift.notes,
-          area: shift.area
-        });
-      }
-      
-      res.status(201).json(template);
-    } catch (error) {
-      console.error("❌ Errore nel salvataggio del template:", error);
-      res.status(500).json({ message: "Errore nel salvataggio del template. Riprova più tardi." });
-    }
-  });
+  // Registrazione corretta del router per i template di orari con il percorso giusto
+  app.use("/api/schedules", schedulesTemplatesRoutes);
   
   // Function to create a database notification (senza WebSocket)
   const sendNotification = async (userId: number, notification: any) => {
