@@ -785,6 +785,14 @@ export default function Schedule() {
         schedules={allSchedules}
         onSelectSchedule={handleSelectSchedule}
       />
+      
+      {/* Componente per gestire i template degli orari */}
+      <TemplateManager
+        isOpen={showTemplateManager}
+        onClose={() => setShowTemplateManager(false)}
+        currentScheduleData={shifts || []}
+        onApplyTemplate={handleApplyTemplate}
+      />
     </Layout>
   );
 }
