@@ -179,6 +179,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registriamo le rotte per i modelli di orario
   app.use("/api/templates", templatesRoutes);
+  
+  // Registrazione corretta del router per i template di orari con il percorso giusto
   app.use("/api/schedules", schedulesTemplatesRoutes);
   
   // Function to create a database notification (senza WebSocket)

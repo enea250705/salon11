@@ -42,9 +42,7 @@ router.post("/:scheduleId/save-as-template", requireAuth, async (req, res) => {
       type: validatedData.type,
       description: validatedData.description || "",
       createdBy: req.session.user.id,
-      createdAt: new Date(),
-      lastUsed: null,
-      timesUsed: 0,
+      description: validatedData.description || "",
     });
     
     // Ottieni i turni dallo schedule
