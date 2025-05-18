@@ -410,51 +410,98 @@ export default function Schedule() {
       dayNames.push(format(currentDate, "EEEE", { locale: it }));
     }
     
-    // Titolo del documento
-    const title = `Pianificazione Turni: ${format(new Date(existingSchedule.startDate), "dd/MM/yyyy", { locale: it })} - ${format(new Date(existingSchedule.endDate), "dd/MM/yyyy", { locale: it })}`;
-    doc.setFontSize(16);
+    // Intestazione principale con logo e titolo
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(41, 128, 185); // Blu più accattivante
+    const title = `Da Vittorino - Pianificazione Turni`;
     doc.text(title, 14, 15);
     
-    // Sottotitolo
+    // Sottotitolo con periodo
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0);
+    const dateRange = `${format(new Date(existingSchedule.startDate), "dd/MM/yyyy", { locale: it })} - ${format(new Date(existingSchedule.endDate), "dd/MM/yyyy", { locale: it })}`;
+    doc.text(`Periodo: ${dateRange}`, 14, 21);
+    
+    // Stato pubblicazione
     doc.setFontSize(10);
-    doc.setTextColor(100);
     const status = existingSchedule.isPublished ? "Pubblicato" : "Bozza";
-    doc.text(`Stato: ${status}`, 14, 20);
+    const publishedDate = existingSchedule.publishedAt ? 
+      `il ${format(new Date(existingSchedule.publishedAt), "dd/MM/yyyy", { locale: it })}` : "";
+    doc.setTextColor(existingSchedule.isPublished ? [0, 128, 0] : [128, 128, 128]); // Verde per pubblicato, grigio per bozza
+    doc.text(`Stato: ${status} ${publishedDate}`, 14, 26);
     
     // TABELLA PRINCIPALE DEGLI ORARI - ESATTAMENTE COME NELLA INTERFACCIA
     const scheduleTableData = [];
     
     // Per ogni dipendente, creiamo una riga con i turni per ogni giorno
-    users.forEach(user => {
-      const row = [user.name]; // Prima colonna: nome dipendente
-      let totalWeeklyHours = 0;
-      
-      // Per ogni giorno della settimana, aggiungiamo i turni
-      dayNames.forEach(dayName => {
-        const userDayShifts = shifts.filter(
-          (shift: any) => shift.userId === user.id && shift.day.toLowerCase() === dayName.toLowerCase()
-        );
+    users
+      .filter(user => user.role === "employee" && user.isActive) // Solo i dipendenti attivi
+      .forEach(user => {
+        const row = [user.name || user.username]; // Prima colonna: nome dipendente (usa username se name non c'è)
+        let totalWeeklyHours = 0;
         
-        // Se l'utente ha turni per questo giorno
-        if (userDayShifts.length > 0) {
-          // Prendiamo il primo turno come riferimento (in caso di più turni nello stesso giorno)
-          const shift = userDayShifts[0];
-          const shiftHours = calculateWorkHours(shift.startTime, shift.endTime);
-          totalWeeklyHours += shiftHours;
+        // Per ogni giorno della settimana, aggiungiamo i turni
+        dayNames.forEach(dayName => {
+          const userDayShifts = shifts.filter(
+            (shift: any) => shift.userId === user.id && shift.day.toLowerCase() === dayName.toLowerCase()
+          );
           
-          // Formato: orario inizio - orario fine
-          row.push(`${shift.startTime} - ${shift.endTime}`);
-        } else {
-          // Se non ci sono turni, mettiamo un trattino
-          row.push('-');
-        }
+          // Se l'utente ha turni per questo giorno
+          if (userDayShifts.length > 0) {
+            // Organizziamo i turni in ordine di inizio
+            const sortedShifts = [...userDayShifts].sort((a, b) => {
+              return a.startTime.localeCompare(b.startTime);
+            });
+            
+            // Calcoliamo le ore totali per il giorno e formattiamo il testo del turno
+            let dailyHours = 0;
+            const shiftsText = sortedShifts.map(shift => {
+              const hours = calculateWorkHours(shift.startTime, shift.endTime);
+              dailyHours += hours;
+              return `${shift.startTime}-${shift.endTime}`;
+            }).join("\n");
+            
+            totalWeeklyHours += dailyHours;
+            
+            // Aggiungiamo il testo del turno con stile appropriato
+            row.push({
+              content: shiftsText,
+              styles: { 
+                cellWidth: 'wrap',
+                halign: 'center',
+                fontSize: 8,
+                fontStyle: dailyHours > 0 ? 'bold' : 'normal',
+                textColor: dailyHours > 0 ? [0, 0, 0] : [150, 150, 150]
+              }
+            });
+          } else {
+            // Se non ci sono turni, mettiamo un trattino
+            row.push({
+              content: '-',
+              styles: { 
+                cellWidth: 'wrap',
+                halign: 'center',
+                textColor: [150, 150, 150]
+              }
+            });
+          }
+        });
+        
+        // Aggiungiamo il totale ore alla fine della riga (in grassetto e evidenziato)
+        row.push({
+          content: formatHours(totalWeeklyHours),
+          styles: { 
+            fontStyle: 'bold',
+            halign: 'center',
+            fillColor: [223, 240, 216], // Verde chiaro per evidenziare il totale
+            textColor: [60, 118, 61] // Verde scuro per il testo
+          }
+        });
+        
+        scheduleTableData.push(row);
       });
-      
-      // Aggiungiamo il totale ore alla fine della riga
-      row.push(formatHours(totalWeeklyHours));
-      
-      scheduleTableData.push(row);
-    });
     
     // Ottieni i giorni della settimana in italiano
     const weekDays = dayNames.map(day => {
