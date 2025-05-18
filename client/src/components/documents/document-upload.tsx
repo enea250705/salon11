@@ -22,6 +22,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const formSchema = z.object({
   type: z.string(),
+  customType: z.string().optional(),
   userId: z.coerce.number().min(1, "Seleziona un dipendente"),
   period: z.string().min(1, "Il periodo è obbligatorio"),
   file: z
@@ -48,6 +49,7 @@ export function DocumentUpload({ users }: { users: any[] }) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       type: "payslip",
+      customType: "",
       period: "",
     },
   });
@@ -65,8 +67,13 @@ export function DocumentUpload({ users }: { users: any[] }) {
             // Remove the data:application/pdf;base64, prefix
             const base64Data = (reader.result as string).split(",")[1];
             
+            // If custom type is selected and provided, use it as the document type
+            const documentType = data.type === "custom" && data.customType 
+              ? data.customType 
+              : data.type;
+              
             const payload = {
-              type: data.type,
+              type: documentType,
               userId: data.userId,
               period: data.period,
               filename: file.name,
@@ -97,6 +104,7 @@ export function DocumentUpload({ users }: { users: any[] }) {
       });
       form.reset({
         type: "payslip",
+        customType: "",
         period: "",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
@@ -146,6 +154,7 @@ export function DocumentUpload({ users }: { users: any[] }) {
                       <SelectContent position="popper">
                         <SelectItem value="payslip">Busta paga</SelectItem>
                         <SelectItem value="tax_document">CUD</SelectItem>
+                        <SelectItem value="custom">Personalizzato</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
