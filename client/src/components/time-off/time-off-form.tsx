@@ -31,12 +31,24 @@ const formSchema = z.object({
     required_error: "Seleziona una data di fine",
   }),
   duration: z.string(),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  totalHours: z.number().optional(),
   reason: z.string().optional(),
 }).refine(data => {
   return data.startDate <= data.endDate;
 }, {
   message: "La data di fine deve essere successiva o uguale alla data di inizio",
   path: ["endDate"],
+}).refine(data => {
+  // Verifica che l'ora di fine sia successiva all'ora di inizio se la durata è personalizzata
+  if (data.duration === 'custom' && data.startTime && data.endTime) {
+    return data.startTime < data.endTime;
+  }
+  return true;
+}, {
+  message: "L'ora di fine deve essere successiva all'ora di inizio",
+  path: ["endTime"],
 });
 
 export function TimeOffRequestForm() {
@@ -51,16 +63,22 @@ export function TimeOffRequestForm() {
       type: "vacation",
       duration: "full_day",
       reason: "",
+      startTime: "",
+      endTime: "",
+      totalHours: 0,
     },
   });
   
-  // Aggiorna la durata quando cambia il tipo di richiesta o le date
+  // Aggiorna la durata quando cambia il tipo di richiesta, le date o le ore
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
-      if (name === "type" || name === "startDate" || name === "endDate") {
+      if (name === "type" || name === "startDate" || name === "endDate" || name === "startTime" || name === "endTime" || name === "duration") {
         const requestType = form.getValues("type");
         const startDate = form.getValues("startDate");
         const endDate = form.getValues("endDate");
+        const duration = form.getValues("duration");
+        const startTime = form.getValues("startTime");
+        const endTime = form.getValues("endTime");
         
         if (!startDate || !endDate) return;
         
@@ -76,6 +94,34 @@ export function TimeOffRequestForm() {
         if (!isPersonalLeave || (isPersonalLeave && !isSameDay)) {
           form.setValue("duration", "full_day");
         }
+        
+        // Calcola le ore totali
+        if (duration === "custom" && startTime && endTime) {
+          // Converti l'ora in formato 24h in minuti
+          const convertToMinutes = (timeStr: string) => {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return (hours * 60) + minutes;
+          };
+          
+          const startMinutes = convertToMinutes(startTime);
+          const endMinutes = convertToMinutes(endTime);
+          
+          if (endMinutes > startMinutes) {
+            // Calcola la differenza in ore
+            const diffMinutes = endMinutes - startMinutes;
+            const totalHours = Math.round(diffMinutes / 30) / 2; // Arrotonda a 0.5 ore
+            form.setValue("totalHours", totalHours);
+          }
+        } else if (duration === "full_day") {
+          // Giornata intera: 8 ore
+          form.setValue("totalHours", 8);
+        } else if (duration === "morning") {
+          // Solo mattina: 4 ore
+          form.setValue("totalHours", 4);
+        } else if (duration === "afternoon") {
+          // Solo pomeriggio: 4 ore
+          form.setValue("totalHours", 4);
+        }
       }
     });
     
@@ -88,6 +134,9 @@ export function TimeOffRequestForm() {
         ...data,
         startDate: format(data.startDate, "yyyy-MM-dd"),
         endDate: format(data.endDate, "yyyy-MM-dd"),
+        startTime: data.startTime || null,
+        endTime: data.endTime || null,
+        totalHours: data.totalHours || null,
       };
       return apiRequest("POST", "/api/time-off-requests", payload);
     },
@@ -100,6 +149,9 @@ export function TimeOffRequestForm() {
         type: "vacation",
         duration: "full_day",
         reason: "",
+        startTime: "",
+        endTime: "",
+        totalHours: 0,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/time-off-requests"] });
     },
