@@ -26,8 +26,8 @@ export interface IStorage {
   getScheduleByDateRange(startDate: Date, endDate: Date): Promise<Schedule | undefined>;
   getAllSchedules(): Promise<Schedule[]>;
   publishSchedule(id: number): Promise<Schedule | undefined>;
-  updateSchedule(id: number, scheduleData: Partial<InsertSchedule>): Promise<Schedule | undefined>; // Funzione per aggiornare uno schedule
-  deleteSchedule?(id: number): Promise<boolean>; // Nuova funzione opzionale per eliminare uno schedule
+  updateSchedule(id: number, scheduleData: Partial<InsertSchedule>): Promise<Schedule | undefined>;
+  deleteSchedule(id: number): Promise<boolean>;
   
   // Schedule Templates management
   createScheduleTemplate(template: InsertScheduleTemplate): Promise<ScheduleTemplate>;
@@ -49,7 +49,7 @@ export interface IStorage {
   getUserShifts(userId: number, scheduleId: number): Promise<Shift[]>;
   updateShift(id: number, shiftData: Partial<InsertShift>): Promise<Shift | undefined>;
   deleteShift(id: number): Promise<boolean>;
-  deleteAllShiftsForSchedule?(scheduleId: number): Promise<boolean>; // Funzione per eliminare tutti i turni di uno schedule
+  deleteAllShiftsForSchedule(scheduleId: number): Promise<boolean>;
   
   // TimeOff requests
   createTimeOffRequest(request: InsertTimeOffRequest): Promise<TimeOffRequest>;
