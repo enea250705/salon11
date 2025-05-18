@@ -1191,26 +1191,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Estrai l'orario dal motivo se è un orario specifico
           let durataText = '';
-          let motivoText = request.reason || 'Nessun motivo specificato';
+          let motivoText = '';
           
-          if (request.duration === 'specific_hours' && motivoText.startsWith('Orario:')) {
-            const orarioParte = motivoText.split('.')[0].replace('Orario:', '').trim();
-            durataText = `Orario specifico: ${orarioParte}`;
+          // Separa il motivo dall'orario specifico
+          if (request.reason) {
+            const reasonText = request.reason;
             
-            // Rimuovi la parte dell'orario dal motivo se c'è altro testo
-            if (motivoText.split('.').length > 1) {
-              motivoText = motivoText.split('.').slice(1).join('.').trim();
+            if (request.duration === 'specific_hours' && reasonText.startsWith('Orario:')) {
+              // Estrai l'orario (es. "09:00 - 13:00")
+              const orarioMatch = reasonText.match(/Orario: ([0-9:]{5} - [0-9:]{5})/);
+              
+              if (orarioMatch && orarioMatch[1]) {
+                durataText = `Orario specifico: ${orarioMatch[1]}`;
+                
+                // Rimuovi la parte dell'orario dal motivo
+                const remainingText = reasonText.replace(/Orario: [0-9:]{5} - [0-9:]{5}\.?\s*/, '');
+                motivoText = remainingText || 'Nessun motivo specificato';
+              } else {
+                durataText = 'Orario specifico';
+                motivoText = reasonText;
+              }
             } else {
-              motivoText = 'Nessun motivo specificato';
+              // Non è un orario specifico o non ha il formato atteso
+              if (request.duration === 'full_day') {
+                durataText = 'Giornata intera';
+              } else if (request.duration === 'morning') {
+                durataText = 'Mattina';
+              } else if (request.duration === 'afternoon') {
+                durataText = 'Pomeriggio';
+              } else {
+                durataText = 'Orario specifico';
+              }
+              
+              motivoText = reasonText;
             }
-          } else if (request.duration === 'full_day') {
-            durataText = 'Giornata intera';
-          } else if (request.duration === 'morning') {
-            durataText = 'Mattina';
-          } else if (request.duration === 'afternoon') {
-            durataText = 'Pomeriggio';
           } else {
-            durataText = 'Orario specifico';
+            // Non c'è un motivo specificato
+            if (request.duration === 'full_day') {
+              durataText = 'Giornata intera';
+            } else if (request.duration === 'morning') {
+              durataText = 'Mattina';
+            } else if (request.duration === 'afternoon') {
+              durataText = 'Pomeriggio';
+            } else {
+              durataText = 'Orario specifico';
+            }
+            
+            motivoText = 'Nessun motivo specificato';
           }
           
           const emailParams = {
