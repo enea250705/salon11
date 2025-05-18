@@ -234,7 +234,18 @@ export function AdminDashboard() {
                           </span>
                         </p>
                         <p className="text-xs text-gray-500">
-                          Periodo: {formatDate(request.startDate)} - {formatDate(request.endDate)}
+                          Periodo: {formatDate(request.startDate)}
+                          {request.startDate === request.endDate ? (
+                            request.duration === "specific_hours" && request.startTime && request.endTime ? (
+                              ` (${request.startTime} - ${request.endTime})`
+                            ) : (
+                              request.duration === "full_day" ? " (giornata intera)" :
+                              request.duration === "morning" ? " (mattina)" :
+                              request.duration === "afternoon" ? " (pomeriggio)" : ""
+                            )
+                          ) : (
+                            ` - ${formatDate(request.endDate)}`
+                          )}
                         </p>
                       </div>
                       <div className="flex space-x-2">

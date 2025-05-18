@@ -200,7 +200,7 @@ export function UnifiedTimeOffApproval() {
                     <div className="font-medium text-lg">{getUserName(request.userId)}</div>
                     <div className="text-sm font-semibold mt-1">
                       {getTypeLabel(request.type)}:&nbsp;
-                      <span className="font-normal">{formatDateRange(request.startDate, request.endDate, request.duration)}</span>
+                      <span className="font-normal">{formatDateRange(request.startDate, request.endDate, request.duration, request)}</span>
                     </div>
                     
                     {request.reason && (
