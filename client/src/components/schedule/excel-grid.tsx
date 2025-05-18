@@ -711,6 +711,100 @@ export function ExcelGrid({
     }
   };
   
+  // Funzione per esportare la tabella in PDF
+  const handleExportPDF = async () => {
+    try {
+      setIsExporting(true);
+      
+      // Crea il PDF con orientamento orizzontale
+      const pdf = new jsPDF('landscape', 'pt', 'a4');
+      
+      // Aggiungi intestazione al PDF
+      pdf.setFontSize(16);
+      pdf.setTextColor(40, 40, 40);
+      pdf.text(`Orari settimanali: ${format(startDate, "d MMMM", { locale: it })} - ${format(endDate, "d MMMM yyyy", { locale: it })}`, 40, 40);
+      
+      // Esporta la tabella per ogni giorno della settimana
+      for (let i = 0; i < weekDays.length; i++) {
+        const day = weekDays[i];
+        
+        // Se non è il primo giorno, aggiungi una nuova pagina
+        if (i > 0) {
+          pdf.addPage();
+        }
+        
+        // Titolo del giorno
+        pdf.setFontSize(14);
+        pdf.setTextColor(60, 60, 60);
+        pdf.text(`${day.name} ${format(day.date, "d MMMM yyyy", { locale: it })}`, 40, 60);
+        
+        // Seleziona la tabella del giorno
+        const tableElement = document.querySelector(`[data-value="${day.name}"] table`);
+        
+        if (tableElement) {
+          // Converti la tabella in canvas
+          const canvas = await html2canvas(tableElement, {
+            scale: 1.5,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            logging: false
+          });
+          
+          // Aggiungi l'immagine al PDF
+          const imgData = canvas.toDataURL('image/png');
+          
+          // Calcola le dimensioni mantenendo le proporzioni
+          const imgWidth = pdf.internal.pageSize.getWidth() - 80; // margini
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+          
+          // Aggiungi l'immagine al PDF
+          pdf.addImage(imgData, 'PNG', 40, 80, imgWidth, imgHeight);
+        }
+      }
+      
+      // Aggiungi una pagina per il riepilogo ore settimanali
+      pdf.addPage();
+      pdf.setFontSize(14);
+      pdf.setTextColor(60, 60, 60);
+      pdf.text("Riepilogo ore settimanali", 40, 60);
+      
+      // Seleziona il riepilogo
+      const summaryElement = document.querySelector('.mt-6.overflow-auto.rounded-lg');
+      
+      if (summaryElement) {
+        const canvas = await html2canvas(summaryElement, {
+          scale: 1.5,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = pdf.internal.pageSize.getWidth() - 80;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 40, 80, imgWidth, imgHeight);
+      }
+      
+      // Salva il PDF
+      pdf.save(`Orari_settimanali_${format(startDate, "dd-MM-yyyy", { locale: it })}.pdf`);
+      
+      toast({
+        title: "Esportazione completata",
+        description: "Il PDF è stato generato con successo.",
+      });
+    } catch (error) {
+      console.error("Errore durante l'esportazione del PDF:", error);
+      toast({
+        title: "Errore esportazione",
+        description: "Si è verificato un errore durante l'esportazione in PDF. Riprova.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // Funzione per pubblicare lo schedule
   const handlePublish = () => {
     if (!scheduleId) return;
@@ -758,6 +852,24 @@ export function ExcelGrid({
                 </Tooltip>
               </TooltipProvider>
             )}
+            <Button 
+              onClick={handleExportPDF} 
+              variant="outline" 
+              className="bg-blue-50 text-blue-700 border-blue-200"
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <>
+                  <span className="animate-spin mr-1">⟳</span>
+                  Esportazione...
+                </>
+              ) : (
+                <>
+                  <span className="material-icons text-sm mr-1">picture_as_pdf</span>
+                  Esporta PDF
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </div>
