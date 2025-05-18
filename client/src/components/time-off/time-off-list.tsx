@@ -18,22 +18,32 @@ export function TimeOffList() {
   const rejectedRequests = timeOffRequests.filter(req => req.status === "rejected");
   
   // Funzione per formattare le date
-  const formatDateRange = (startDate: string, endDate: string, duration: string) => {
+  const formatDateRange = (startDate: string, endDate: string, duration: string, request?: any) => {
     const start = parseISO(startDate);
     const end = parseISO(endDate);
     const days = differenceInDays(end, start) + 1;
     
     if (startDate === endDate) {
       let durationType = "";
-      switch (duration) {
-        case "morning":
-          durationType = " (mattina)";
-          break;
-        case "afternoon":
-          durationType = " (pomeriggio)";
-          break;
-        default:
-          durationType = " (giornata intera)";
+      
+      if (duration === "specific_hours" && request?.startTime && request?.endTime) {
+        // Mostra orario specifico quando è un permesso con orario personalizzato
+        durationType = ` (orario: ${request.startTime} - ${request.endTime})`;
+      } else {
+        switch (duration) {
+          case "morning":
+            durationType = " (mattina)";
+            break;
+          case "afternoon":
+            durationType = " (pomeriggio)";
+            break;
+          case "specific_hours":
+            // Fallback se mancano gli orari specifici
+            durationType = " (orario specifico)";
+            break;
+          default:
+            durationType = " (giornata intera)";
+        }
       }
       
       return format(start, "d MMMM yyyy", { locale: it }) + durationType;
@@ -279,7 +289,7 @@ export function TimeOffList() {
 
 interface RequestCardProps {
   request: any;
-  formatDateRange: (startDate: string, endDate: string, duration: string) => JSX.Element | string;
+  formatDateRange: (startDate: string, endDate: string, duration: string, request?: any) => JSX.Element | string;
   getTypeLabel: (type: string) => string;
   getTypeIcon: (type: string) => string;
   getStatusBadge: (status: string) => JSX.Element | null;
@@ -299,7 +309,7 @@ function RequestCard({ request, formatDateRange, getTypeLabel, getTypeIcon, getS
       </div>
       
       <div className="text-sm text-gray-600 mb-2">
-        {formatDateRange(request.startDate, request.endDate, request.duration)}
+        {formatDateRange(request.startDate, request.endDate, request.duration, request)}
       </div>
       
       {request.reason && (

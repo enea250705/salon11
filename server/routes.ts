@@ -1277,8 +1277,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Import del servizio email
           const { sendTimeOffApprovalNotification } = await import('./services/nodemailer-service');
           
-          // Invia email di notifica
-          await sendTimeOffApprovalNotification(user, request.type, request.startDate, request.endDate);
+          // Invia email di notifica con gli orari specifici se presenti
+          await sendTimeOffApprovalNotification(
+            user, 
+            request.type, 
+            request.startDate, 
+            request.endDate,
+            request.duration,
+            request.startTime,
+            request.endTime
+          );
           console.log(`📧 Email di notifica approvazione inviata a ${user.name} (${user.email})`);
         } catch (emailError) {
           console.error(`❌ Errore nell'invio email a ${user.email}:`, emailError);
@@ -1411,10 +1419,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (user && user.email) {
         try {
           // Import del servizio email
-          const { sendTimeOffRejectionNotification } = await import('./services/email-service');
+          const { sendTimeOffRejectionNotification } = await import('./services/nodemailer-service');
           
-          // Invia email di notifica
-          await sendTimeOffRejectionNotification(user, request.type, request.startDate, request.endDate);
+          // Invia email di notifica con gli orari specifici se presenti
+          await sendTimeOffRejectionNotification(
+            user, 
+            request.type, 
+            request.startDate, 
+            request.endDate,
+            request.duration,
+            request.startTime,
+            request.endTime
+          );
           console.log(`📧 Email di notifica rifiuto inviata a ${user.name} (${user.email})`);
         } catch (emailError) {
           console.error(`❌ Errore nell'invio email a ${user.email}:`, emailError);
