@@ -429,15 +429,15 @@ export function ExcelGrid({
     // Determina il nuovo tipo di turno secondo la rotazione stabilita
     let newType = "work"; // Default: se la cella è vuota, diventa lavoro
     
-    // Verifica se la cella è bloccata perché è una richiesta di ferie/permesso già approvata
+    // Avviso che si sta per modificare una cella di ferie/permesso, ma non blocchiamo più l'azione
     if (currentCell.isTimeOff) {
-      console.log("⚠️ Non è possibile modificare questa cella: è una richiesta di ferie o permesso approvata");
+      console.log("⚠️ Modifica di una cella di ferie/permesso approvata");
       toast({
-        title: "Azione non permessa",
-        description: "Non puoi modificare una cella che rappresenta ferie o permessi già approvati.",
-        variant: "destructive"
+        title: "Attenzione",
+        description: "Stai modificando una cella che rappresenta ferie o permessi già approvati.",
+        duration: 1500,
       });
-      return;
+      // Non blocchiamo più con return - consentiamo la modifica
     }
     
     if (currentCell.type) {
