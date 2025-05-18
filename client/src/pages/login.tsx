@@ -34,6 +34,7 @@ export default function Login() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Se l'utente è già autenticato, reindirizza alla dashboard
   useEffect(() => {
