@@ -25,6 +25,20 @@ export interface IStorage {
   publishSchedule(id: number): Promise<Schedule | undefined>;
   deleteSchedule?(id: number): Promise<boolean>; // Nuova funzione opzionale per eliminare uno schedule
   
+  // Schedule Templates management
+  createScheduleTemplate(template: InsertScheduleTemplate): Promise<ScheduleTemplate>;
+  getScheduleTemplate(id: number): Promise<ScheduleTemplate | undefined>;
+  getAllScheduleTemplates(): Promise<ScheduleTemplate[]>;
+  deleteScheduleTemplate(id: number): Promise<boolean>;
+  updateScheduleTemplateUsage(id: number): Promise<ScheduleTemplate | undefined>;
+  
+  // Template Shifts management
+  createTemplateShift(shift: InsertTemplateShift): Promise<TemplateShift>;
+  getTemplateShifts(templateId: number): Promise<TemplateShift[]>;
+  deleteTemplateShift(id: number): Promise<boolean>;
+  deleteAllTemplateShifts(templateId: number): Promise<boolean>;
+  applyTemplateToSchedule(templateId: number, scheduleId: number): Promise<boolean>;
+  
   // Shift management
   createShift(shift: InsertShift): Promise<Shift>;
   getShifts(scheduleId: number): Promise<Shift[]>;

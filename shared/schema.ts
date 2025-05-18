@@ -95,6 +95,39 @@ export const insertDocumentSchema = createInsertSchema(documents).omit({
   uploadedAt: true,
 });
 
+// Schedule Templates schema
+export const scheduleTemplates = pgTable("schedule_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // even_week, odd_week, custom
+  createdBy: integer("created_by").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  lastUsed: timestamp("last_used"),
+});
+
+export const insertScheduleTemplateSchema = createInsertSchema(scheduleTemplates).omit({
+  id: true,
+  createdAt: true,
+  lastUsed: true,
+});
+
+// Template Shifts schema
+export const templateShifts = pgTable("template_shifts", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").notNull(),
+  userId: integer("user_id").notNull(),
+  day: text("day").notNull(), // Monday, Tuesday, etc.
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
+  notes: text("notes"),
+  area: text("area"),
+  type: text("type").notNull().default("work"), // work, vacation, leave, sick
+});
+
+export const insertTemplateShiftSchema = createInsertSchema(templateShifts).omit({
+  id: true,
+});
+
 // Notifications schema
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
@@ -144,6 +177,12 @@ export type InsertTimeOffRequest = z.infer<typeof insertTimeOffRequestSchema>;
 
 export type Document = typeof documents.$inferSelect;
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
+
+export type ScheduleTemplate = typeof scheduleTemplates.$inferSelect;
+export type InsertScheduleTemplate = z.infer<typeof insertScheduleTemplateSchema>;
+
+export type TemplateShift = typeof templateShifts.$inferSelect;
+export type InsertTemplateShift = z.infer<typeof insertTemplateShiftSchema>;
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
