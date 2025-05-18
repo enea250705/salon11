@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { WeekSelectorDialog } from "@/components/schedule/week-selector-dialog";
 import { ScheduleAutoGenerator } from "@/components/schedule/auto-generator/auto-generator";
 import { ExcelGrid } from "@/components/schedule/excel-grid";
+import { TemplateManager } from "@/components/schedule/template-manager";
 
 // Date utilities
 import { format, startOfWeek, addDays, isBefore, parseISO } from "date-fns";
@@ -270,6 +271,9 @@ export default function Schedule() {
   
   // State for showing schedule builder
   const [showScheduleBuilder, setShowScheduleBuilder] = useState(false);
+  
+  // State for showing template manager
+  const [showTemplateManager, setShowTemplateManager] = useState(false);
   // Flag per il reset completo della griglia (per mostrare una tabella vuota dopo la creazione)
   const [forceResetGrid, setForceResetGrid] = useState(false);
   // Flag per stabilire se stiamo caricando uno schedule nuovo o esistente
