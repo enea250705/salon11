@@ -179,6 +179,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrazione dei router personalizzati
   app.use("/api/templates", templatesRouter);
   
+  // Endpoint per salvare un orario come modello (template)
+  app.post("/api/schedules/:scheduleId/save-as-template", (req, res, next) => {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    res.status(401).json({ message: "Unauthorized" });
+  }, async (req, res) => {
+    try {
+      console.log("🔄 Richiesta salvataggio template", req.body);
+      
+      const scheduleId = parseInt(req.params.scheduleId);
+      const { name, type, description } = req.body;
+      
+      // Verifica che lo schedule esista
+      const schedule = await storage.getSchedule(scheduleId);
+      if (!schedule) {
+        return res.status(404).json({ message: "Orario non trovato" });
+      }
+      
+      // Crea il template
+      const template = await storage.createScheduleTemplate({
+        name,
+        type,
+        description: description || "",
+        createdBy: (req.user as any).id
+      });
+      
+      // Ottieni i turni dallo schedule
+      const shifts = await storage.getShifts(scheduleId);
+      
+      // Crea i turni del template basati sui turni dello schedule
+      for (const shift of shifts) {
+        await storage.createTemplateShift({
+          templateId: template.id,
+          userId: shift.userId,
+          day: shift.day,
+          startTime: shift.startTime,
+          endTime: shift.endTime,
+          type: shift.type || "regular",
+          notes: shift.notes,
+          area: shift.area
+        });
+      }
+      
+      res.status(201).json(template);
+    } catch (error) {
+      console.error("❌ Errore nel salvataggio del template:", error);
+      res.status(500).json({ message: "Errore nel salvataggio del template. Riprova più tardi." });
+    }
+  });
+  
   // Function to create a database notification (senza WebSocket)
   const sendNotification = async (userId: number, notification: any) => {
     try {
