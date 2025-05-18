@@ -757,7 +757,7 @@ export default function Schedule() {
           });
           
           // FASE 3: AGGIORNAMENTO INTERFACCIA
-          // Usa un timeout per garantire che la UI sia aggiornata correttamente
+          // Usa un timeout più breve per garantire che la UI sia aggiornata rapidamente
           setTimeout(() => {
             // Invalida le query per caricare dati freschi
             queryClient.invalidateQueries({ queryKey: ["/api/schedules/all"] });
@@ -768,10 +768,14 @@ export default function Schedule() {
             // Aggiungi un timestamp per evitare cache del browser
             const timestamp = Date.now();
             
-            // FASE 4: REDIRECT CON PARAMETRI MIGLIORATI
-            // Usa parametri URL più espliciti e aggiungi currentScheduleId in modo esplicito
+            // Aggiorna lo stato locale prima del redirect
+            setCurrentScheduleId(data.id);
+            setForceResetGrid(true);
+            
+            // FASE 4: REDIRECT CON PARAMETRI MIGLIORATI E FORZATURA DEL CARICAMENTO DEL NUOVO SCHEDULE
+            // Usa parametri URL più espliciti per garantire che venga caricato il nuovo schedule
             window.location.href = `/schedule?reset=true&id=${data.id}&scheduleId=${data.id}&currentScheduleId=${data.id}&newSchedule=${data.id}&date=${format(customStartDate!, "yyyy-MM-dd")}&forceEmpty=true&refreshed=true&ts=${timestamp}`;
-          }, 1000);
+          }, 300);
         })
         .catch(err => {
           console.error("❌ Errore nella gestione dello schedule:", err);
