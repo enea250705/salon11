@@ -72,8 +72,8 @@ export function TimeOffRequestForm() {
         const isSameDay = startDate.toDateString() === endDate.toDateString();
         const isPersonalLeave = requestType === "personal";
         
-        // Se non è permesso personale o è su più giorni, forza a "full_day"
-        if (!isPersonalLeave || (isPersonalLeave && !isSameDay)) {
+        // Solo per i permessi è possibile scegliere orari specifici (per ferie e malattia sempre giornata intera)
+        if (!isPersonalLeave || !isSameDay) {
           form.setValue("duration", "full_day");
         }
       }
@@ -156,7 +156,7 @@ export function TimeOffRequestForm() {
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="vacation">Ferie</SelectItem>
-                      <SelectItem value="personal">Permesso personale</SelectItem>
+                      <SelectItem value="personal">Permesso</SelectItem>
                       <SelectItem value="sick">Malattia</SelectItem>
                     </SelectContent>
                   </Select>
@@ -309,17 +309,18 @@ export function TimeOffRequestForm() {
                 const endDateValue = form.watch("endDate");
                 const datesAreOnSameDay = startDateValue && endDateValue && 
                   isSameDay(startDateValue, endDateValue);
-                const isPersonalLeave = requestType === "personal";
+                const isPermesso = requestType === "personal";
                 
-                // Se non è permesso personale o è su più giorni, forza a "full_day"
-                if (!isPersonalLeave || (isPersonalLeave && !datesAreOnSameDay)) {
+                // Solo per i permessi è possibile scegliere orari specifici
+                // (per ferie e malattia sempre giornata intera)
+                if (!isPermesso || !datesAreOnSameDay) {
                   if (field.value !== "full_day") {
                     setTimeout(() => form.setValue("duration", "full_day"), 0);
                   }
                 }
                 
-                // Non mostrare questa sezione se non è possibile selezionare opzioni diverse
-                if (!isPersonalLeave || (isPersonalLeave && !datesAreOnSameDay)) {
+                // Mostra le opzioni di durata solo per i permessi (personal) e solo per singoli giorni
+                if (!isPermesso || !datesAreOnSameDay) {
                   return <></>;
                 }
                 
