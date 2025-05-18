@@ -356,25 +356,6 @@ export function TimeOffRequestForm() {
               control={form.control}
               name="duration"
               render={({ field }) => {
-                const requestType = form.watch("type");
-                const startDateValue = form.watch("startDate");
-                const endDateValue = form.watch("endDate");
-                const datesAreOnSameDay = startDateValue && endDateValue && 
-                  isSameDay(startDateValue, endDateValue);
-                const isPersonalLeave = requestType === "personal";
-                
-                // Se non è permesso personale o è su più giorni, forza a "full_day"
-                if (!isPersonalLeave || (isPersonalLeave && !datesAreOnSameDay)) {
-                  if (field.value !== "full_day") {
-                    setTimeout(() => form.setValue("duration", "full_day"), 0);
-                  }
-                }
-                
-                // Non mostrare questa sezione se non è possibile selezionare opzioni diverse
-                if (!isPersonalLeave || (isPersonalLeave && !datesAreOnSameDay)) {
-                  return <></>;
-                }
-                
                 return (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
@@ -383,7 +364,7 @@ export function TimeOffRequestForm() {
                     transition={{ duration: 0.2 }}
                   >
                     <FormItem className="space-y-2">
-                      <FormLabel>Durata giornaliera</FormLabel>
+                      <FormLabel>Durata</FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
@@ -395,7 +376,7 @@ export function TimeOffRequestForm() {
                               <RadioGroupItem value="full_day" />
                             </FormControl>
                             <FormLabel className="font-normal">
-                              Giornata intera
+                              Giornata intera (8 ore)
                             </FormLabel>
                           </FormItem>
                           <FormItem className="flex items-center space-x-3 space-y-0">
@@ -403,7 +384,7 @@ export function TimeOffRequestForm() {
                               <RadioGroupItem value="morning" />
                             </FormControl>
                             <FormLabel className="font-normal">
-                              Solo mattina
+                              Solo mattina (4 ore)
                             </FormLabel>
                           </FormItem>
                           <FormItem className="flex items-center space-x-3 space-y-0">
@@ -411,7 +392,15 @@ export function TimeOffRequestForm() {
                               <RadioGroupItem value="afternoon" />
                             </FormControl>
                             <FormLabel className="font-normal">
-                              Solo pomeriggio
+                              Solo pomeriggio (4 ore)
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="custom" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Personalizzata (specifica ore)
                             </FormLabel>
                           </FormItem>
                         </RadioGroup>
@@ -422,6 +411,68 @@ export function TimeOffRequestForm() {
                 );
               }}
             />
+            
+            {form.watch("duration") === "custom" && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-4"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ora di inizio</FormLabel>
+                        <FormControl>
+                          <input
+                            type="time"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="endTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ora di fine</FormLabel>
+                        <FormControl>
+                          <input
+                            type="time"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                {form.watch("startTime") && form.watch("endTime") && (
+                  <div className="text-sm p-3 bg-primary/10 rounded-md">
+                    <div className="flex items-center">
+                      <span className="material-icons text-primary mr-2">schedule</span>
+                      <span>
+                        Totale ore calcolate: <strong>{form.watch("totalHours")}</strong>
+                      </span>
+                    </div>
+                    <p className="text-xs mt-1 text-muted-foreground">
+                      Le ore vengono arrotondate a multipli di 0.5 (mezz'ora)
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            )}
             
             <FormField
               control={form.control}
