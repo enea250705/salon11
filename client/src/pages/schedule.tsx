@@ -730,6 +730,31 @@ export default function Schedule() {
                 <span className="material-icons text-xs sm:text-sm mr-1">add</span>
                 Nuovo turno settimanale
               </Button>
+              
+              {/* Pulsante per esportare in PDF */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportPDF}
+                className="text-xs sm:text-sm"
+                disabled={!existingSchedule?.id || shifts?.length === 0}
+              >
+                <Download className="h-4 w-4 mr-1" />
+                Esporta PDF
+              </Button>
+              
+              {/* Pulsante per ritirare dalla pubblicazione (visibile solo se lo schedule è pubblicato) */}
+              {existingSchedule?.isPublished && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleUnpublish}
+                  className="text-xs sm:text-sm text-amber-600 hover:text-amber-700 border-amber-200 hover:border-amber-300 hover:bg-amber-50"
+                >
+                  <Upload className="h-4 w-4 mr-1" />
+                  Ritira pubblicazione
+                </Button>
+              )}
             </div>
             
             {/* Componente per gestire i template di orario */}
