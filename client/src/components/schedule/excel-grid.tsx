@@ -410,6 +410,14 @@ export function ExcelGrid({
     
     console.log(`🔄 Cambio tipo cella: ${currentCell.type || 'vuota'} -> ${newType || 'vuota'}`);
     
+    // Prima di tutto, aggiorniamo immediatamente la cella localmente per feedback visivo
+    // Questo dà all'utente un feedback immediato anche prima che l'API risponda
+    userDayData.cells[timeIndex] = {
+      type: newType,
+      shiftId: currentCell.shiftId,
+      isTimeOff: false
+    };
+    
     // GESTIONE API PER TIPO DI AZIONE
     // 1. SE LA CELLA HA UN ID ESISTENTE
     if (currentCell.shiftId) {
@@ -425,12 +433,6 @@ export function ExcelGrid({
           userDayData.total = Math.max(0, Math.round((userDayData.total - slotDuration) * 100) / 100);
         }
         
-        // Aggiorna la cella localmente
-        userDayData.cells[timeIndex] = { 
-          type: "", 
-          shiftId: null,
-          isTimeOff: false
-        };
       } else {
         // CASO 2: AGGIORNAMENTO
         // Prepara i dati per l'aggiornamento
@@ -447,16 +449,6 @@ export function ExcelGrid({
         
         // Invia l'aggiornamento al server
         updateShiftMutation.mutate(updateData);
-        
-        // IMPORTANTE: Ricalcola SEMPRE le ore totali indipendentemente dal tipo di cella cambiata
-        // Questo assicura che il totale sia sempre aggiornato dopo ogni modifica
-        
-        // Aggiorna la cella localmente
-        userDayData.cells[timeIndex] = {
-          type: newType,
-          shiftId: currentCell.shiftId,
-          isTimeOff: false
-        };
         
         // Contiamo quante celle "work" ci sono nella giornata DOPO il cambiamento
         const workCells = userDayData.cells.filter(cell => cell.type === "work").length;
@@ -497,13 +489,6 @@ export function ExcelGrid({
         type: newType,
         notes: userDayData.notes || "",
         area: null // Area opzionale
-      };
-      
-      // Aggiorniamo immediatamente la cella locale per feedback visivo
-      userDayData.cells[timeIndex] = {
-        type: newType,
-        shiftId: null, // Sarà aggiornato dopo la risposta dal server
-        isTimeOff: false
       };
       
       // Crea un nuovo turno nel database utilizzando la mutation esistente
