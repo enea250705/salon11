@@ -496,8 +496,13 @@ export default function Schedule() {
         });
         
         // Aggiungiamo il totale ore alla fine della riga (in grassetto e evidenziato)
+        // Assicuriamo che il totale sia visualizzato correttamente anche quando è zero
+        const formattedTotalHours = totalWeeklyHours > 0 
+          ? formatHours(totalWeeklyHours) 
+          : "0 ore";
+          
         row.push({
-          content: formatHours(totalWeeklyHours),
+          content: formattedTotalHours,
           styles: { 
             fontStyle: 'bold',
             halign: 'center',
