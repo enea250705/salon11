@@ -732,50 +732,45 @@ export default function Schedule() {
       
       console.log(`🆕 Creazione nuovo schedule: ${formattedStartDate} - ${formattedEndDate}`);
       
-      // FASE 1: CREAZIONE NUOVA PIANIFICAZIONE SUL SERVER
-      // Usiamo apiRequest direttamente per maggiore controllo
-      apiRequest("POST", "/api/schedules/new-empty", newScheduleData)
-        .then((data: any) => {
-          console.log("✅ Nuovo schedule vuoto creato con ID:", data.id);
-          
-          // FASE 2: AGGIORNAMENTO DELLO STATO E PREPARAZIONE UI
-          // Passare all'interfaccia di pianificazione con la griglia vuota
-          setCreatingNewSchedule(false);
-          setShowDatePicker(false);
-          setForceResetGrid(true);
-          
-          // Aggiorna l'ID corrente
-          setCurrentScheduleId(data.id);
-          
-          // Ri-carica lo schedule nella cache di React Query
-          queryClient.setQueryData(["/api/schedules", { id: data.id }], data);
-          
-          // Notifica all'utente
-          toast({
-            title: "Turno creato con successo",
-            description: "Caricamento della tabella completamente vuota...",
-          });
-          
-          // FASE 3: AGGIORNAMENTO INTERFACCIA
-          // Usa un timeout più breve per garantire che la UI sia aggiornata rapidamente
-          setTimeout(() => {
-            // Invalida le query per caricare dati freschi
-            queryClient.invalidateQueries({ queryKey: ["/api/schedules/all"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/schedules", { id: data.id }] });
-            
-            console.log("🧹 Pulizia e ricaricamento tabella vuota per ID:", data.id);
-            
-            // Aggiungi un timestamp per evitare cache del browser
-            const timestamp = Date.now();
-            
-            // Aggiorna lo stato locale prima del redirect
-            setCurrentScheduleId(data.id);
-            setForceResetGrid(true);
-            
-            // FASE 4: REDIRECT CON PARAMETRI MIGLIORATI E FORZATURA DEL CARICAMENTO DEL NUOVO SCHEDULE
-            // Usa parametri URL più espliciti per garantire che venga caricato il nuovo schedule
-            window.location.href = `/schedule?reset=true&id=${data.id}&scheduleId=${data.id}&currentScheduleId=${data.id}&newSchedule=${data.id}&date=${format(customStartDate!, "yyyy-MM-dd")}&forceEmpty=true&refreshed=true&ts=${timestamp}`;
-          }, 300);
+      // NOTIFICA PRELIMINARE
+      toast({
+        title: "Creazione in corso...",
+        description: "Stiamo preparando la nuova pianificazione, attendere...",
+      });
+
+      // FASE 1: CREAZIONE NUOVA PIANIFICAZIONE SUL SERVER con gestione DIRETTA del redirect
+      fetch("/api/schedules/new-empty", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newScheduleData)
+      })
+      .then(response => response.json())
+      .then((data: any) => {
+        console.log("✅ CREAZIONE FORZATA - Nuovo schedule vuoto creato con ID:", data.id);
+        
+        // FASE 2: NOTIFICA e PREPARAZIONE al REDIRECT IMMEDIATO
+        console.log("⚡ REDIRECT FORZATO in corso...");
+        
+        // Aggiungi un timestamp per evitare la cache
+        const timestamp = Date.now();
+        
+        // AGGIORNAMENTO DIRETTO SENZA ATTESE
+        // Notifica all'utente che sta avvenendo il redirect
+        toast({
+          title: "Turno creato!",
+          description: "Caricamento immediato della nuova tabella vuota...",
+          duration: 2000,
+        });
+        
+        // REDIRECT IMMEDIATO E FORZATO con ancora più parametri per garantire il caricamento
+        // Aggiungiamo "hard_redirect=true" per indicare un redirect assoluto
+        // e aggiungiamo "new_created=1" come flag aggiuntivo
+        const redirectUrl = `/schedule?force_reset=true&id=${data.id}&scheduleId=${data.id}&currentScheduleId=${data.id}&new_schedule=${data.id}&hard_redirect=true&new_created=1&date=${format(customStartDate!, "yyyy-MM-dd")}&forceEmpty=true&refreshed=true&ts=${timestamp}`;
+        
+        console.log("🔄 REDIRECT AGGRESSIVO a:", redirectUrl);
+        
+        // REDIRECT IMMEDIATO (senza setTimeout)
+        window.location.href = redirectUrl;
         })
         .catch(err => {
           console.error("❌ Errore nella gestione dello schedule:", err);
