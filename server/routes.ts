@@ -1204,7 +1204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   <ul style="margin-bottom: 0;">
                     <li><strong>Tipo:</strong> ${typeLabel}</li>
                     <li><strong>Periodo:</strong> ${formattedStartDate} - ${formattedEndDate}</li>
-                    <li><strong>Durata:</strong> ${request.duration === 'full_day' ? 'Giornata intera' : request.duration === 'morning' ? 'Mattina' : 'Pomeriggio'}</li>
+                    <li><strong>Durata:</strong> ${request.duration === 'full_day' ? 'Giornata intera' : request.duration === 'specific_hours' && request.startTime && request.endTime ? `Orario specifico: ${request.startTime} - ${request.endTime}` : request.duration === 'morning' ? 'Mattina' : 'Pomeriggio'}</li>
                     <li><strong>Motivo:</strong> ${request.reason || 'Nessun motivo specificato'}</li>
                   </ul>
                 </div>

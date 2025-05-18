@@ -62,7 +62,9 @@ export const timeOffRequests = pgTable("time_off_requests", {
   type: text("type").notNull(), // vacation, personal, sick
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
-  duration: text("duration").notNull(), // full_day, morning, afternoon
+  duration: text("duration").notNull(), // full_day, specific_hours
+  startTime: text("start_time"), // es. "09:00"
+  endTime: text("end_time"), // es. "13:00"
   reason: text("reason"),
   status: text("status").notNull().default("pending"), // pending, approved, rejected
   approvedBy: integer("approved_by"),
