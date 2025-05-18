@@ -1,10 +1,13 @@
 import {
   users, schedules, shifts, timeOffRequests, documents, notifications, messages,
+  scheduleTemplates, templateShifts,
   type User, type InsertUser,
   type Schedule, type InsertSchedule,
   type Shift, type InsertShift,
   type TimeOffRequest, type InsertTimeOffRequest,
   type Document, type InsertDocument,
+  type ScheduleTemplate, type InsertScheduleTemplate,
+  type TemplateShift, type InsertTemplateShift,
   type Notification, type InsertNotification,
   type Message, type InsertMessage
 } from "@shared/schema";
