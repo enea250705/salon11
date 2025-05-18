@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 
 const formSchema = z.object({
   username: z.string().min(1, {
@@ -34,6 +34,7 @@ export default function Login() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Se l'utente è già autenticato, reindirizza alla dashboard
   useEffect(() => {
@@ -55,7 +56,7 @@ export default function Login() {
     setIsLoading(true);
     
     try {
-      // Login diretto usando fetch invece di utilizzare la funzione login dal contesto
+      // Migliore gestione degli errori con visualizzazione dei messaggi specifici
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -68,24 +69,32 @@ export default function Login() {
         credentials: 'include'
       });
       
+      // Se la risposta non è OK, prova a ottenere il messaggio di errore
       if (!response.ok) {
-        throw new Error('Credenziali non valide');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || 'Credenziali non valide';
+        throw new Error(errorMessage);
       }
       
       const data = await response.json();
       
       if (data.user) {
+        toast({
+          title: "Accesso effettuato",
+          description: "Benvenuto nel sistema!",
+          variant: "default",
+        });
         // Ricarica la pagina per aggiornare lo stato di autenticazione
         window.location.href = '/';
         return;
       }
       
       throw new Error('Errore durante l\'accesso');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
       toast({
         title: "Errore di accesso",
-        description: "Credenziali non valide. Riprova.",
+        description: error.message || "Credenziali non valide. Riprova.",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -130,7 +139,24 @@ export default function Login() {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="********" {...field} />
+                        <div className="relative">
+                          <Input 
+                            type={showPassword ? "text" : "password"} 
+                            placeholder="********" 
+                            {...field} 
+                          />
+                          <button 
+                            type="button"
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
