@@ -210,22 +210,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
+        console.log(`🔐 Tentativo di login per l'utente: ${username}`);
         const user = await storage.getUserByUsername(username);
         
         if (!user) {
-          return done(null, false, { message: "Incorrect username" });
+          console.log(`❌ Login fallito per ${username}: utente non trovato`);
+          return done(null, false, { message: "Username non trovato" });
         }
         
+        // Log per debug
+        console.log(`🔍 Verifica password per ${username}: stored='${user.password}', provided='${password}'`);
+        
         if (user.password !== password) {
-          return done(null, false, { message: "Incorrect password" });
+          console.log(`❌ Login fallito per ${username}: password errata`);
+          return done(null, false, { message: "Password errata" });
         }
         
         if (!user.isActive) {
-          return done(null, false, { message: "User account is disabled" });
+          console.log(`❌ Login fallito per ${username}: account disabilitato`);
+          return done(null, false, { message: "Account disabilitato" });
         }
+        
+        // Aggiorna lastLogin dell'utente
+        await storage.updateUser(user.id, { lastLogin: new Date() });
+        console.log(`✅ Login riuscito per ${username} (ID: ${user.id})`);
         
         return done(null, user);
       } catch (err) {
+        console.error("❌ Errore durante il login:", err);
         return done(err);
       }
     })
@@ -306,16 +318,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(userData.username);
       if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
+        return res.status(400).json({ message: "Username già esistente" });
       }
       
+      // Garantisci che la password sia una stringa
+      if (typeof userData.password !== 'string' || userData.password.trim() === '') {
+        return res.status(400).json({ message: "Password non valida" });
+      }
+      
+      // Log per debug
+      console.log(`✅ Creazione nuovo utente: ${userData.username}, ${userData.name}, password: ${userData.password.slice(0, 1)}*****`);
+      
       const user = await storage.createUser(userData);
+      
+      console.log(`✅ Utente creato con successo: ID=${user.id}, Username=${user.username}`);
       res.status(201).json(user);
     } catch (err) {
+      console.error("❌ Errore nella creazione dell'utente:", err);
       if (err instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid user data", errors: err.errors });
+        return res.status(400).json({ message: "Dati utente non validi", errors: err.errors });
       }
-      res.status(400).json({ message: "Invalid user data" });
+      res.status(400).json({ message: "Dati utente non validi" });
     }
   });
   

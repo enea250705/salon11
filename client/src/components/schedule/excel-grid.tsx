@@ -364,17 +364,13 @@ export function ExcelGrid({
   // Gestisce in modo più robusto il clic su una cella della griglia
   const handleCellClick = (userId: number, timeIndex: number, day: string) => {
     // VALIDAZIONE PRELIMINARE
-    // Non procedere se non c'è uno schedule valido o se è già pubblicato
-    if (!scheduleId || isPublished) {
-      if (isPublished) {
-        toast({
-          title: "Turno pubblicato",
-          description: "Non puoi modificare un turno già pubblicato.",
-          variant: "destructive"
-        });
-      }
+    // Non procedere se non c'è uno schedule valido
+    if (!scheduleId) {
       return;
     }
+    
+    // Anche se è pubblicato, ora permettiamo le modifiche
+    // Questo per consentire correzioni in caso di malattia o altre necessità
     
     // PREPARAZIONE STATO
     // Creiamo una copia profonda dei dati per evitare modifiche accidentali dello stato
