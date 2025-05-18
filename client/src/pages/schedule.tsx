@@ -464,11 +464,17 @@ export default function Schedule() {
             // Calcoliamo le ore totali per il giorno e formattiamo il testo del turno
             let dailyHours = 0;
             const shiftsText = sortedShifts.map(shift => {
+              // Calcolo ore seguendo la stessa logica usata nell'interfaccia
               const hours = calculateWorkHours(shift.startTime, shift.endTime);
+              console.log(`Turno di ${shift.startTime}-${shift.endTime}: ${hours} ore`);
               dailyHours += hours;
               return `${shift.startTime}-${shift.endTime}`;
             }).join("\n");
             
+            // Log per debug
+            console.log(`Ore giornaliere per ${user.name} (${dayName}): ${dailyHours}`);
+            
+            // Assicuriamoci che le ore vengano sommate correttamente
             totalWeeklyHours += dailyHours;
             
             // Aggiungiamo il testo del turno con stile appropriato
@@ -588,200 +594,13 @@ export default function Schedule() {
       }
     });
     
-    // Aggiungiamo una seconda pagina con i dettagli per turno
-    doc.addPage();
+    // Rimuovere le pagine e tabelle aggiuntive come richiesto dall'utente
+    // Lasciamo solo la pagina principale con l'orario settimanale
     
-    // Titolo della seconda pagina
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(41, 128, 185);
-    doc.text("Dettaglio Turni Individuali", 14, 15);
-    
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(0);
-    doc.text(`Periodo: ${dateRange}`, 14, 21);
-    
-    // Tabella dettagliata con tutti i turni
-    const detailedShiftsData = [];
-    
-    users
-      .filter(user => user.role === "employee" && user.isActive)
-      .forEach(user => {
-        const userShifts = shifts.filter((shift: any) => shift.userId === user.id);
-        
-        // Ordina i turni per giorno e ora di inizio
-        const sortedShifts = [...userShifts].sort((a, b) => {
-          const dayCompare = dayNames.indexOf(a.day) - dayNames.indexOf(b.day);
-          if (dayCompare !== 0) return dayCompare;
-          return a.startTime.localeCompare(b.startTime);
-        });
-        
-        if (sortedShifts.length > 0) {
-          sortedShifts.forEach((shift: any) => {
-            const hours = calculateWorkHours(shift.startTime, shift.endTime);
-            
-            // Aggiunta di una condizione più esplicita per il calcolo delle ore
-            // Per assicurarsi che le ore siano visualizzate correttamente anche nel PDF
-            const formattedHours = hours > 0 ? formatHours(hours) : "0 ore";
-            
-            detailedShiftsData.push([
-              user.name || user.username,
-              shift.day.charAt(0).toUpperCase() + shift.day.slice(1),
-              shift.startTime,
-              shift.endTime,
-              formattedHours,
-              shift.type || "",
-              shift.notes || "",
-              shift.area || ""
-            ]);
-          });
-        }
-      });
-    
-    // Genera la tabella dettagliata
-    autoTable(doc, {
-      head: [[
-        { content: 'Dipendente', styles: { halign: 'left' } },
-        { content: 'Giorno', styles: { halign: 'center' } },
-        { content: 'Inizio', styles: { halign: 'center' } },
-        { content: 'Fine', styles: { halign: 'center' } },
-        { content: 'Ore', styles: { halign: 'center' } },
-        { content: 'Tipo', styles: { halign: 'center' } },
-        { content: 'Note', styles: { halign: 'left' } },
-        { content: 'Area', styles: { halign: 'center' } }
-      ]],
-      body: detailedShiftsData,
-      startY: 30,
-      theme: 'grid',
-      styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-      columnStyles: {
-        0: { cellWidth: 40 },  // Dipendente
-        1: { cellWidth: 25, halign: 'center' },  // Giorno
-        2: { cellWidth: 15, halign: 'center' },  // Inizio
-        3: { cellWidth: 15, halign: 'center' },  // Fine
-        4: { cellWidth: 15, halign: 'center', fontStyle: 'bold' },  // Ore
-        5: { cellWidth: 20, halign: 'center' },  // Tipo
-        6: { cellWidth: 'auto' },  // Note
-        7: { cellWidth: 25, halign: 'center' }   // Area
-      },
-      alternateRowStyles: { fillColor: [245, 245, 245] },
-      didDrawPage: (data) => {
-        // Aggiunge l'intestazione sulle pagine successive
-        if (data.pageCount > 1 && data.cursor.y === data.startY) {
-          doc.setFontSize(16);
-          doc.setFont("helvetica", "bold");
-          doc.setTextColor(41, 128, 185);
-          doc.text("Dettaglio Turni Individuali (continua)", 14, 15);
-          doc.setFontSize(12);
-          doc.setFont("helvetica", "normal");
-          doc.setTextColor(0);
-          doc.text(`Periodo: ${dateRange}`, 14, 21);
-        }
-      }
-    });
-    
-    // Aggiungiamo una terza pagina con il conteggio del personale per fascia oraria
-    doc.addPage();
-    
-    // Titolo della terza pagina
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(41, 128, 185);
-    doc.text("Conteggio Personale per Fascia Oraria", 14, 15);
-    
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(0);
-    doc.text(`Periodo: ${dateRange}`, 14, 21);
-    
-    // Definizione delle fasce orarie (timeslots)
-    const timeSlots = [
-      "6:00", "6:30", "7:00", "7:30", "8:00", "8:30", "9:00", "9:30",
-      "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30",
-      "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
-      "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30",
-      "22:00", "22:30", "23:00", "23:30"
-    ];
-    
-    // Inizializziamo il conteggio del personale
-    const staffCount = {};
-    weekDays.forEach((day, dayIndex) => {
-      staffCount[dayIndex] = {};
-      timeSlots.forEach((timeSlot) => {
-        staffCount[dayIndex][timeSlot] = 0;
-      });
-    });
-    
-    // Contiamo il personale per ogni fascia oraria
-    shifts.forEach((shift: any) => {
-      const dayIndex = dayNames.findIndex(day => day.toLowerCase() === shift.day.toLowerCase());
-      if (dayIndex !== -1) {
-        const startTimeIndex = timeSlots.indexOf(shift.startTime);
-        const endTimeIndex = timeSlots.indexOf(shift.endTime);
-        
-        if (startTimeIndex !== -1 && endTimeIndex !== -1) {
-          for (let i = startTimeIndex; i < endTimeIndex; i++) {
-            staffCount[dayIndex][timeSlots[i]]++;
-          }
-        }
-      }
-    });
-    
-    // Prepariamo i dati per la tabella
-    const staffCountData = [];
-    timeSlots.forEach((timeSlot) => {
-      const row = [timeSlot];
-      weekDays.forEach((day, dayIndex) => {
-        row.push(staffCount[dayIndex][timeSlot].toString());
-      });
-      staffCountData.push(row);
-    });
-    
-    // Genera la tabella del conteggio con intestazioni personalizzate
-    const headerCells = ['Orario', ...weekDays].map((header, index) => {
-      return {
-        content: header,
-        styles: {
-          halign: index === 0 ? 'left' : 'center',
-          fontStyle: 'bold'
-        }
-      };
-    });
-    
-    autoTable(doc, {
-      head: [headerCells],
-      body: staffCountData,
-      startY: 30,
-      theme: 'grid',
-      styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-      columnStyles: {
-        0: { cellWidth: 25, halign: 'left' }, // Orario
-        1: { cellWidth: 20, halign: 'center' }, // Lunedì
-        2: { cellWidth: 20, halign: 'center' }, // Martedì
-        3: { cellWidth: 20, halign: 'center' }, // Mercoledì
-        4: { cellWidth: 20, halign: 'center' }, // Giovedì
-        5: { cellWidth: 20, halign: 'center' }, // Venerdì
-        6: { cellWidth: 20, halign: 'center' }, // Sabato
-        7: { cellWidth: 20, halign: 'center' }  // Domenica
-      },
-      alternateRowStyles: { fillColor: [245, 245, 245] },
-      didDrawPage: (data) => {
-        // Aggiunge l'intestazione sulle pagine successive
-        if (data.pageCount > 1 && data.cursor.y === data.startY) {
-          doc.setFontSize(16);
-          doc.setFont("helvetica", "bold");
-          doc.setTextColor(41, 128, 185);
-          doc.text("Conteggio Personale per Fascia Oraria (continua)", 14, 15);
-          doc.setFontSize(12);
-          doc.setFont("helvetica", "normal"); 
-          doc.setTextColor(0);
-          doc.text(`Periodo: ${dateRange}`, 14, 21);
-        }
-      }
-    });
+    // Aggiungiamo log per debug
+    console.log(`PDF esportato con successo: ${existingSchedule.startDate} - ${existingSchedule.endDate}`);
+    console.log(`Totale dipendenti mostrati: ${users.filter(u => u.role === "employee" && u.isActive).length}`);
+    console.log(`Totale turni nel periodo: ${shifts.length}`);
     
     // Data di generazione e piè di pagina su tutte le pagine
     const today = format(new Date(), "dd/MM/yyyy HH:mm", { locale: it });
