@@ -596,13 +596,14 @@ export default function Schedule() {
       doc.text(`Pagina ${i} di ${pageCount}`, doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 10);
     }
     
-    // Salva il PDF
-    doc.save(`turni_${format(new Date(existingSchedule.startDate), "yyyyMMdd")}-${format(new Date(existingSchedule.endDate), "yyyyMMdd")}.pdf`);
+    // Salva il PDF con un formato più descrittivo
+    doc.save(`Da_Vittorino_Turni_${format(new Date(existingSchedule.startDate), "yyyyMMdd")}-${format(new Date(existingSchedule.endDate), "yyyyMMdd")}.pdf`);
     
+    // Notifica di successo all'utente
     toast({
-      title: "Esportazione completata",
-      description: "Gli orari settimanali sono stati esportati in PDF con successo.",
-      variant: "default",
+      title: "PDF Esportato con Successo",
+      description: "Il file è stato scaricato sul tuo dispositivo.",
+      variant: "default"
     });
   };
   
