@@ -145,7 +145,6 @@ export function ExportToPdfDialog({
                   ${day.name.charAt(0).toUpperCase() + day.name.slice(1)}<br>${format(day.date, "dd/MM", { locale: it })}
                 </th>
               `).join('')}
-              <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: center;">Totale</th>
             </tr>
           </thead>
           <tbody>
@@ -200,11 +199,8 @@ export function ExportToPdfDialog({
         htmlContent += `<td style="${cellStyle}">${cellContent}</td>`;
       }
       
-      // Aggiungiamo la cella del totale settimanale
+      // Chiudiamo la riga senza aggiungere la cella del totale
       htmlContent += `
-        <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold;">
-          ${formatHours(totalWeekHours)}
-        </td>
       </tr>
       `;
     }
