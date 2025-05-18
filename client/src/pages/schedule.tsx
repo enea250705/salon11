@@ -14,7 +14,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { WeekSelectorDialog } from "@/components/schedule/week-selector-dialog";
 import { ScheduleAutoGenerator } from "@/components/schedule/auto-generator/auto-generator";
 import { ExcelGrid } from "@/components/schedule/excel-grid";
-import { TemplateManager } from "@/components/schedule/template-manager";
 
 // Date utilities
 import { format, startOfWeek, addDays, isBefore, parseISO } from "date-fns";
@@ -271,9 +270,6 @@ export default function Schedule() {
   
   // State for showing schedule builder
   const [showScheduleBuilder, setShowScheduleBuilder] = useState(false);
-  
-  // State for showing template manager
-  const [showTemplateManager, setShowTemplateManager] = useState(false);
   // Flag per il reset completo della griglia (per mostrare una tabella vuota dopo la creazione)
   const [forceResetGrid, setForceResetGrid] = useState(false);
   // Flag per stabilire se stiamo caricando uno schedule nuovo o esistente
@@ -378,78 +374,6 @@ export default function Schedule() {
     }
     
     setShowAutoGenerator(true);
-  };
-  
-  // Gestisce l'apertura del gestore dei template
-  const handleOpenTemplateManager = () => {
-    // Verifica che ci sia uno schedule attivo
-    if (!existingSchedule?.id) {
-      toast({
-        title: "Nessun turno selezionato",
-        description: "Seleziona prima un turno per salvarlo come template o applicare un template esistente",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setShowTemplateManager(true);
-  };
-  
-  // Gestisce l'applicazione di un template selezionato all'orario corrente
-  const handleApplyTemplate = (templateData: any) => {
-    if (!existingSchedule?.id) return;
-    
-    // Verifica se il turno attuale ha già dei turni e chiedi conferma
-    if (shifts && shifts.length > 0) {
-      if (!window.confirm("Il turno attuale contiene già dei dati. Continuare sovrascriverà i turni esistenti. Continuare?")) {
-        return;
-      }
-    }
-    
-    // Elimina tutti i turni esistenti per questo schedule
-    apiRequest("DELETE", `/api/schedules/${existingSchedule.id}/shifts/all`, {})
-      .then(() => {
-        console.log("Turni esistenti eliminati con successo");
-        
-        // Applica i nuovi turni dal template
-        const promises = templateData.map((shift: any) => {
-          // Adatta il turno al nuovo schedule
-          const newShift = {
-            ...shift,
-            scheduleId: existingSchedule.id
-          };
-          
-          // Crea il nuovo turno
-          return apiRequest("POST", "/api/shifts", newShift);
-        });
-        
-        // Attendi che tutti i turni siano stati creati
-        return Promise.all(promises);
-      })
-      .then(() => {
-        // Aggiorna la cache
-        queryClient.invalidateQueries({ queryKey: [`/api/schedules/${existingSchedule.id}/shifts`] });
-        
-        // Forza il refresh della griglia
-        setForceResetGrid(true);
-        
-        // Notifica all'utente
-        toast({
-          title: "Template applicato",
-          description: "Il template è stato applicato con successo all'orario corrente",
-        });
-        
-        // Chiudi il dialog
-        setShowTemplateManager(false);
-      })
-      .catch(error => {
-        console.error("Errore nell'applicare il template:", error);
-        toast({
-          title: "Errore",
-          description: "Si è verificato un errore nell'applicare il template",
-          variant: "destructive",
-        });
-      });
   };
   
   // Handle date change
@@ -657,15 +581,6 @@ export default function Schedule() {
                 <span className="material-icons text-xs sm:text-sm mr-1">add</span>
                 Nuovo turno settimanale
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleOpenTemplateManager}
-                className="text-xs sm:text-sm"
-              >
-                <span className="material-icons text-xs sm:text-sm mr-1">content_copy</span>
-                Gestione Template
-              </Button>
             </div>
           </div>
         ) : (
@@ -784,14 +699,6 @@ export default function Schedule() {
         onOpenChange={setShowWeekSelector}
         schedules={allSchedules}
         onSelectSchedule={handleSelectSchedule}
-      />
-      
-      {/* Componente per gestire i template degli orari */}
-      <TemplateManager
-        isOpen={showTemplateManager}
-        onClose={() => setShowTemplateManager(false)}
-        currentScheduleData={shifts || []}
-        onApplyTemplate={handleApplyTemplate}
       />
     </Layout>
   );
