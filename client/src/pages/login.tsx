@@ -21,7 +21,7 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 
 const formSchema = z.object({
   username: z.string().min(1, {
-    message: "Username è obbligatorio",
+    message: "Username o email è obbligatorio",
   }),
   password: z.string().min(1, {
     message: "Password è obbligatoria",
@@ -115,9 +115,9 @@ export default function Login() {
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Username o Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="nome.cognome@davittorino.it" {...field} />
+                        <Input placeholder="Inserisci username o email" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

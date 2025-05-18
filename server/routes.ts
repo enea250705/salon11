@@ -222,18 +222,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        const user = await storage.getUserByUsername(username);
+        // Prima cerca per username
+        let user = await storage.getUserByUsername(username);
+        
+        // Se non trovato, controlla se è una email
+        if (!user && username.includes('@')) {
+          // Cerchiamo per email
+          user = await storage.getUserByEmail(username);
+        }
         
         if (!user) {
-          return done(null, false, { message: "Incorrect username" });
+          return done(null, false, { message: "Credenziali non valide" });
         }
         
         if (user.password !== password) {
-          return done(null, false, { message: "Incorrect password" });
+          return done(null, false, { message: "Credenziali non valide" });
         }
         
         if (!user.isActive) {
-          return done(null, false, { message: "User account is disabled" });
+          return done(null, false, { message: "Account utente disabilitato" });
         }
         
         return done(null, user);
