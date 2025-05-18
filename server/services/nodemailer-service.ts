@@ -542,14 +542,14 @@ export async function sendTimeOffRejectionNotification(user: User, type: string,
   const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #4a6cf7;">StaffSync</h2>
+          <h2 style="color: #4a6cf7;">Da Vittorino Staff</h2>
         </div>
         <p>Gentile ${user.name},</p>
         <p>Ti informiamo che la tua richiesta di <strong>${typeTranslated}</strong> per il periodo <strong>${formattedStartDate} - ${formattedEndDate}</strong> è stata <span style="color: red;"><strong>rifiutata</strong></span>.</p>
         <p>Per maggiori informazioni, contatta il tuo responsabile.</p>
-        <p>Puoi visualizzare lo stato di tutte le tue richieste accedendo alla piattaforma StaffSync.</p>
+        <p>Puoi visualizzare lo stato di tutte le tue richieste accedendo alla piattaforma Da Vittorino.</p>
         <div style="text-align: center; margin-top: 30px;">
-          <a href="https://staffsync.replit.app/time-off" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Le Mie Richieste</a>
+          <a href="https://davittorino.vercel.app/time-off" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Le Mie Richieste</a>
         </div>
         <p style="margin-top: 30px; font-size: 12px; color: #666; text-align: center;">
           Questa è un'email automatica, ti preghiamo di non rispondere.

@@ -1194,7 +1194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
                 <div style="text-align: center; margin-bottom: 20px;">
-                  <h2 style="color: #4a6cf7;">StaffSync</h2>
+                  <h2 style="color: #4a6cf7;">Da Vittorino Staff</h2>
                 </div>
                 <p>Gentile ${admin.name || admin.username},</p>
                 <p>Ti informiamo che <strong>${requester.name}</strong> ha inviato una nuova richiesta di <strong>${typeLabel.toLowerCase()}</strong>.</p>
@@ -1209,10 +1209,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   </ul>
                 </div>
                 
-                <p>Puoi gestire questa richiesta dalla piattaforma StaffSync.</p>
+                <p>Puoi gestire questa richiesta dalla piattaforma Da Vittorino.</p>
                 
                 <div style="text-align: center; margin-top: 30px;">
-                  <a href="https://staffsync.replit.app/requests" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Gestisci Richieste</a>
+                  <a href="https://davittorino.vercel.app/requests" style="background-color: #4a6cf7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Gestisci Richieste</a>
                 </div>
                 
                 <p style="margin-top: 30px; font-size: 12px; color: #666; text-align: center;">
