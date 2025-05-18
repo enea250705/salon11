@@ -176,7 +176,7 @@ async function generateAutomaticSchedule(
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
-  // Registriamo le rotte per i modelli di orario
+  // Registrazione dei router personalizzati
   app.use("/api/templates", templatesRouter);
   
   // Function to create a database notification (senza WebSocket)
