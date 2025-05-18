@@ -170,9 +170,7 @@ export function ExcelGrid({
       forceResetGrid || 
       forceEmptyFromUrl || 
       resetFromUrl || 
-      Object.keys(gridData).length === 0 ||
-      (scheduleIdFromUrl && scheduleId?.toString() === scheduleIdFromUrl) ||
-      (newScheduleParam && scheduleId?.toString() === newScheduleParam);
+      Object.keys(gridData).length === 0;
     
     if (shouldReset) {
       // Log dettagliato delle condizioni di reset
@@ -779,9 +777,9 @@ export function ExcelGrid({
             <TabsContent key={day.name} value={day.name} className="relative">
               <div className="overflow-auto border rounded-md">
                 <table className="w-full border-collapse">
-                  <thead>
+                  <thead className="sticky top-0 z-10">
                     <tr className="border-b bg-muted/50">
-                      <th className="p-1 sm:p-2 text-left font-medium">Dipendente</th>
+                      <th className="p-1 sm:p-2 text-left font-medium sticky left-0 z-20 bg-muted/50">Dipendente</th>
                       {timeSlots.map((slot, idx) => (
                         idx < timeSlots.length - 1 && (
                           <th key={idx} className="p-1 sm:p-2 text-center text-xs sm:text-sm font-medium">
@@ -840,12 +838,12 @@ export function ExcelGrid({
                           
                           <td className="p-1">
                             <Input
-                              size={20}
+                              size={40}
                               placeholder="Note..."
                               value={gridData[day.name]?.[user.id]?.notes || ""}
                               onChange={(e) => handleNotesChange(user.id, day.name, e.target.value)}
                               disabled={isPublished}
-                              className="text-xs sm:text-sm w-full"
+                              className="text-sm sm:text-base w-full min-w-[200px] font-medium"
                             />
                           </td>
                           
