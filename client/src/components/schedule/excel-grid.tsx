@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -9,8 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 
 /**
  * La griglia Excel-like per la gestione dei turni
@@ -50,8 +48,6 @@ export function ExcelGrid({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedDay, setSelectedDay] = useState(0);
-  const [isExporting, setIsExporting] = useState(false);
-  const scheduleGridRef = useRef<HTMLDivElement>(null);
   
   // Generazione degli slot di tempo (30 minuti) dalle 4:00 alle 24:00
   const timeSlots = generateTimeSlots(4, 24);
@@ -711,100 +707,6 @@ export function ExcelGrid({
     }
   };
   
-  // Funzione per esportare la tabella in PDF
-  const handleExportPDF = async () => {
-    try {
-      setIsExporting(true);
-      
-      // Crea il PDF con orientamento orizzontale
-      const pdf = new jsPDF('landscape', 'pt', 'a4');
-      
-      // Aggiungi intestazione al PDF
-      pdf.setFontSize(16);
-      pdf.setTextColor(40, 40, 40);
-      pdf.text(`Orari settimanali: ${format(startDate, "d MMMM", { locale: it })} - ${format(endDate, "d MMMM yyyy", { locale: it })}`, 40, 40);
-      
-      // Esporta la tabella per ogni giorno della settimana
-      for (let i = 0; i < weekDays.length; i++) {
-        const day = weekDays[i];
-        
-        // Se non è il primo giorno, aggiungi una nuova pagina
-        if (i > 0) {
-          pdf.addPage();
-        }
-        
-        // Titolo del giorno
-        pdf.setFontSize(14);
-        pdf.setTextColor(60, 60, 60);
-        pdf.text(`${day.name} ${format(day.date, "d MMMM yyyy", { locale: it })}`, 40, 60);
-        
-        // Seleziona la tabella del giorno
-        const tableElement = document.querySelector(`[data-value="${day.name}"] table`);
-        
-        if (tableElement && tableElement instanceof HTMLElement) {
-          // Converti la tabella in canvas
-          const canvas = await html2canvas(tableElement, {
-            scale: 1.5,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false
-          });
-          
-          // Aggiungi l'immagine al PDF
-          const imgData = canvas.toDataURL('image/png');
-          
-          // Calcola le dimensioni mantenendo le proporzioni
-          const imgWidth = pdf.internal.pageSize.getWidth() - 80; // margini
-          const imgHeight = (canvas.height * imgWidth) / canvas.width;
-          
-          // Aggiungi l'immagine al PDF
-          pdf.addImage(imgData, 'PNG', 40, 80, imgWidth, imgHeight);
-        }
-      }
-      
-      // Aggiungi una pagina per il riepilogo ore settimanali
-      pdf.addPage();
-      pdf.setFontSize(14);
-      pdf.setTextColor(60, 60, 60);
-      pdf.text("Riepilogo ore settimanali", 40, 60);
-      
-      // Seleziona il riepilogo
-      const summaryElement = document.querySelector('.mt-6.overflow-auto.rounded-lg');
-      
-      if (summaryElement && summaryElement instanceof HTMLElement) {
-        const canvas = await html2canvas(summaryElement, {
-          scale: 1.5,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          logging: false
-        });
-        
-        const imgData = canvas.toDataURL('image/png');
-        const imgWidth = pdf.internal.pageSize.getWidth() - 80;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        pdf.addImage(imgData, 'PNG', 40, 80, imgWidth, imgHeight);
-      }
-      
-      // Salva il PDF
-      pdf.save(`Orari_settimanali_${format(startDate, "dd-MM-yyyy", { locale: it })}.pdf`);
-      
-      toast({
-        title: "Esportazione completata",
-        description: "Il PDF è stato generato con successo.",
-      });
-    } catch (error) {
-      console.error("Errore durante l'esportazione del PDF:", error);
-      toast({
-        title: "Errore esportazione",
-        description: "Si è verificato un errore durante l'esportazione in PDF. Riprova.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
   // Funzione per pubblicare lo schedule
   const handlePublish = () => {
     if (!scheduleId) return;
@@ -852,24 +754,6 @@ export function ExcelGrid({
                 </Tooltip>
               </TooltipProvider>
             )}
-            <Button 
-              onClick={handleExportPDF} 
-              variant="outline" 
-              className="bg-blue-50 text-blue-700 border-blue-200"
-              disabled={isExporting}
-            >
-              {isExporting ? (
-                <>
-                  <span className="animate-spin mr-1">⟳</span>
-                  Esportazione...
-                </>
-              ) : (
-                <>
-                  <span className="material-icons text-sm mr-1">picture_as_pdf</span>
-                  Esporta PDF
-                </>
-              )}
-            </Button>
           </div>
         </div>
       </div>
@@ -895,10 +779,10 @@ export function ExcelGrid({
             ))}
           </TabsList>
           
-          {weekDays.map((day, index) => (
+          {weekDays.map((day) => (
             <TabsContent key={day.name} value={day.name} className="relative">
               <div className="overflow-auto border rounded-md relative">
-                <table id={`schedule-table-${index}`} className="w-full border-collapse print-table">
+                <table className="w-full border-collapse">
                   <thead className="sticky top-0 z-10">
                     <tr className="border-b bg-muted/50">
                       <th className="p-1 sm:p-2 text-left font-medium sticky left-0 bg-muted/50 z-20">Dipendente</th>
