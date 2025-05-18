@@ -32,6 +32,16 @@ export function TimeOffList() {
         case "afternoon":
           durationType = " (pomeriggio)";
           break;
+        case "specific_hours":
+          // Controlla se il motivo contiene l'informazione sull'orario
+          const reason = timeOffRequests.find(r => r.startDate === startDate && r.endDate === endDate && r.duration === "specific_hours")?.reason || "";
+          if (reason && reason.startsWith("Orario:")) {
+            const orario = reason.split('.')[0].replace('Orario:', '').trim();
+            durationType = ` (orario specifico: ${orario})`;
+          } else {
+            durationType = " (orario specifico)";
+          }
+          break;
         default:
           durationType = " (giornata intera)";
       }
