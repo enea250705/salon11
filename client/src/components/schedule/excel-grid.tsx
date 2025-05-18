@@ -358,85 +358,60 @@ export function ExcelGrid({
     }
   }, [scheduleId, users, shifts, timeOffRequests, weekDays, timeSlots, forceResetGrid]);
   
-  // GESTIONE CLIC MIGLIORATA
-  // Gestisce in modo più robusto il clic su una cella della griglia
+  // Funzione semplificata per il clic sulla cella
   const handleCellClick = (userId: number, timeIndex: number, day: string) => {
-    // VALIDAZIONE PRELIMINARE
-    // Non procedere se non c'è uno schedule valido
-    if (!scheduleId) {
-      return;
-    }
+    // Controllo validità dello schedule
+    if (!scheduleId) return;
     
-    // Anche se è pubblicato, ora permettiamo le modifiche
-    // Questo per consentire correzioni in caso di malattia o altre necessità
-    
-    // PREPARAZIONE STATO
-    // Creiamo una copia profonda dei dati per evitare modifiche accidentali dello stato
+    // Creiamo una copia profonda dello stato attuale
     const newGridData = structuredClone(gridData);
-    // Verifica che i dati utente/giorno esistano
-    if (!newGridData[day] || !newGridData[day][userId]) {
-      console.error(`Dati mancanti per utente ${userId} nel giorno ${day}`);
-      return;
-    }
+    
+    // Verifica se i dati utente/giorno esistono 
+    if (!newGridData[day] || !newGridData[day][userId]) return;
     
     const userDayData = newGridData[day][userId];
-    const currentCell = userDayData.cells[timeIndex];
+    const currentCell = userDayData.cells[timeIndex] || { type: "", shiftId: null, isTimeOff: false };
     
-    // CICLO DELLE TIPOLOGIE
-    // Determina il nuovo tipo di turno secondo la rotazione stabilita
-    let newType = "work"; // Default: se la cella è vuota, diventa lavoro
-    
-    // Verifica se la cella è bloccata perché è una richiesta di ferie/permesso già approvata
+    // Non modificare celle di ferie/permessi approvati
     if (currentCell.isTimeOff) {
-      console.log("⚠️ Non è possibile modificare questa cella: è una richiesta di ferie o permesso approvata");
       toast({
         title: "Azione non permessa",
-        description: "Non puoi modificare una cella che rappresenta ferie o permessi già approvati.",
+        description: "Questa cella rappresenta ferie o permessi già approvati",
         variant: "destructive"
       });
       return;
     }
     
+    // Determina il nuovo tipo di cella
+    let newType = "work"; // Default quando la cella è vuota
+    
     if (currentCell.type) {
-      // Rotazione: work -> vacation -> leave -> (vuoto) -> work...
-      if (currentCell.type === "work") {
-        newType = "vacation";  // Lavoro -> Ferie
-      } else if (currentCell.type === "vacation") {
-        newType = "leave";     // Ferie -> Permesso 
-      } else if (currentCell.type === "leave") {
-        newType = "";          // Permesso -> Vuoto
-      }
+      if (currentCell.type === "work") newType = "vacation";      // X → F
+      else if (currentCell.type === "vacation") newType = "leave"; // F → P
+      else if (currentCell.type === "leave") newType = "";         // P → vuoto
     }
     
+    // Log del cambio
     console.log(`🔄 Cambio tipo cella: ${currentCell.type || 'vuota'} -> ${newType || 'vuota'}`);
     
-    // Prima di tutto, aggiorniamo immediatamente la cella localmente per feedback visivo
-    // Questo dà all'utente un feedback immediato anche prima che l'API risponda
+    // Aggiorna immediatamente lo stato
     userDayData.cells[timeIndex] = {
       type: newType,
       shiftId: currentCell.shiftId,
       isTimeOff: false
     };
     
-    // GESTIONE API PER TIPO DI AZIONE
-    // 1. SE LA CELLA HA UN ID ESISTENTE
+    // Applica il nuovo stato
+    setGridData(newGridData);
+    
+    // Gestisci il database
     if (currentCell.shiftId) {
       if (newType === "") {
-        // CASO 1: ELIMINAZIONE
-        // Elimina il turno dal database
+        // Eliminazione di un turno esistente
         deleteShiftMutation.mutate(currentCell.shiftId);
-        
-        // Aggiorna il conteggio delle ore (solo se era un turno di lavoro)
-        if (currentCell.type === "work") {
-          const slotDuration = 0.5; // 30 minuti
-          // Arrotondiamo a due decimali per evitare errori di approssimazione
-          userDayData.total = Math.max(0, Math.round((userDayData.total - slotDuration) * 100) / 100);
-        }
-        
       } else {
-        // CASO 2: AGGIORNAMENTO
-        // Prepara i dati per l'aggiornamento
-        const updateData = {
+        // Aggiornamento di un turno esistente
+        updateShiftMutation.mutate({
           id: currentCell.shiftId,
           scheduleId,
           userId,
@@ -445,10 +420,7 @@ export function ExcelGrid({
           endTime: timeSlots[timeIndex + 1],
           type: newType,
           notes: userDayData.notes || ""
-        };
-        
-        // Invia l'aggiornamento al server
-        updateShiftMutation.mutate(updateData);
+        });
         
         // Contiamo quante celle "work" ci sono nella giornata DOPO il cambiamento
         const workCells = userDayData.cells.filter(cell => cell.type === "work").length;
@@ -479,7 +451,6 @@ export function ExcelGrid({
     // 2. CELLA SENZA ID O VUOTA CHE DIVENTA NON-VUOTA
     else if (newType !== "") {
       // CASO 3: CREAZIONE
-      // Prepara i dati per la creazione
       const createData = {
         scheduleId,
         userId,
@@ -488,10 +459,10 @@ export function ExcelGrid({
         endTime: timeSlots[timeIndex + 1],
         type: newType,
         notes: userDayData.notes || "",
-        area: null // Area opzionale
+        area: null
       };
       
-      // Crea un nuovo turno nel database utilizzando la mutation esistente
+      // Crea un nuovo turno nel database
       updateShiftMutation.mutate(createData, {
         onSuccess: (data) => {
           // Ora la risposta è già un oggetto JSON grazie alla mutationFn migliorata
