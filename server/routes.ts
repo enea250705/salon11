@@ -13,8 +13,14 @@ import {
   insertShiftSchema,
   insertTimeOffRequestSchema,
   insertDocumentSchema,
-  insertNotificationSchema
+  insertNotificationSchema,
+  insertScheduleTemplateSchema,
+  insertTemplateShiftSchema
 } from "@shared/schema";
+
+// Import dei moduli di route personalizzati
+import templatesRoutes from "./routes/templates";
+import schedulesTemplatesRoutes from "./routes/schedules-templates";
 
 // Initialize session store
 const MemorySessionStore = MemoryStore(session);

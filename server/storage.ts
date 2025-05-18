@@ -1003,4 +1003,232 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
+// Implementazione dei metodi per i modelli di orario
+class MemStorageWithTemplates extends MemStorage {
+  private scheduleTemplates: Map<number, ScheduleTemplate>;
+  private templateShifts: Map<number, TemplateShift>;
+  private scheduleTemplateCurrentId: number;
+  private templateShiftCurrentId: number;
+
+  constructor() {
+    super();
+    this.scheduleTemplates = new Map();
+    this.templateShifts = new Map();
+    this.scheduleTemplateCurrentId = 1;
+    this.templateShiftCurrentId = 1;
+  }
+
+  // TEMPLATE DI ORARIO
+  
+  // Crea un nuovo template di orario
+  async createScheduleTemplate(templateData: InsertScheduleTemplate): Promise<ScheduleTemplate> {
+    const id = this.scheduleTemplateCurrentId++;
+    const now = new Date();
+    
+    const template: ScheduleTemplate = {
+      ...templateData,
+      id,
+      createdAt: templateData.createdAt || now,
+      lastUsed: templateData.lastUsed || null,
+      timesUsed: templateData.timesUsed || 0
+    };
+    
+    this.scheduleTemplates.set(id, template);
+    return template;
+  }
+
+  // Ottieni un template specifico per ID
+  async getScheduleTemplate(id: number): Promise<ScheduleTemplate | undefined> {
+    return this.scheduleTemplates.get(id);
+  }
+
+  // Ottieni tutti i template disponibili
+  async getAllScheduleTemplates(): Promise<ScheduleTemplate[]> {
+    return Array.from(this.scheduleTemplates.values());
+  }
+
+  // Elimina un template
+  async deleteScheduleTemplate(id: number): Promise<boolean> {
+    return this.scheduleTemplates.delete(id);
+  }
+
+  // Aggiorna le statistiche di utilizzo di un template
+  async updateScheduleTemplateUsage(id: number): Promise<ScheduleTemplate | undefined> {
+    const template = this.scheduleTemplates.get(id);
+    if (!template) return undefined;
+    
+    const updatedTemplate: ScheduleTemplate = {
+      ...template,
+      timesUsed: template.timesUsed + 1,
+      lastUsed: new Date()
+    };
+    
+    this.scheduleTemplates.set(id, updatedTemplate);
+    return updatedTemplate;
+  }
+
+  // TURNI NEI TEMPLATE
+
+  // Crea un nuovo turno nel template
+  async createTemplateShift(shiftData: InsertTemplateShift): Promise<TemplateShift> {
+    const id = this.templateShiftCurrentId++;
+    
+    const shift: TemplateShift = {
+      ...shiftData,
+      id
+    };
+    
+    this.templateShifts.set(id, shift);
+    return shift;
+  }
+
+  // Ottieni tutti i turni di un template
+  async getTemplateShifts(templateId: number): Promise<TemplateShift[]> {
+    return Array.from(this.templateShifts.values())
+      .filter(shift => shift.templateId === templateId);
+  }
+
+  // Elimina un turno dal template
+  async deleteTemplateShift(id: number): Promise<boolean> {
+    return this.templateShifts.delete(id);
+  }
+
+  // Elimina tutti i turni di un template
+  async deleteAllTemplateShifts(templateId: number): Promise<boolean> {
+    let deletedAny = false;
+    
+    for (const [id, shift] of this.templateShifts.entries()) {
+      if (shift.templateId === templateId) {
+        this.templateShifts.delete(id);
+        deletedAny = true;
+      }
+    }
+    
+    return deletedAny;
+  }
+
+  // Applica un template a uno schedule esistente
+  async applyTemplateToSchedule(templateId: number, scheduleId: number): Promise<boolean> {
+    try {
+      // Prima eliminiamo tutti i turni esistenti nello schedule di destinazione
+      await this.deleteAllShiftsForSchedule(scheduleId);
+      
+      // Otteniamo tutti i turni dal template
+      const templateShifts = await this.getTemplateShifts(templateId);
+      
+      // Creiamo nuovi turni nello schedule basati sul template
+      for (const templateShift of templateShifts) {
+        await this.createShift({
+          scheduleId,
+          userId: templateShift.userId,
+          day: templateShift.day,
+          startTime: templateShift.startTime,
+          endTime: templateShift.endTime,
+          type: templateShift.type,
+          notes: templateShift.notes,
+          area: templateShift.area
+        });
+      }
+      
+      // Aggiorna le statistiche del template
+      await this.updateScheduleTemplateUsage(templateId);
+      
+      return true;
+    } catch (error) {
+      console.error("Errore nell'applicazione del template:", error);
+      return false;
+    }
+  }
+}
+
+// Per DatabaseStorage, aggiungiamo i metodi per gestire i template
+DatabaseStorage.prototype.createScheduleTemplate = async function(templateData: InsertScheduleTemplate): Promise<ScheduleTemplate> {
+  const [template] = await db.insert(scheduleTemplates).values(templateData).returning();
+  return template;
+};
+
+DatabaseStorage.prototype.getScheduleTemplate = async function(id: number): Promise<ScheduleTemplate | undefined> {
+  const [template] = await db.select().from(scheduleTemplates).where(eq(scheduleTemplates.id, id));
+  return template;
+};
+
+DatabaseStorage.prototype.getAllScheduleTemplates = async function(): Promise<ScheduleTemplate[]> {
+  const templates = await db.select().from(scheduleTemplates).orderBy(scheduleTemplates.name);
+  return templates;
+};
+
+DatabaseStorage.prototype.deleteScheduleTemplate = async function(id: number): Promise<boolean> {
+  const result = await db.delete(scheduleTemplates).where(eq(scheduleTemplates.id, id));
+  return result.rowCount > 0;
+};
+
+DatabaseStorage.prototype.updateScheduleTemplateUsage = async function(id: number): Promise<ScheduleTemplate | undefined> {
+  const [template] = await db.select().from(scheduleTemplates).where(eq(scheduleTemplates.id, id));
+  if (!template) return undefined;
+  
+  const [updatedTemplate] = await db.update(scheduleTemplates)
+    .set({ 
+      timesUsed: template.timesUsed + 1,
+      lastUsed: new Date()
+    })
+    .where(eq(scheduleTemplates.id, id))
+    .returning();
+    
+  return updatedTemplate;
+};
+
+DatabaseStorage.prototype.createTemplateShift = async function(shiftData: InsertTemplateShift): Promise<TemplateShift> {
+  const [shift] = await db.insert(templateShifts).values(shiftData).returning();
+  return shift;
+};
+
+DatabaseStorage.prototype.getTemplateShifts = async function(templateId: number): Promise<TemplateShift[]> {
+  const shifts = await db.select()
+    .from(templateShifts)
+    .where(eq(templateShifts.templateId, templateId));
+  return shifts;
+};
+
+DatabaseStorage.prototype.deleteTemplateShift = async function(id: number): Promise<boolean> {
+  const result = await db.delete(templateShifts).where(eq(templateShifts.id, id));
+  return result.rowCount > 0;
+};
+
+DatabaseStorage.prototype.deleteAllTemplateShifts = async function(templateId: number): Promise<boolean> {
+  const result = await db.delete(templateShifts).where(eq(templateShifts.templateId, templateId));
+  return result.rowCount > 0;
+};
+
+DatabaseStorage.prototype.applyTemplateToSchedule = async function(templateId: number, scheduleId: number): Promise<boolean> {
+  try {
+    // Prima eliminiamo tutti i turni esistenti nello schedule di destinazione
+    await this.deleteAllShiftsForSchedule(scheduleId);
+    
+    // Otteniamo tutti i turni dal template
+    const templateShifts = await this.getTemplateShifts(templateId);
+    
+    // Creiamo nuovi turni nello schedule basati sul template
+    for (const templateShift of templateShifts) {
+      await this.createShift({
+        scheduleId,
+        userId: templateShift.userId,
+        day: templateShift.day,
+        startTime: templateShift.startTime,
+        endTime: templateShift.endTime,
+        type: templateShift.type,
+        notes: templateShift.notes,
+        area: templateShift.area
+      });
+    }
+    
+    // Aggiorna le statistiche del template
+    await this.updateScheduleTemplateUsage(templateId);
+    
+    return true;
+  } catch (error) {
+    console.error("Errore nell'applicazione del template:", error);
+    return false;
+  }
+};
+
 export const storage = new DatabaseStorage();
