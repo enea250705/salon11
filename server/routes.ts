@@ -1212,11 +1212,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                           ? 'Mattina' 
                           : request.duration === 'afternoon' 
                             ? 'Pomeriggio' 
-                            : request.duration === 'specific_hours' && request.startTime && request.endTime
-                              ? `Orario specifico: ${request.startTime} - ${request.endTime}`
-                              : 'Orario specifico'
+                            : 'Orario specifico' + (request.reason && request.reason.startsWith('Orario:') 
+                               ? `: ${request.reason.split('.')[0].replace('Orario:', '').trim()}`
+                               : '')
                     }</li>
-                    <li><strong>Motivo:</strong> ${request.reason || 'Nessun motivo specificato'}</li>
+                    <li><strong>Motivo:</strong> ${request.reason && request.reason.startsWith('Orario:') ? (request.reason.split('.').length > 1 ? request.reason.split('.').slice(1).join('.').trim() : 'Nessun motivo specificato') : (request.reason || 'Nessun motivo specificato')}</li>
                   </ul>
                 </div>
                 
