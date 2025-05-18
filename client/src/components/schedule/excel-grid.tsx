@@ -741,7 +741,7 @@ export function ExcelGrid({
         // Seleziona la tabella del giorno
         const tableElement = document.querySelector(`[data-value="${day.name}"] table`);
         
-        if (tableElement) {
+        if (tableElement && tableElement instanceof HTMLElement) {
           // Converti la tabella in canvas
           const canvas = await html2canvas(tableElement, {
             scale: 1.5,
@@ -771,7 +771,7 @@ export function ExcelGrid({
       // Seleziona il riepilogo
       const summaryElement = document.querySelector('.mt-6.overflow-auto.rounded-lg');
       
-      if (summaryElement) {
+      if (summaryElement && summaryElement instanceof HTMLElement) {
         const canvas = await html2canvas(summaryElement, {
           scale: 1.5,
           useCORS: true,
@@ -895,10 +895,10 @@ export function ExcelGrid({
             ))}
           </TabsList>
           
-          {weekDays.map((day) => (
+          {weekDays.map((day, index) => (
             <TabsContent key={day.name} value={day.name} className="relative">
               <div className="overflow-auto border rounded-md relative">
-                <table className="w-full border-collapse">
+                <table id={`schedule-table-${index}`} className="w-full border-collapse print-table">
                   <thead className="sticky top-0 z-10">
                     <tr className="border-b bg-muted/50">
                       <th className="p-1 sm:p-2 text-left font-medium sticky left-0 bg-muted/50 z-20">Dipendente</th>
