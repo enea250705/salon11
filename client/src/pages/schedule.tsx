@@ -502,11 +502,17 @@ export default function Schedule() {
         });
         
         // Aggiungiamo il totale ore alla fine della riga (in grassetto e evidenziato)
+        // Aggiungiamo un log di debug per vedere il valore esatto prima della formattazione
+        console.log(`DEBUG TOTALE ORE PDF: ${user.name || user.username} - Totale ore: ${totalWeeklyHours}`);
+        
         // Assicuriamo che il totale sia visualizzato correttamente anche quando è zero
-        const formattedTotalHours = totalWeeklyHours > 0 
-          ? formatHours(totalWeeklyHours) 
-          : "0 ore";
-          
+        // IMPORTANTE: correggiamo il problema di visualizzazione nel PDF
+        let formattedTotalHours = "0 ore";
+        if (totalWeeklyHours > 0) {
+          formattedTotalHours = formatHours(totalWeeklyHours);
+          console.log(`Ore formattate: ${formattedTotalHours}`);
+        }
+        
         row.push({
           content: formattedTotalHours,
           styles: { 
