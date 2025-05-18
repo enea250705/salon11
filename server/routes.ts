@@ -1142,6 +1142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/time-off-requests", isAuthenticated, async (req, res) => {
     try {
+      // Gestisci i dati della richiesta
       const requestData = insertTimeOffRequestSchema.parse({
         ...req.body,
         userId: (req.user as any).id
