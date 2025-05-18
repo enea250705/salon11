@@ -26,9 +26,14 @@ export function TimeOffList() {
     if (startDate === endDate) {
       let durationType = "";
       
-      if (duration === "specific_hours" && request?.startTime && request?.endTime) {
-        // Mostra orario specifico quando è un permesso con orario personalizzato
-        durationType = ` (orario: ${request.startTime} - ${request.endTime})`;
+      if (duration === "specific_hours") {
+        if (request?.startTime && request?.endTime) {
+          // Mostra orario specifico quando è un permesso con orario personalizzato
+          durationType = ` (${request.startTime} - ${request.endTime})`;
+        } else {
+          // Per retrocompatibilità, nel caso di richieste vecchie senza orari specifici salvati
+          durationType = " (orario specifico)";
+        }
       } else {
         switch (duration) {
           case "morning":
