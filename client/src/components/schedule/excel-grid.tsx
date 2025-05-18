@@ -857,6 +857,37 @@ export function ExcelGrid({
                           
                         </tr>
                       ))}
+                    {/* Riga per il conteggio dei dipendenti per fascia oraria */}
+                    <tr className="bg-gray-100 border-t-2 border-gray-300">
+                      <td className="p-2 font-bold text-gray-700">Totale Dipendenti</td>
+                      {timeSlots.map((slot, slotIdx) => {
+                        if (slotIdx < timeSlots.length - 1) {
+                          // Calcola quanti dipendenti sono presenti in questo slot orario
+                          const employeeCount = users.reduce((count, user) => {
+                            const userDayData = gridData[day.name]?.[user.id];
+                            if (userDayData && userDayData.cells[slotIdx]?.type === 'work') {
+                              return count + 1;
+                            }
+                            return count;
+                          }, 0);
+                          
+                          return (
+                            <td key={slotIdx} className="p-2 text-center font-bold">
+                              {employeeCount > 0 ? (
+                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                  {employeeCount}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400">0</span>
+                              )}
+                            </td>
+                          );
+                        }
+                        return null;
+                      })}
+                      <td className="p-2"></td> {/* Colonna delle note */}
+                      <td className="p-2"></td> {/* Colonna dei totali */}
+                    </tr>
                   </tbody>
                 </table>
               </div>
