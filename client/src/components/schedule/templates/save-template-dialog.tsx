@@ -37,7 +37,6 @@ const templateFormSchema = z.object({
   type: z.enum(["even", "odd", "custom"], {
     required_error: "Seleziona il tipo di modello",
   }),
-  description: z.string().optional(),
 });
 
 type TemplateFormValues = z.infer<typeof templateFormSchema>;
@@ -57,7 +56,6 @@ export function SaveTemplateDialog({ open, onOpenChange, scheduleId }: SaveTempl
     defaultValues: {
       name: "",
       type: "custom",
-      description: "",
     },
   });
 
@@ -68,7 +66,8 @@ export function SaveTemplateDialog({ open, onOpenChange, scheduleId }: SaveTempl
       return apiRequest(`/api/schedules/${scheduleId}/save-as-template`, {
         method: "POST",
         data: {
-          ...data,
+          name: data.name,
+          type: data.type,
           scheduleId
         },
       });
@@ -147,19 +146,7 @@ export function SaveTemplateDialog({ open, onOpenChange, scheduleId }: SaveTempl
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrizione (opzionale)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Descrizione del modello" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
             
             <DialogFooter className="pt-4">
               <Button

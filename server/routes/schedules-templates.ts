@@ -16,7 +16,6 @@ function requireAuth(req: any, res: any, next: any) {
 const saveAsTemplateSchema = z.object({
   name: z.string().min(3),
   type: z.enum(["even", "odd", "custom"]),
-  description: z.string().optional(),
   scheduleId: z.number(),
 });
 
