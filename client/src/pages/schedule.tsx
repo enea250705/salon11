@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { WeekSelectorDialog } from "@/components/schedule/week-selector-dialog";
 import { ScheduleAutoGenerator } from "@/components/schedule/auto-generator/auto-generator";
 import { ExcelGrid } from "@/components/schedule/excel-grid";
-import { TemplateManager } from "@/components/schedule/templates/template-manager";
+// La funzionalità di gestione modelli è stata rimossa
 
 // PDF Export utilities
 import jsPDF from "jspdf";
@@ -922,24 +922,7 @@ export default function Schedule() {
               )}
             </div>
             
-            {/* Componente per gestire i template di orario */}
-            <div className="mt-4 mb-2 pt-4 border-t border-gray-200">
-              <h3 className="text-sm font-medium mb-3 flex items-center text-gray-700">
-                <span className="material-icons text-base mr-2">save_alt</span>
-                Modelli di orario
-              </h3>
-              <p className="text-xs text-gray-500 mb-3">
-                Salva e riutilizza modelli di orario per settimane pari o dispari, o crea modelli personalizzati.
-              </p>
-              
-              {/* Importiamo il componente TemplateManager */}
-              <div className="bg-slate-50 p-4 rounded-md border border-gray-200">
-                <TemplateManager 
-                  scheduleId={existingSchedule?.id || null}
-                  disabled={existingSchedule?.isPublished || false}
-                />
-              </div>
-            </div>
+            {/* La sezione "Modelli di orario" è stata rimossa come richiesto */}
           </div>
         ) : (
           <div>
