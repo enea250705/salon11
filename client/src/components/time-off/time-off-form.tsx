@@ -98,11 +98,23 @@ export function TimeOffRequestForm() {
   
   const createTimeOffRequest = useMutation({
     mutationFn: (data: z.infer<typeof formSchema>) => {
-      const payload = {
+      // Crea un payload con i dati di base
+      const payload: any = {
         ...data,
         startDate: format(data.startDate, "yyyy-MM-dd"),
         endDate: format(data.endDate, "yyyy-MM-dd"),
       };
+      
+      // Aggiungi i campi di orario solo se la durata è specific_hours
+      if (data.duration === "specific_hours") {
+        payload.startTime = data.startTime;
+        payload.endTime = data.endTime;
+      } else {
+        // Se non è orario specifico, assicurati che i campi siano null
+        payload.startTime = null;
+        payload.endTime = null;
+      }
+      
       return apiRequest("POST", "/api/time-off-requests", payload);
     },
     onSuccess: () => {
