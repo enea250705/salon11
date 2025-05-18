@@ -298,9 +298,46 @@ export function ExcelGrid({
             const isSameOrBeforeEnd = dayDate <= endDate;
             
             if (isSameOrAfterStart && isSameOrBeforeEnd && newGridData[day.name] && newGridData[day.name][userId]) {
-              // Determina se è mezza giornata (mattina/pomeriggio) o giornata intera
-              if (request.halfDay) {
-                // Gestione dei permessi a mezza giornata
+              // Determina il tipo di durata: orario specifico, mezza giornata o giornata intera
+              if (request.duration === "specific_hours" && request.startTime && request.endTime) {
+                // NUOVA GESTIONE: permessi con orario specifico
+                console.log(`🕒 Applicazione permesso con orario specifico: ${request.startTime} - ${request.endTime}`);
+                
+                // Trova gli indici degli slot corrispondenti agli orari
+                const startIndex = timeSlots.findIndex(slot => slot === request.startTime);
+                const endIndex = timeSlots.findIndex(slot => slot === request.endTime);
+                
+                if (startIndex >= 0 && endIndex >= 0) {
+                  // Resetta tutte le celle a vuote prima di applicare l'orario specifico
+                  for (let i = 0; i < timeSlots.length; i++) {
+                    // Preserva le celle che non sono nel range dell'orario specifico
+                    if (i < startIndex || i >= endIndex) {
+                      // Se la cella non ha già un valore (ad es. un turno di lavoro), lasciala vuota
+                      if (!newGridData[day.name][userId].cells[i].type) {
+                        newGridData[day.name][userId].cells[i] = {
+                          type: "",
+                          shiftId: null,
+                          isTimeOff: false
+                        };
+                      }
+                    } else {
+                      // Imposta le celle nel range dell'orario specifico come permesso
+                      newGridData[day.name][userId].cells[i] = {
+                        type: requestType,
+                        shiftId: null,
+                        isTimeOff: true
+                      };
+                    }
+                  }
+                  
+                  // Aggiorna le note con l'orario specifico
+                  newGridData[day.name][userId].notes = `Permesso (${request.startTime}-${request.endTime})`;
+                } else {
+                  console.warn(`⚠️ Orari specifici non trovati nei time slots: ${request.startTime} - ${request.endTime}`);
+                }
+              }
+              // Gestione dei permessi a mezza giornata (mattina/pomeriggio)
+              else if (request.halfDay) {
                 // Mattina (fino alle 13:00)
                 if (request.halfDayPeriod === "morning") {
                   for (let i = 0; i < timeSlots.length; i++) {
