@@ -15,7 +15,6 @@ import { WeekSelectorDialog } from "@/components/schedule/week-selector-dialog";
 import { ScheduleAutoGenerator } from "@/components/schedule/auto-generator/auto-generator";
 import { ExcelGrid } from "@/components/schedule/excel-grid";
 import { TemplateManager } from "@/components/schedule/templates/template-manager";
-import { ExportToPdfDialog } from "@/components/schedule/export-to-pdf";
 
 // Date utilities
 import { format, startOfWeek, addDays, isBefore, parseISO } from "date-fns";
@@ -301,8 +300,6 @@ export default function Schedule() {
   const [forceResetGrid, setForceResetGrid] = useState(false);
   // Flag per stabilire se stiamo caricando uno schedule nuovo o esistente
   const [isLoadingNewSchedule, setIsLoadingNewSchedule] = useState(false);
-  // State per mostrare la dialog di esportazione PDF
-  const [showPdfExport, setShowPdfExport] = useState(false);
   
   // State for creating a new schedule
   const [creatingNewSchedule, setCreatingNewSchedule] = useState(false);
