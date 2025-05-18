@@ -34,7 +34,6 @@ export default function Login() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   // Se l'utente è già autenticato, reindirizza alla dashboard
   useEffect(() => {
@@ -56,7 +55,7 @@ export default function Login() {
     setIsLoading(true);
     
     try {
-      // Migliore gestione degli errori con visualizzazione dei messaggi specifici
+      // Login diretto usando fetch invece di utilizzare la funzione login dal contesto
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -69,32 +68,24 @@ export default function Login() {
         credentials: 'include'
       });
       
-      // Se la risposta non è OK, prova a ottenere il messaggio di errore
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.message || 'Credenziali non valide';
-        throw new Error(errorMessage);
+        throw new Error('Credenziali non valide');
       }
       
       const data = await response.json();
       
       if (data.user) {
-        toast({
-          title: "Accesso effettuato",
-          description: "Benvenuto nel sistema!",
-          variant: "default",
-        });
         // Ricarica la pagina per aggiornare lo stato di autenticazione
         window.location.href = '/';
         return;
       }
       
       throw new Error('Errore durante l\'accesso');
-    } catch (error: any) {
+    } catch (error) {
       console.error("Login error:", error);
       toast({
         title: "Errore di accesso",
-        description: error.message || "Credenziali non valide. Riprova.",
+        description: "Credenziali non valide. Riprova.",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -145,9 +136,9 @@ export default function Login() {
                             placeholder="********" 
                             {...field} 
                           />
-                          <button 
+                          <button
                             type="button"
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                             onClick={() => setShowPassword(!showPassword)}
                           >
                             {showPassword ? (

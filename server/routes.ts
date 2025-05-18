@@ -422,44 +422,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Endpoint specifico per il cambio password
-  app.post("/api/users/:id/change-password", isAdmin, async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const { password } = req.body;
-      
-      if (!password) {
-        return res.status(400).json({ message: "Password non specificata" });
-      }
-      
-      // Verifica requisiti minimi password
-      if (password.length < 8 || !/[0-9]/.test(password)) {
-        return res.status(400).json({ 
-          message: "La password deve avere almeno 8 caratteri e contenere almeno un numero" 
-        });
-      }
-      
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
-        return res.status(404).json({ message: "Utente non trovato" });
-      }
-      
-      // Aggiorna solo la password
-      const updatedUser = await storage.updateUser(userId, { password });
-      
-      if (!updatedUser) {
-        return res.status(500).json({ message: "Errore nell'aggiornamento della password" });
-      }
-      
-      console.log(`✅ Password aggiornata per l'utente ${userId}`);
-      res.json({ success: true, message: "Password aggiornata con successo" });
-    } catch (err) {
-      console.error("❌ Errore nell'aggiornamento della password:", err);
-      res.status(500).json({ message: "Errore durante il cambio password" });
-    }
-  });
-  
   // Schedule management routes
   // Ottieni tutte le programmazioni
   app.get("/api/schedules/all", isAuthenticated, async (req, res) => {
