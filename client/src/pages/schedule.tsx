@@ -324,6 +324,68 @@ export default function Schedule() {
     }
   };
   
+  // Mutation per annullare la pubblicazione della programmazione
+  
+  // Mutation per annullare la pubblicazione della programmazione
+  const unpublishScheduleMutation = useMutation({
+    mutationFn: async (scheduleId: number) => {
+      const response = await apiRequest("POST", `/api/schedules/${scheduleId}/unpublish`, {});
+      if (!response.ok) {
+        throw new Error("Errore durante l'annullamento della pubblicazione");
+      }
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Pubblicazione annullata",
+        description: "La programmazione è stata riportata in stato bozza e può essere modificata.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/schedules"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/schedules/all"] });
+      if (existingSchedule?.id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/schedules/${existingSchedule.id}`] });
+      }
+    },
+    onError: (error) => {
+      console.error("Errore durante l'annullamento della pubblicazione:", error);
+      toast({
+        title: "Errore",
+        description: `Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Mutation per ripubblicare/aggiornare la programmazione
+  const republishScheduleMutation = useMutation({
+    mutationFn: async (scheduleId: number) => {
+      const response = await apiRequest("POST", `/api/schedules/${scheduleId}/republish`, {});
+      if (!response.ok) {
+        throw new Error("Errore durante l'aggiornamento della pubblicazione");
+      }
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Pubblicazione aggiornata",
+        description: "I dipendenti riceveranno una notifica con gli orari aggiornati.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/schedules"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/schedules/all"] });
+      if (existingSchedule?.id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/schedules/${existingSchedule.id}`] });
+      }
+    },
+    onError: (error) => {
+      console.error("Errore durante l'aggiornamento della pubblicazione:", error);
+      toast({
+        title: "Errore",
+        description: `Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
   // Handle publish schedule
   const handlePublish = () => {
     if (existingSchedule?.id) {
@@ -522,14 +584,47 @@ export default function Schedule() {
               )}
             </p>
           </div>
-          {existingSchedule?.id && !existingSchedule.isPublished && (
-            <Button
-              onClick={handlePublish}
-              disabled={publishScheduleMutation.isPending}
-              className="mt-4 md:mt-0 w-full md:w-auto"
-            >
-              {publishScheduleMutation.isPending ? "Pubblicazione..." : "Pubblica Turni"}
-            </Button>
+          {existingSchedule?.id && (
+            <>
+              {!existingSchedule.isPublished ? (
+                <Button
+                  onClick={handlePublish}
+                  disabled={publishScheduleMutation.isPending}
+                  className="mt-4 md:mt-0 w-full md:w-auto"
+                >
+                  {publishScheduleMutation.isPending ? "Pubblicazione..." : "Pubblica Turni"}
+                </Button>
+              ) : (
+                <div className="flex flex-col md:flex-row gap-2 mt-4 md:mt-0">
+                  <Button
+                    onClick={() => {
+                      // Implementazione per annullare la pubblicazione
+                      if (confirm("Sei sicuro di voler annullare la pubblicazione? Questo permetterà di apportare modifiche ma rimuoverà lo stato pubblicato.")) {
+                        // Chiamata API per rimuovere lo stato di pubblicazione
+                        unpublishScheduleMutation.mutate(existingSchedule.id);
+                      }
+                    }}
+                    variant="outline"
+                    className="w-full md:w-auto"
+                  >
+                    <span className="mr-1">📝</span> Modifica turni
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      // Implementazione per ripubblicare/aggiornare
+                      if (confirm("Sei sicuro di voler ripubblicare i turni? Questo invierà un'email di aggiornamento a tutti i dipendenti.")) {
+                        // Chiamata API per ripubblicare
+                        republishScheduleMutation.mutate(existingSchedule.id);
+                      }
+                    }}
+                    variant="secondary"
+                    className="w-full md:w-auto"
+                  >
+                    <span className="mr-1">📣</span> Aggiorna pubblicazione
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
