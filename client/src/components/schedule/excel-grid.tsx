@@ -862,6 +862,40 @@ export function ExcelGrid({
                           
                         </tr>
                       ))}
+                    {/* Riga per totale dipendenti per fascia oraria */}
+                    <tr className="border-t-2 border-primary bg-primary/10">
+                      <td className="p-2 text-left font-bold text-xs sm:text-sm">
+                        Totale dipendenti
+                      </td>
+                      
+                      {timeSlots.map((slot, idx) => {
+                        if (idx >= timeSlots.length - 1) return null;
+                        
+                        // Calcola quanti dipendenti sono in servizio in questo slot
+                        const employeesOnDuty = users
+                          .filter(user => user.role === "employee" && user.isActive)
+                          .reduce((count, user) => {
+                            const cellData = gridData[day.name]?.[user.id]?.cells[idx];
+                            // Conta solo se il dipendente ha un turno di lavoro (type === "work")
+                            return cellData?.type === "work" ? count + 1 : count;
+                          }, 0);
+                        
+                        return (
+                          <td key={idx} className="p-1 text-center font-bold">
+                            <div className={`rounded-full mx-auto flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7
+                              ${employeesOnDuty === 0 ? 'bg-gray-200 text-gray-500' : 
+                                employeesOnDuty < 2 ? 'bg-yellow-200 text-yellow-800' : 
+                                'bg-green-200 text-green-800'}`}>
+                              {employeesOnDuty}
+                            </div>
+                          </td>
+                        );
+                      })}
+                      
+                      {/* Celle vuote per allineamento con Note e Totale Ore */}
+                      <td className="p-1"></td>
+                      <td className="p-2"></td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
