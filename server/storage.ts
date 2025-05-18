@@ -218,6 +218,21 @@ export class MemStorage implements IStorage {
     return updatedSchedule;
   }
   
+  async updateSchedule(id: number, scheduleData: Partial<InsertSchedule>): Promise<Schedule | undefined> {
+    const schedule = await this.getSchedule(id);
+    if (!schedule) return undefined;
+    
+    const now = new Date();
+    const updatedSchedule: Schedule = {
+      ...schedule,
+      ...scheduleData,
+      updatedAt: now
+    };
+    
+    this.schedules.set(id, updatedSchedule);
+    return updatedSchedule;
+  }
+  
   // Shift management
   async createShift(shiftData: InsertShift): Promise<Shift> {
     const id = this.shiftCurrentId++;
@@ -672,6 +687,24 @@ export class DatabaseStorage implements IStorage {
     const [schedule] = await db
       .update(schedules)
       .set({ isPublished: true, publishedAt: now })
+      .where(eq(schedules.id, id))
+      .returning();
+    
+    return schedule;
+  }
+  
+  async updateSchedule(id: number, scheduleData: Partial<InsertSchedule>): Promise<Schedule | undefined> {
+    const now = new Date();
+    
+    // Assicuriamo che updatedAt sia sempre aggiornato
+    const dataToUpdate = {
+      ...scheduleData,
+      updatedAt: now
+    };
+    
+    const [schedule] = await db
+      .update(schedules)
+      .set(dataToUpdate)
       .where(eq(schedules.id, id))
       .returning();
     
