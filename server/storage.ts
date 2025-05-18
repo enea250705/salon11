@@ -150,6 +150,12 @@ export class MemStorage implements IStorage {
     );
   }
   
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.email.toLowerCase() === email.toLowerCase()
+    );
+  }
+  
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.userCurrentId++;
     const now = new Date();
