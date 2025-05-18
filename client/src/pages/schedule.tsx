@@ -429,7 +429,13 @@ export default function Schedule() {
     const status = existingSchedule.isPublished ? "Pubblicato" : "Bozza";
     const publishedDate = existingSchedule.publishedAt ? 
       `il ${format(new Date(existingSchedule.publishedAt), "dd/MM/yyyy", { locale: it })}` : "";
-    doc.setTextColor(existingSchedule.isPublished ? [0, 128, 0] : [128, 128, 128]); // Verde per pubblicato, grigio per bozza
+    
+    // Imposta il colore del testo in base allo stato di pubblicazione
+    if (existingSchedule.isPublished) {
+      doc.setTextColor(0, 128, 0); // Verde per pubblicato
+    } else {
+      doc.setTextColor(128, 128, 128); // Grigio per bozza
+    }
     doc.text(`Stato: ${status} ${publishedDate}`, 14, 26);
     
     // TABELLA PRINCIPALE DEGLI ORARI - ESATTAMENTE COME NELLA INTERFACCIA
@@ -503,22 +509,78 @@ export default function Schedule() {
         scheduleTableData.push(row);
       });
     
-    // Ottieni i giorni della settimana in italiano
+    // Ottieni i giorni della settimana in italiano (prima lettera maiuscola)
     const weekDays = dayNames.map(day => {
-      // Capitalizza la prima lettera di ogni giorno
       return day.charAt(0).toUpperCase() + day.slice(1);
     });
     
+    // Aggiungi anche la data del giorno
+    const formattedDays = weekDays.map((day, index) => {
+      const currentDate = addDays(startDate, index);
+      return {
+        content: `${day}\n${format(currentDate, "dd/MM", { locale: it })}`,
+        styles: {
+          halign: 'center',
+          valign: 'middle',
+          fontStyle: 'bold'
+        }
+      };
+    });
+    
+    // Intestazione della tabella con styling
+    const headerRow = [
+      { 
+        content: 'Dipendente', 
+        styles: { 
+          halign: 'left',
+          fontStyle: 'bold'
+        } 
+      },
+      ...formattedDays,
+      { 
+        content: 'Ore\nTotali', 
+        styles: { 
+          halign: 'center',
+          fontStyle: 'bold'
+        } 
+      }
+    ];
+    
     // Genera la tabella principale come appare nell'applicazione
     autoTable(doc, {
-      head: [['Dipendente', ...weekDays, 'Ore Totali']],
+      head: [headerRow],
       body: scheduleTableData,
-      startY: 25,
+      startY: 32, // Più spazio per l'intestazione
       theme: 'grid',
-      styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [240, 240, 240] },
-      margin: { top: 25 }
+      styles: { 
+        fontSize: 9, 
+        cellPadding: 3,
+        lineColor: [200, 200, 200],
+        lineWidth: 0.1
+      },
+      headStyles: { 
+        fillColor: [41, 128, 185], 
+        textColor: 255, 
+        fontSize: 10,
+        cellPadding: 4
+      },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      columnStyles: {
+        0: { cellWidth: 40 } // Nome dipendente più largo
+      },
+      didDrawPage: (data) => {
+        // Se la tabella è lunga e va su più pagine, aggiunge l'intestazione su ogni pagina
+        if (data.pageCount > 1 && data.cursor.y === data.startY) {
+          doc.setFontSize(12);
+          doc.setFont("helvetica", "bold");
+          doc.setTextColor(41, 128, 185);
+          doc.text("Pianificazione Turni (continua)", 14, 15);
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(0);
+          doc.text(`Periodo: ${dateRange}`, 14, 21);
+        }
+      }
     });
     
     // Aggiungiamo una seconda pagina con i dettagli per turno
@@ -526,43 +588,89 @@ export default function Schedule() {
     
     // Titolo della seconda pagina
     doc.setFontSize(16);
-    doc.setTextColor(0);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(41, 128, 185);
     doc.text("Dettaglio Turni Individuali", 14, 15);
+    
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0);
+    doc.text(`Periodo: ${dateRange}`, 14, 21);
     
     // Tabella dettagliata con tutti i turni
     const detailedShiftsData = [];
     
-    users.forEach(user => {
-      const userShifts = shifts.filter((shift: any) => shift.userId === user.id);
-      
-      if (userShifts.length > 0) {
-        userShifts.forEach((shift: any) => {
-          const hours = calculateWorkHours(shift.startTime, shift.endTime);
-          
-          detailedShiftsData.push([
-            user.name,
-            shift.day.charAt(0).toUpperCase() + shift.day.slice(1),
-            shift.startTime,
-            shift.endTime,
-            formatHours(hours),
-            shift.type || "",
-            shift.notes || "",
-            shift.area || ""
-          ]);
+    users
+      .filter(user => user.role === "employee" && user.isActive)
+      .forEach(user => {
+        const userShifts = shifts.filter((shift: any) => shift.userId === user.id);
+        
+        // Ordina i turni per giorno e ora di inizio
+        const sortedShifts = [...userShifts].sort((a, b) => {
+          const dayCompare = dayNames.indexOf(a.day) - dayNames.indexOf(b.day);
+          if (dayCompare !== 0) return dayCompare;
+          return a.startTime.localeCompare(b.startTime);
         });
-      }
-    });
+        
+        if (sortedShifts.length > 0) {
+          sortedShifts.forEach((shift: any) => {
+            const hours = calculateWorkHours(shift.startTime, shift.endTime);
+            
+            detailedShiftsData.push([
+              user.name || user.username,
+              shift.day.charAt(0).toUpperCase() + shift.day.slice(1),
+              shift.startTime,
+              shift.endTime,
+              formatHours(hours),
+              shift.type || "",
+              shift.notes || "",
+              shift.area || ""
+            ]);
+          });
+        }
+      });
     
     // Genera la tabella dettagliata
     autoTable(doc, {
-      head: [['Dipendente', 'Giorno', 'Inizio', 'Fine', 'Ore', 'Tipo', 'Note', 'Area']],
+      head: [[
+        { content: 'Dipendente', styles: { halign: 'left' } },
+        { content: 'Giorno', styles: { halign: 'center' } },
+        { content: 'Inizio', styles: { halign: 'center' } },
+        { content: 'Fine', styles: { halign: 'center' } },
+        { content: 'Ore', styles: { halign: 'center' } },
+        { content: 'Tipo', styles: { halign: 'center' } },
+        { content: 'Note', styles: { halign: 'left' } },
+        { content: 'Area', styles: { halign: 'center' } }
+      ]],
       body: detailedShiftsData,
-      startY: 25,
+      startY: 30,
       theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 2 },
+      styles: { fontSize: 9, cellPadding: 3 },
       headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-      alternateRowStyles: { fillColor: [240, 240, 240] },
-      margin: { top: 25 }
+      columnStyles: {
+        0: { cellWidth: 40 },  // Dipendente
+        1: { cellWidth: 25, halign: 'center' },  // Giorno
+        2: { cellWidth: 15, halign: 'center' },  // Inizio
+        3: { cellWidth: 15, halign: 'center' },  // Fine
+        4: { cellWidth: 15, halign: 'center', fontStyle: 'bold' },  // Ore
+        5: { cellWidth: 20, halign: 'center' },  // Tipo
+        6: { cellWidth: 'auto' },  // Note
+        7: { cellWidth: 25, halign: 'center' }   // Area
+      },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      didDrawPage: (data) => {
+        // Aggiunge l'intestazione sulle pagine successive
+        if (data.pageCount > 1 && data.cursor.y === data.startY) {
+          doc.setFontSize(16);
+          doc.setFont("helvetica", "bold");
+          doc.setTextColor(41, 128, 185);
+          doc.text("Dettaglio Turni Individuali (continua)", 14, 15);
+          doc.setFontSize(12);
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(0);
+          doc.text(`Periodo: ${dateRange}`, 14, 21);
+        }
+      }
     });
     
     // Aggiungiamo una terza pagina con il conteggio del personale per fascia oraria
@@ -570,8 +678,14 @@ export default function Schedule() {
     
     // Titolo della terza pagina
     doc.setFontSize(16);
-    doc.setTextColor(0);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(41, 128, 185);
     doc.text("Conteggio Personale per Fascia Oraria", 14, 15);
+    
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0);
+    doc.text(`Periodo: ${dateRange}`, 14, 21);
     
     // Definizione delle fasce orarie (timeslots)
     const timeSlots = [
