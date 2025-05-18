@@ -170,7 +170,9 @@ export function ExcelGrid({
       forceResetGrid || 
       forceEmptyFromUrl || 
       resetFromUrl || 
-      Object.keys(gridData).length === 0;
+      Object.keys(gridData).length === 0 ||
+      (scheduleIdFromUrl && scheduleId?.toString() === scheduleIdFromUrl) ||
+      (newScheduleParam && scheduleId?.toString() === newScheduleParam);
     
     if (shouldReset) {
       // Log dettagliato delle condizioni di reset
@@ -358,60 +360,87 @@ export function ExcelGrid({
     }
   }, [scheduleId, users, shifts, timeOffRequests, weekDays, timeSlots, forceResetGrid]);
   
-  // Funzione semplificata per il clic sulla cella
+  // GESTIONE CLIC MIGLIORATA
+  // Gestisce in modo più robusto il clic su una cella della griglia
   const handleCellClick = (userId: number, timeIndex: number, day: string) => {
-    // Controllo validità dello schedule
-    if (!scheduleId) return;
+    // VALIDAZIONE PRELIMINARE
+    // Non procedere se non c'è uno schedule valido o se è già pubblicato
+    if (!scheduleId || isPublished) {
+      if (isPublished) {
+        toast({
+          title: "Turno pubblicato",
+          description: "Non puoi modificare un turno già pubblicato.",
+          variant: "destructive"
+        });
+      }
+      return;
+    }
     
-    // Creiamo una copia profonda dello stato attuale
+    // PREPARAZIONE STATO
+    // Creiamo una copia profonda dei dati per evitare modifiche accidentali dello stato
     const newGridData = structuredClone(gridData);
-    
-    // Verifica se i dati utente/giorno esistono 
-    if (!newGridData[day] || !newGridData[day][userId]) return;
+    // Verifica che i dati utente/giorno esistano
+    if (!newGridData[day] || !newGridData[day][userId]) {
+      console.error(`Dati mancanti per utente ${userId} nel giorno ${day}`);
+      return;
+    }
     
     const userDayData = newGridData[day][userId];
-    const currentCell = userDayData.cells[timeIndex] || { type: "", shiftId: null, isTimeOff: false };
+    const currentCell = userDayData.cells[timeIndex];
     
-    // Non modificare celle di ferie/permessi approvati
+    // CICLO DELLE TIPOLOGIE
+    // Determina il nuovo tipo di turno secondo la rotazione stabilita
+    let newType = "work"; // Default: se la cella è vuota, diventa lavoro
+    
+    // Verifica se la cella è bloccata perché è una richiesta di ferie/permesso già approvata
     if (currentCell.isTimeOff) {
+      console.log("⚠️ Non è possibile modificare questa cella: è una richiesta di ferie o permesso approvata");
       toast({
         title: "Azione non permessa",
-        description: "Questa cella rappresenta ferie o permessi già approvati",
+        description: "Non puoi modificare una cella che rappresenta ferie o permessi già approvati.",
         variant: "destructive"
       });
       return;
     }
     
-    // Determina il nuovo tipo di cella
-    let newType = "work"; // Default quando la cella è vuota
-    
     if (currentCell.type) {
-      if (currentCell.type === "work") newType = "vacation";      // X → F
-      else if (currentCell.type === "vacation") newType = "leave"; // F → P
-      else if (currentCell.type === "leave") newType = "";         // P → vuoto
+      // Rotazione: work -> vacation -> leave -> (vuoto) -> work...
+      if (currentCell.type === "work") {
+        newType = "vacation";  // Lavoro -> Ferie
+      } else if (currentCell.type === "vacation") {
+        newType = "leave";     // Ferie -> Permesso 
+      } else if (currentCell.type === "leave") {
+        newType = "";          // Permesso -> Vuoto
+      }
     }
     
-    // Log del cambio
     console.log(`🔄 Cambio tipo cella: ${currentCell.type || 'vuota'} -> ${newType || 'vuota'}`);
     
-    // Aggiorna immediatamente lo stato
-    userDayData.cells[timeIndex] = {
-      type: newType,
-      shiftId: currentCell.shiftId,
-      isTimeOff: false
-    };
-    
-    // Applica il nuovo stato
-    setGridData(newGridData);
-    
-    // Gestisci il database
+    // GESTIONE API PER TIPO DI AZIONE
+    // 1. SE LA CELLA HA UN ID ESISTENTE
     if (currentCell.shiftId) {
       if (newType === "") {
-        // Eliminazione di un turno esistente
+        // CASO 1: ELIMINAZIONE
+        // Elimina il turno dal database
         deleteShiftMutation.mutate(currentCell.shiftId);
+        
+        // Aggiorna il conteggio delle ore (solo se era un turno di lavoro)
+        if (currentCell.type === "work") {
+          const slotDuration = 0.5; // 30 minuti
+          // Arrotondiamo a due decimali per evitare errori di approssimazione
+          userDayData.total = Math.max(0, Math.round((userDayData.total - slotDuration) * 100) / 100);
+        }
+        
+        // Aggiorna la cella localmente
+        userDayData.cells[timeIndex] = { 
+          type: "", 
+          shiftId: null,
+          isTimeOff: false
+        };
       } else {
-        // Aggiornamento di un turno esistente
-        updateShiftMutation.mutate({
+        // CASO 2: AGGIORNAMENTO
+        // Prepara i dati per l'aggiornamento
+        const updateData = {
           id: currentCell.shiftId,
           scheduleId,
           userId,
@@ -420,10 +449,18 @@ export function ExcelGrid({
           endTime: timeSlots[timeIndex + 1],
           type: newType,
           notes: userDayData.notes || ""
-        });
+        };
+        
+        // Invia l'aggiornamento al server
+        updateShiftMutation.mutate(updateData);
+        
+        // IMPORTANTE: Ricalcola SEMPRE le ore totali indipendentemente dal tipo di cella cambiata
+        // Questo assicura che il totale sia sempre aggiornato dopo ogni modifica
         
         // Contiamo quante celle "work" ci sono nella giornata DOPO il cambiamento
-        const workCells = userDayData.cells.filter(cell => cell.type === "work").length;
+        const workCells = userDayData.cells.map((cell, idx) => 
+          idx === timeIndex ? newType : cell.type
+        ).filter(type => type === "work").length;
         
         // Usa la funzione utility che implementa tutte le regole richieste
         let hours = calculateHoursFromCells(workCells);
@@ -451,6 +488,7 @@ export function ExcelGrid({
     // 2. CELLA SENZA ID O VUOTA CHE DIVENTA NON-VUOTA
     else if (newType !== "") {
       // CASO 3: CREAZIONE
+      // Prepara i dati per la creazione
       const createData = {
         scheduleId,
         userId,
@@ -459,7 +497,7 @@ export function ExcelGrid({
         endTime: timeSlots[timeIndex + 1],
         type: newType,
         notes: userDayData.notes || "",
-        area: null
+        area: null // Area opzionale
       };
       
       // Crea un nuovo turno nel database
@@ -745,9 +783,9 @@ export function ExcelGrid({
             <TabsContent key={day.name} value={day.name} className="relative">
               <div className="overflow-auto border rounded-md">
                 <table className="w-full border-collapse">
-                  <thead className="sticky top-0 z-10">
+                  <thead>
                     <tr className="border-b bg-muted/50">
-                      <th className="p-1 sm:p-2 text-left font-medium sticky left-0 z-20 bg-muted/50">Dipendente</th>
+                      <th className="p-1 sm:p-2 text-left font-medium">Dipendente</th>
                       {timeSlots.map((slot, idx) => (
                         idx < timeSlots.length - 1 && (
                           <th key={idx} className="p-1 sm:p-2 text-center text-xs sm:text-sm font-medium">
@@ -806,12 +844,12 @@ export function ExcelGrid({
                           
                           <td className="p-1">
                             <Input
-                              size={40}
+                              size={20}
                               placeholder="Note..."
                               value={gridData[day.name]?.[user.id]?.notes || ""}
                               onChange={(e) => handleNotesChange(user.id, day.name, e.target.value)}
                               disabled={isPublished}
-                              className="text-sm sm:text-base w-full min-w-[200px] font-medium"
+                              className="text-xs sm:text-sm w-full"
                             />
                           </td>
                           
@@ -825,37 +863,6 @@ export function ExcelGrid({
                           
                         </tr>
                       ))}
-                    {/* Riga per il conteggio dei dipendenti per fascia oraria */}
-                    <tr className="bg-gray-100 border-t-2 border-gray-300">
-                      <td className="p-2 font-bold text-gray-700">Totale Dipendenti</td>
-                      {timeSlots.map((slot, slotIdx) => {
-                        if (slotIdx < timeSlots.length - 1) {
-                          // Calcola quanti dipendenti sono presenti in questo slot orario
-                          const employeeCount = users.reduce((count, user) => {
-                            const userDayData = gridData[day.name]?.[user.id];
-                            if (userDayData && userDayData.cells[slotIdx]?.type === 'work') {
-                              return count + 1;
-                            }
-                            return count;
-                          }, 0);
-                          
-                          return (
-                            <td key={slotIdx} className="p-2 text-center font-bold">
-                              {employeeCount > 0 ? (
-                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                                  {employeeCount}
-                                </span>
-                              ) : (
-                                <span className="text-gray-400">0</span>
-                              )}
-                            </td>
-                          );
-                        }
-                        return null;
-                      })}
-                      <td className="p-2"></td> {/* Colonna delle note */}
-                      <td className="p-2"></td> {/* Colonna dei totali */}
-                    </tr>
                   </tbody>
                 </table>
               </div>
