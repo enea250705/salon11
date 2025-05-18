@@ -36,15 +36,11 @@ router.post("/:scheduleId/save-as-template", requireAuth, async (req, res) => {
       return res.status(404).json({ message: "Orario non trovato" });
     }
     
-    // Crea il template
+    // Crea il template - adattato alla struttura attuale del database
     const template = await storage.createScheduleTemplate({
       name: validatedData.name,
       type: validatedData.type,
-      description: validatedData.description || "",
-      createdBy: req.session.user.id,
-      createdAt: new Date(),
-      lastUsed: null,
-      timesUsed: 0,
+      createdBy: req.session.user.id
     });
     
     // Ottieni i turni dallo schedule

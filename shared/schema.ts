@@ -99,16 +99,19 @@ export const insertDocumentSchema = createInsertSchema(documents).omit({
 export const scheduleTemplates = pgTable("schedule_templates", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  type: text("type").notNull(), // even_week, odd_week, custom
+  type: text("type").notNull(), // even, odd, custom
+  description: text("description"),
   createdBy: integer("created_by").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   lastUsed: timestamp("last_used"),
+  timesUsed: integer("times_used").notNull().default(0),
 });
 
 export const insertScheduleTemplateSchema = createInsertSchema(scheduleTemplates).omit({
   id: true,
   createdAt: true,
   lastUsed: true,
+  timesUsed: true,
 });
 
 // Template Shifts schema
