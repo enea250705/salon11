@@ -289,21 +289,10 @@ export default function Calendar() {
               </div>
               <div className="flex items-center space-x-2">
                 <Button 
-                  variant={viewMode === "day" ? "default" : "outline"} 
-                  onClick={() => setViewMode("day")}
+                  variant="default"
                   size="sm"
                 >
                   Giorno
-                </Button>
-                <Button 
-                  variant={viewMode === "week" ? "default" : "outline"} 
-                  onClick={() => setViewMode("week")}
-                  size="sm"
-                >
-                  Settimana
-                </Button>
-                <Button variant="outline" onClick={navigateToday} size="sm">
-                  Oggi
                 </Button>
               </div>
             </div>
