@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcrypt";
+import session from "express-session";
 import { insertClientSchema, insertAppointmentSchema, insertServiceSchema, insertStylistSchema, insertMessageTemplateSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -21,6 +22,19 @@ const isAdmin = (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup session middleware
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'hairdresser-secret-key-2024',
+    store: storage.sessionStore,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Set to true in production with HTTPS
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
+
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {
