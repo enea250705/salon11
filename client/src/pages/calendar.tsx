@@ -47,11 +47,24 @@ export default function Calendar() {
   // Fetch appointments based on view mode
   const { data: appointments, isLoading } = useQuery<any[]>({
     queryKey: viewMode === 'month' 
-      ? ["/api/appointments", { 
-          startDate: format(startOfMonth(selectedDate), "yyyy-MM-dd"),
-          endDate: format(endOfMonth(selectedDate), "yyyy-MM-dd")
-        }]
-      : ["/api/appointments", { date: format(selectedDate, "yyyy-MM-dd") }],
+      ? ["/api/appointments", "month", format(selectedDate, "yyyy-MM")]
+      : ["/api/appointments", "day", format(selectedDate, "yyyy-MM-dd")],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      
+      if (viewMode === 'month') {
+        params.set('startDate', format(startOfMonth(selectedDate), "yyyy-MM-dd"));
+        params.set('endDate', format(endOfMonth(selectedDate), "yyyy-MM-dd"));
+      } else {
+        params.set('date', format(selectedDate, "yyyy-MM-dd"));
+      }
+      
+      const response = await fetch(`/api/appointments?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
   });
 
   const { data: stylists } = useQuery<any[]>({

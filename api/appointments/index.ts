@@ -5,12 +5,18 @@ import { insertAppointmentSchema } from '../../shared/schema';
 async function handler(req: any, res: any) {
   try {
     if (req.method === 'GET') {
-      const { date } = req.query;
+      const { date, startDate, endDate } = req.query;
       
-      if (date) {
+      if (startDate && endDate) {
+        // Monthly view - get appointments in date range
+        const appointments = await storage.getAppointmentsByDateRange(startDate, endDate);
+        return res.status(200).json(appointments);
+      } else if (date) {
+        // Daily view - get appointments for specific date
         const appointments = await storage.getAppointmentsByDate(date);
         return res.status(200).json(appointments);
       } else {
+        // Default - get all appointments
         const appointments = await storage.getAllAppointments();
         return res.status(200).json(appointments);
       }
