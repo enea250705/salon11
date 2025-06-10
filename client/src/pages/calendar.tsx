@@ -21,7 +21,8 @@ const appointmentSchema = z.object({
   stylistId: z.number({ required_error: "Stilista è richiesto" }),
   serviceId: z.number({ required_error: "Servizio è richiesto" }),
   date: z.string().min(1, "Data è richiesta"),
-  startTime: z.string().min(1, "Ora inizio è richiesta"),
+  startHour: z.number({ required_error: "Ora è richiesta" }),
+  startMinute: z.number({ required_error: "Minuti sono richiesti" }),
 });
 
 type AppointmentForm = z.infer<typeof appointmentSchema>;
@@ -38,7 +39,8 @@ export default function Calendar() {
     defaultValues: {
       clientName: "",
       date: format(selectedDate, "yyyy-MM-dd"),
-      startTime: "",
+      startHour: 9,
+      startMinute: 0,
     },
   });
 
@@ -70,9 +72,9 @@ export default function Calendar() {
       });
       const newClient = await clientResponse.json();
 
-      // Calculate end time based on service duration
-      const [hours, minutes] = data.startTime.split(':').map(Number);
-      const startTimeMinutes = hours * 60 + minutes;
+      // Calculate start and end times
+      const startTime = `${data.startHour.toString().padStart(2, '0')}:${data.startMinute.toString().padStart(2, '0')}`;
+      const startTimeMinutes = data.startHour * 60 + data.startMinute;
       
       // Get service duration
       const service = services?.find(s => s.id === data.serviceId);
@@ -89,7 +91,7 @@ export default function Calendar() {
         stylistId: data.stylistId,
         serviceId: data.serviceId,
         date: data.date,
-        startTime: data.startTime,
+        startTime: startTime,
         endTime: endTime,
         notes: "",
       });
@@ -179,19 +181,56 @@ export default function Calendar() {
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="startTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Ora Inizio</FormLabel>
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="startHour"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Ora</FormLabel>
+                            <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={field.value?.toString()}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Ora" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {Array.from({ length: 11 }, (_, i) => i + 8).map((hour) => (
+                                  <SelectItem key={hour} value={hour.toString()}>
+                                    {hour.toString().padStart(2, '0')}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="startMinute"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Minuti</FormLabel>
+                            <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={field.value?.toString()}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Min" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {[0, 15, 30, 45].map((minute) => (
+                                  <SelectItem key={minute} value={minute.toString()}>
+                                    {minute.toString().padStart(2, '0')}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                   <FormField
                     control={form.control}
