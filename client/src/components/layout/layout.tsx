@@ -90,16 +90,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 const isActive = location === item.href || location.startsWith(item.href);
                 return (
                   <li key={item.name}>
-                    <Link href={item.href}>
-                      <a className={cn(
-                        "flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                        isActive
-                          ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
-                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                      )}>
-                        <item.icon className="h-5 w-5" />
-                        <span>{item.name}</span>
-                      </a>
+                    <Link href={item.href} className={cn(
+                      "flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    )}>
+                      <item.icon className="h-5 w-5" />
+                      <span>{item.name}</span>
                     </Link>
                   </li>
                 );
