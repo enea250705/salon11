@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format, addDays, subDays, startOfWeek, addWeeks, subWeeks } from "date-fns";
 import { it } from "date-fns/locale";
+// Types will be inferred from the queries
 
 const appointmentSchema = z.object({
   clientId: z.number({ required_error: "Cliente è richiesto" }),
@@ -27,30 +28,7 @@ const appointmentSchema = z.object({
   notes: z.string().optional(),
 });
 
-type AppointmentWithDetails = {
-  id: number;
-  date: string;
-  startTime: string;
-  endTime: string;
-  status: string;
-  notes: string | null;
-  client: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    phone: string;
-  };
-  stylist: {
-    id: number;
-    name: string;
-  };
-  service: {
-    id: number;
-    name: string;
-    duration: number;
-    price: number;
-  };
-};
+
 
 export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -69,19 +47,19 @@ export default function Calendar() {
     },
   });
 
-  const { data: appointments, isLoading } = useQuery<AppointmentWithDetails[]>({
+  const { data: appointments, isLoading } = useQuery<any[]>({
     queryKey: ["/api/appointments", { date: format(selectedDate, "yyyy-MM-dd") }],
   });
 
-  const { data: clients } = useQuery({
+  const { data: clients } = useQuery<any[]>({
     queryKey: ["/api/clients"],
   });
 
-  const { data: stylists } = useQuery({
+  const { data: stylists } = useQuery<any[]>({
     queryKey: ["/api/stylists"],
   });
 
-  const { data: services } = useQuery({
+  const { data: services } = useQuery<any[]>({
     queryKey: ["/api/services"],
   });
 
