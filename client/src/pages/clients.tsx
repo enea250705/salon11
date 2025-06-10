@@ -58,7 +58,7 @@ export default function Clients() {
 
   const createClientMutation = useMutation({
     mutationFn: (data: z.infer<typeof clientSchema>) => 
-      apiRequest("/api/clients", { method: "POST", body: data }),
+      apiRequest("POST", "/api/clients", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
       setIsDialogOpen(false);
@@ -76,7 +76,7 @@ export default function Clients() {
 
   const updateClientMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: z.infer<typeof clientSchema> }) =>
-      apiRequest(`/api/clients/${id}`, { method: "PUT", body: data }),
+      apiRequest("PUT", `/api/clients/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
       setIsDialogOpen(false);
@@ -94,7 +94,7 @@ export default function Clients() {
   });
 
   const deleteClientMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/clients/${id}`, { method: "DELETE" }),
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/clients/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
       toast({ title: "Cliente eliminato con successo" });

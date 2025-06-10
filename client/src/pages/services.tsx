@@ -53,7 +53,7 @@ export default function Services() {
 
   const createServiceMutation = useMutation({
     mutationFn: (data: z.infer<typeof serviceSchema>) => 
-      apiRequest("/api/services", { method: "POST", body: data }),
+      apiRequest("POST", "/api/services", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       setIsDialogOpen(false);

@@ -9,6 +9,11 @@ import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
+import Clients from "@/pages/clients";
+import Calendar from "@/pages/calendar";
+import Services from "@/pages/services";
+import Stylists from "@/pages/stylists";
+import Settings from "@/pages/settings";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -33,6 +38,11 @@ function Router() {
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/clients" component={Clients} />
+          <Route path="/calendar" component={Calendar} />
+          <Route path="/services" component={Services} />
+          <Route path="/stylists" component={Stylists} />
+          <Route path="/settings" component={Settings} />
           <Route component={NotFound} />
         </>
       )}
