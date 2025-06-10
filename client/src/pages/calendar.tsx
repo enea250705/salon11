@@ -340,18 +340,36 @@ export default function Calendar() {
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <h2 className="text-xl font-semibold">
-                  {format(selectedDate, "EEEE, d MMMM yyyy", { locale: it })}
+                  {viewMode === 'month' 
+                    ? format(selectedDate, "MMMM yyyy", { locale: it })
+                    : format(selectedDate, "EEEE, d MMMM yyyy", { locale: it })
+                  }
                 </h2>
                 <Button variant="outline" onClick={navigateNext}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
               <div className="flex items-center space-x-2">
-                <Button 
-                  variant="default"
-                  size="sm"
-                >
-                  Giorno
+                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                  <Button
+                    variant={viewMode === 'month' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('month')}
+                    className="h-8"
+                  >
+                    Mese
+                  </Button>
+                  <Button
+                    variant={viewMode === 'day' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('day')}
+                    className="h-8"
+                  >
+                    Giorno
+                  </Button>
+                </div>
+                <Button variant="outline" size="sm" onClick={navigateToday}>
+                  Oggi
                 </Button>
               </div>
             </div>
@@ -361,37 +379,102 @@ export default function Calendar() {
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
               </div>
-            ) : !dayAppointments || dayAppointments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                <p>Nessun appuntamento per {format(selectedDate, "d MMMM", { locale: it })}</p>
+            ) : viewMode === 'month' ? (
+              <div className="space-y-4">
+                {/* Month Header */}
+                <div className="grid grid-cols-7 gap-1 mb-2">
+                  {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map((day) => (
+                    <div key={day} className="p-2 text-center text-sm font-medium text-gray-600">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Calendar Grid */}
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarDays.map((day, index) => {
+                    const dayAppointments = getAppointmentsForDate(day);
+                    const isCurrentMonth = isSameMonth(day, selectedDate);
+                    const isSelected = isSameDay(day, selectedDate);
+                    const isCurrentDay = isToday(day);
+                    
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          setSelectedDate(day);
+                          setViewMode('day');
+                        }}
+                        className={`
+                          min-h-[80px] p-2 border rounded-lg cursor-pointer transition-colors
+                          ${isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 text-gray-400'}
+                          ${isSelected ? 'ring-2 ring-pink-500' : ''}
+                          ${isCurrentDay ? 'bg-pink-50 border-pink-200' : 'border-gray-200'}
+                        `}
+                      >
+                        <div className={`text-sm font-medium mb-1 ${
+                          isCurrentDay ? 'text-pink-600' : 
+                          isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
+                        }`}>
+                          {format(day, 'd')}
+                        </div>
+                        
+                        {/* Appointment dots */}
+                        <div className="space-y-1">
+                          {dayAppointments.slice(0, 3).map((apt: any, i: number) => (
+                            <div
+                              key={i}
+                              className="text-xs px-1 py-0.5 bg-gradient-to-r from-pink-100 to-purple-100 text-pink-700 rounded truncate"
+                              title={`${apt.startTime.slice(0, 5)} - ${apt.client.firstName} ${apt.client.lastName}`}
+                            >
+                              {apt.startTime.slice(0, 5)} {apt.client.firstName}
+                            </div>
+                          ))}
+                          {dayAppointments.length > 3 && (
+                            <div className="text-xs text-gray-500">
+                              +{dayAppointments.length - 3} altri
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             ) : (
-              <div className="space-y-4">
-                {dayAppointments.map((appointment: any) => (
-                  <div
-                    key={appointment.id}
-                    className="flex items-center justify-between p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border"
-                  >
-                    <div className="flex-1">
-                      <div className="font-semibold text-gray-900">
-                        {appointment.client.firstName} {appointment.client.lastName}
+              // Day view
+              !dayAppointments || dayAppointments.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                  <p>Nessun appuntamento per {format(selectedDate, "d MMMM", { locale: it })}</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {dayAppointments.map((appointment: any) => (
+                    <div
+                      key={appointment.id}
+                      className="flex items-center justify-between p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border"
+                    >
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900">
+                          {appointment.client.firstName} {appointment.client.lastName}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {appointment.service.name} • {appointment.stylist.name}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {appointment.service.name} • {appointment.stylist.name}
+                      <div className="text-right">
+                        <div className="font-semibold text-pink-600">
+                          {appointment.startTime.slice(0, 5)}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {appointment.service.duration}min
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-semibold text-pink-600">
-                        {appointment.startTime.slice(0, 5)}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {appointment.service.duration}min
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )
             )}
           </CardContent>
         </Card>
