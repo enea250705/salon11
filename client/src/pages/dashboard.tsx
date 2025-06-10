@@ -20,8 +20,9 @@ const quickAppointmentSchema = z.object({
   serviceId: z.number({ required_error: "Servizio è richiesto" }),
   date: z.string().min(1, "Data è richiesta"),
   startTime: z.string().min(1, "Ora inizio è richiesta"),
-  endTime: z.string().min(1, "Ora fine è richiesta"),
 });
+
+type QuickAppointmentForm = z.infer<typeof quickAppointmentSchema>;
 
 type DashboardStats = {
   totalClients: number;
@@ -36,13 +37,12 @@ export default function Dashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<z.infer<typeof quickAppointmentSchema>>({
+  const form = useForm<QuickAppointmentForm>({
     resolver: zodResolver(quickAppointmentSchema),
     defaultValues: {
       clientName: "",
       date: new Date().toISOString().split('T')[0],
       startTime: "",
-      endTime: "",
     },
   });
 
@@ -63,7 +63,7 @@ export default function Dashboard() {
   });
 
   const createAppointmentMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof quickAppointmentSchema>) => {
+    mutationFn: async (data: QuickAppointmentForm) => {
       // Create client with just the name (split into first and last name)
       const nameParts = data.clientName.split(' ');
       const firstName = nameParts[0] || data.clientName;
@@ -78,6 +78,19 @@ export default function Dashboard() {
       });
       const newClient = await clientResponse.json();
 
+      // Calculate end time based on service duration
+      const [hours, minutes] = data.startTime.split(':').map(Number);
+      const startTimeMinutes = hours * 60 + minutes;
+      
+      // Get service duration
+      const service = services?.find(s => s.id === data.serviceId);
+      const duration = service?.duration || 30; // default to 30 minutes if not found
+      
+      const endTimeMinutes = startTimeMinutes + duration;
+      const endHours = Math.floor(endTimeMinutes / 60);
+      const endMins = endTimeMinutes % 60;
+      const endTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+
       // Create the appointment with the new client
       return apiRequest("POST", "/api/appointments", {
         clientId: newClient.id,
@@ -85,7 +98,7 @@ export default function Dashboard() {
         serviceId: data.serviceId,
         date: data.date,
         startTime: data.startTime,
-        endTime: data.endTime,
+        endTime: endTime,
         notes: "",
       });
     },
@@ -106,7 +119,7 @@ export default function Dashboard() {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof quickAppointmentSchema>) => {
+  const onSubmit = (data: QuickAppointmentForm) => {
     createAppointmentMutation.mutate(data);
   };
 
@@ -223,19 +236,6 @@ export default function Dashboard() {
                           )}
                         />
                       </div>
-                      <FormField
-                        control={form.control}
-                        name="endTime"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Ora Fine</FormLabel>
-                            <FormControl>
-                              <Input type="time" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                       <FormField
                         control={form.control}
                         name="clientName"
