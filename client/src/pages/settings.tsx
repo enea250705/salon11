@@ -47,7 +47,7 @@ export default function Settings() {
 
   const createTemplateMutation = useMutation({
     mutationFn: (data: z.infer<typeof templateSchema>) => 
-      apiRequest("/api/message-templates", { method: "POST", body: data }),
+      apiRequest("POST", "/api/message-templates", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/message-templates"] });
       setIsDialogOpen(false);
@@ -65,7 +65,7 @@ export default function Settings() {
 
   const updateTemplateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: z.infer<typeof templateSchema> }) =>
-      apiRequest(`/api/message-templates/${id}`, { method: "PUT", body: data }),
+      apiRequest("PUT", `/api/message-templates/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/message-templates"] });
       setIsDialogOpen(false);
@@ -83,7 +83,7 @@ export default function Settings() {
   });
 
   const deleteTemplateMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/message-templates/${id}`, { method: "DELETE" }),
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/message-templates/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/message-templates"] });
       toast({ title: "Template eliminato con successo" });

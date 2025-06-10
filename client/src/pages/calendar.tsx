@@ -87,7 +87,7 @@ export default function Calendar() {
 
   const createAppointmentMutation = useMutation({
     mutationFn: (data: z.infer<typeof appointmentSchema>) => 
-      apiRequest("/api/appointments", { method: "POST", body: data }),
+      apiRequest("POST", "/api/appointments", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
       setIsDialogOpen(false);

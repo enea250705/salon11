@@ -49,7 +49,7 @@ export default function Stylists() {
 
   const createStylistMutation = useMutation({
     mutationFn: (data: z.infer<typeof stylistSchema>) => 
-      apiRequest("/api/stylists", { method: "POST", body: data }),
+      apiRequest("POST", "/api/stylists", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/stylists"] });
       setIsDialogOpen(false);
@@ -67,7 +67,7 @@ export default function Stylists() {
 
   const updateStylistMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: z.infer<typeof stylistSchema> }) =>
-      apiRequest(`/api/stylists/${id}`, { method: "PUT", body: data }),
+      apiRequest("PUT", `/api/stylists/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/stylists"] });
       setIsDialogOpen(false);
@@ -85,7 +85,7 @@ export default function Stylists() {
   });
 
   const deleteStylistMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/stylists/${id}`, { method: "DELETE" }),
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/stylists/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/stylists"] });
       toast({ title: "Stilista rimosso con successo" });

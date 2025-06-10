@@ -71,7 +71,7 @@ export default function Services() {
 
   const updateServiceMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: z.infer<typeof serviceSchema> }) =>
-      apiRequest(`/api/services/${id}`, { method: "PUT", body: data }),
+      apiRequest("PUT", `/api/services/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       setIsDialogOpen(false);
@@ -89,7 +89,7 @@ export default function Services() {
   });
 
   const deleteServiceMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/services/${id}`, { method: "DELETE" }),
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/services/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       toast({ title: "Servizio eliminato con successo" });
