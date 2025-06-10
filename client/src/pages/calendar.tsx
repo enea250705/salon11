@@ -13,7 +13,7 @@ import { z } from "zod";
 import { Plus, Calendar as CalendarIcon, Clock, User, Scissors, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { format, addDays, subDays, startOfWeek, addWeeks, subWeeks } from "date-fns";
+import { format, addDays, subDays, startOfWeek, addWeeks, subWeeks, startOfMonth, endOfMonth, addMonths, subMonths, eachDayOfInterval, isSameMonth, isSameDay, isToday } from "date-fns";
 import { it } from "date-fns/locale";
 
 const appointmentSchema = z.object({
@@ -29,7 +29,7 @@ type AppointmentForm = z.infer<typeof appointmentSchema>;
 
 export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<"day" | "week">("day");
+  const [viewMode, setViewMode] = useState<"month" | "day">("month");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -44,8 +44,14 @@ export default function Calendar() {
     },
   });
 
+  // Fetch appointments based on view mode
   const { data: appointments, isLoading } = useQuery<any[]>({
-    queryKey: ["/api/appointments", { date: format(selectedDate, "yyyy-MM-dd") }],
+    queryKey: viewMode === 'month' 
+      ? ["/api/appointments", { 
+          startDate: format(startOfMonth(selectedDate), "yyyy-MM-dd"),
+          endDate: format(endOfMonth(selectedDate), "yyyy-MM-dd")
+        }]
+      : ["/api/appointments", { date: format(selectedDate, "yyyy-MM-dd") }],
   });
 
   const { data: stylists } = useQuery<any[]>({
@@ -121,17 +127,31 @@ export default function Calendar() {
   const navigatePrevious = () => {
     if (viewMode === "day") {
       setSelectedDate(subDays(selectedDate, 1));
-    } else {
-      setSelectedDate(subWeeks(selectedDate, 1));
+    } else if (viewMode === "month") {
+      setSelectedDate(subMonths(selectedDate, 1));
     }
   };
   const navigateNext = () => {
     if (viewMode === "day") {
       setSelectedDate(addDays(selectedDate, 1));
-    } else {
-      setSelectedDate(addWeeks(selectedDate, 1));
+    } else if (viewMode === "month") {
+      setSelectedDate(addMonths(selectedDate, 1));
     }
   };
+
+  // Helper function to get appointments for a specific date
+  const getAppointmentsForDate = (date: Date) => {
+    if (!appointments) return [];
+    const dateString = format(date, "yyyy-MM-dd");
+    return appointments.filter(apt => apt.date === dateString);
+  };
+
+  // Generate calendar days for monthly view
+  const monthStart = startOfMonth(selectedDate);
+  const monthEnd = endOfMonth(selectedDate);
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 }); // Monday start
+  const calendarEnd = addDays(calendarStart, 41); // 6 weeks
+  const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   // Generate time slots for the day view
   const timeSlots = Array.from({ length: 10 }, (_, i) => {
