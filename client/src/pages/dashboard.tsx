@@ -92,14 +92,14 @@ export default function Dashboard() {
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
               </div>
-            ) : !todayAppointments || todayAppointments.length === 0 ? (
+            ) : !todayAppointments || (Array.isArray(todayAppointments) && todayAppointments.length === 0) ? (
               <div className="text-center py-8 text-gray-500">
                 <Calendar className="h-12 w-12 mx-auto mb-4 opacity-30" />
                 <p>Nessun appuntamento per oggi</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {todayAppointments.map((appointment: any) => (
+                {Array.isArray(todayAppointments) && todayAppointments.map((appointment: any) => (
                   <div
                     key={appointment.id}
                     className="flex items-center justify-between p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border"
