@@ -313,59 +313,36 @@ export default function Calendar() {
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
               </div>
-            ) : viewMode === "day" ? (
-              <div className="space-y-2">
-                {timeSlots.map((time) => {
-                  const appointmentsAtTime = dayAppointments.filter(app => 
-                    app.startTime.slice(0, 5) === time
-                  );
-                  
-                  return (
-                    <div key={time} className="flex items-center border-b border-gray-100 py-2">
-                      <div className="w-20 text-sm text-gray-600 font-medium">
-                        {time}
-                      </div>
-                      <div className="flex-1 ml-4">
-                        {appointmentsAtTime.length > 0 ? (
-                          <div className="space-y-1">
-                            {appointmentsAtTime.map((appointment: any) => (
-                              <div
-                                key={appointment.id}
-                                className="bg-gradient-to-r from-pink-100 to-purple-100 border-l-4 border-pink-500 p-3 rounded-r-lg"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <div className="font-semibold text-gray-900">
-                                      {appointment.client.firstName} {appointment.client.lastName}
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                      {appointment.service.name} • {appointment.stylist.name}
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <div className="text-sm font-medium text-pink-600">
-                                      {appointment.startTime.slice(0, 5)} - {appointment.endTime.slice(0, 5)}
-                                    </div>
-                                    <div className="text-xs text-gray-500">
-                                      {appointment.service.duration}min
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-gray-400 text-sm">Nessun appuntamento</div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
+            ) : !dayAppointments || dayAppointments.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                <p>Vista settimanale in sviluppo</p>
+                <p>Nessun appuntamento per {format(selectedDate, "d MMMM", { locale: it })}</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {dayAppointments.map((appointment: any) => (
+                  <div
+                    key={appointment.id}
+                    className="flex items-center justify-between p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border"
+                  >
+                    <div className="flex-1">
+                      <div className="font-semibold text-gray-900">
+                        {appointment.client.firstName} {appointment.client.lastName}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {appointment.service.name} • {appointment.stylist.name}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-pink-600">
+                        {appointment.startTime.slice(0, 5)}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {appointment.service.duration}min
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>
