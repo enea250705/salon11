@@ -4,23 +4,16 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
-import { AuthProvider } from "@/contexts/auth-context";
+import { AuthProvider, useAuth } from "@/contexts/auth-context";
 
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
-import Schedule from "@/pages/schedule";
-import Users from "@/pages/users";
-import Documents from "@/pages/documents";
-import Requests from "@/pages/requests";
-import TimeOff from "@/pages/time-off";
-import MySchedule from "@/pages/my-schedule";
-import MyDocuments from "@/pages/my-documents";
-import Messages from "@/pages/messages";
-import NewUser from "@/pages/new-user";
-import ChangePassword from "@/pages/change-password";
-import EditUser from "@/pages/edit-user";
-import ImportUsers from "@/pages/import-users";
+import Clients from "@/pages/clients";
+import Calendar from "@/pages/calendar";
+import Services from "@/pages/services";
+import Stylists from "@/pages/stylists";
+import Settings from "@/pages/settings";
 
 function Router() {
   return (

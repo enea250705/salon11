@@ -1,193 +1,160 @@
-import { pgTable, text, serial, integer, boolean, date, timestamp, json } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  serial,
+  varchar,
+  text,
+  timestamp,
+  boolean,
+  integer,
+  date,
+  time,
+  jsonb,
+  index,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users schema
+// Users table for authentication
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  phone: text("phone"),
-  role: text("role").notNull().default("employee"),
-  position: text("position"),
-  isActive: boolean("is_active").notNull().default(true),
+  username: varchar("username", { length: 50 }).notNull().unique(),
+  password: varchar("password", { length: 255 }).notNull(),
+  email: varchar("email", { length: 100 }),
+  firstName: varchar("first_name", { length: 50 }).notNull(),
+  lastName: varchar("last_name", { length: 50 }).notNull(),
+  role: varchar("role", { length: 20 }).notNull().default("user"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
   lastLogin: timestamp("last_login"),
 });
 
+// Clients table for customer management
+export const clients = pgTable("clients", {
+  id: serial("id").primaryKey(),
+  firstName: varchar("first_name", { length: 50 }).notNull(),
+  lastName: varchar("last_name", { length: 50 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  email: varchar("email", { length: 100 }),
+  notes: text("notes"), // For preferences, hair color, products used, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  isActive: boolean("is_active").default(true),
+});
+
+// Services table for different hair services
+export const services = pgTable("services", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  duration: integer("duration").notNull(), // in minutes
+  price: integer("price"), // in cents
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Stylists table for staff management
+export const stylists = pgTable("stylists", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  email: varchar("email", { length: 100 }),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Appointments table
+export const appointments = pgTable("appointments", {
+  id: serial("id").primaryKey(),
+  clientId: integer("client_id").references(() => clients.id).notNull(),
+  stylistId: integer("stylist_id").references(() => stylists.id).notNull(),
+  serviceId: integer("service_id").references(() => services.id).notNull(),
+  date: date("date").notNull(),
+  startTime: time("start_time").notNull(),
+  endTime: time("end_time").notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("scheduled"), // scheduled, completed, cancelled, no-show
+  notes: text("notes"),
+  reminderSent: boolean("reminder_sent").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// WhatsApp message templates
+export const messageTemplates = pgTable("message_templates", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  template: text("template").notNull(), // Message template with placeholders
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Session storage table for authentication
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
+  createdAt: true,
   lastLogin: true,
 });
 
-// Schedules schema
-export const schedules = pgTable("schedules", {
-  id: serial("id").primaryKey(),
-  startDate: date("start_date").notNull(),
-  endDate: date("end_date").notNull(),
-  isPublished: boolean("is_published").notNull().default(false),
-  publishedAt: timestamp("published_at"),
-  createdBy: integer("created_by").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
-});
-
-export const insertScheduleSchema = createInsertSchema(schedules).omit({
+export const insertClientSchema = createInsertSchema(clients).omit({
   id: true,
-  publishedAt: true,
-  updatedAt: true,
-});
-
-// Shifts schema
-export const shifts = pgTable("shifts", {
-  id: serial("id").primaryKey(),
-  scheduleId: integer("schedule_id").notNull(),
-  userId: integer("user_id").notNull(),
-  day: text("day").notNull(), // Monday, Tuesday, etc.
-  startTime: text("start_time").notNull(),
-  endTime: text("end_time").notNull(),
-  notes: text("notes"),
-  area: text("area"),
-  type: text("type").notNull().default("work"), // work, vacation, leave, sick
-});
-
-export const insertShiftSchema = createInsertSchema(shifts).omit({
-  id: true,
-});
-
-// TimeOff Requests schema
-export const timeOffRequests = pgTable("time_off_requests", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  type: text("type").notNull(), // vacation, personal, sick
-  startDate: date("start_date").notNull(),
-  endDate: date("end_date").notNull(),
-  duration: text("duration").notNull(), // full_day, specific_hours
-  startTime: text("start_time"), // es. "09:00"
-  endTime: text("end_time"), // es. "13:00"
-  reason: text("reason"),
-  status: text("status").notNull().default("pending"), // pending, approved, rejected
-  approvedBy: integer("approved_by"),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
-});
-
-export const insertTimeOffRequestSchema = createInsertSchema(timeOffRequests).omit({
-  id: true,
-  approvedBy: true,
   createdAt: true,
   updatedAt: true,
 });
 
-// Documents schema
-export const documents = pgTable("documents", {
-  id: serial("id").primaryKey(),
-  type: text("type").notNull(), // payslip, tax_document
-  userId: integer("user_id").notNull(),
-  period: text("period").notNull(), // June 2023, 2022 (for tax docs)
-  filename: text("filename").notNull(),
-  fileData: text("file_data").notNull(), // Base64 encoded PDF
-  fileUrl: text("file_url"), // URL generato per accedere al documento
-  uploadedBy: integer("uploaded_by").notNull(),
-  uploadedAt: timestamp("uploaded_at").notNull(),
-});
-
-export const insertDocumentSchema = createInsertSchema(documents).omit({
-  id: true,
-  uploadedAt: true,
-});
-
-// Schedule Templates schema
-export const scheduleTemplates = pgTable("schedule_templates", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  type: text("type").notNull(), // even_week, odd_week, custom
-  createdBy: integer("created_by").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  lastUsed: timestamp("last_used"),
-});
-
-export const insertScheduleTemplateSchema = createInsertSchema(scheduleTemplates).omit({
-  id: true,
-  createdAt: true,
-  lastUsed: true,
-});
-
-// Template Shifts schema
-export const templateShifts = pgTable("template_shifts", {
-  id: serial("id").primaryKey(),
-  templateId: integer("template_id").notNull(),
-  userId: integer("user_id").notNull(),
-  day: text("day").notNull(), // Monday, Tuesday, etc.
-  startTime: text("start_time").notNull(),
-  endTime: text("end_time").notNull(),
-  notes: text("notes"),
-  area: text("area"),
-  type: text("type").notNull().default("work"), // work, vacation, leave, sick
-});
-
-export const insertTemplateShiftSchema = createInsertSchema(templateShifts).omit({
-  id: true,
-});
-
-// Notifications schema
-export const notifications = pgTable("notifications", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  type: text("type").notNull(), // schedule_update, request_response, document_upload, new_message
-  message: text("message").notNull(),
-  isRead: boolean("is_read").notNull().default(false),
-  data: json("data"),
-  createdAt: timestamp("created_at").notNull(),
-});
-
-export const insertNotificationSchema = createInsertSchema(notifications).omit({
+export const insertServiceSchema = createInsertSchema(services).omit({
   id: true,
   createdAt: true,
 });
 
-// Messages schema
-export const messages = pgTable("messages", {
-  id: serial("id").primaryKey(),
-  fromUserId: integer("from_user_id").notNull(),
-  toUserId: integer("to_user_id").notNull(),
-  subject: text("subject").notNull(),
-  content: text("content").notNull(),
-  isRead: boolean("is_read").notNull().default(false),
-  relatedToShiftId: integer("related_to_shift_id"),
-  createdAt: timestamp("created_at").notNull(),
-});
-
-export const insertMessageSchema = createInsertSchema(messages).omit({
+export const insertStylistSchema = createInsertSchema(stylists).omit({
   id: true,
-  isRead: true,
   createdAt: true,
 });
 
-// Export types
+export const insertAppointmentSchema = createInsertSchema(appointments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  reminderSent: true,
+});
+
+export const insertMessageTemplateSchema = createInsertSchema(messageTemplates).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
-export type Schedule = typeof schedules.$inferSelect;
-export type InsertSchedule = z.infer<typeof insertScheduleSchema>;
+export type Client = typeof clients.$inferSelect;
+export type InsertClient = z.infer<typeof insertClientSchema>;
 
-export type Shift = typeof shifts.$inferSelect;
-export type InsertShift = z.infer<typeof insertShiftSchema>;
+export type Service = typeof services.$inferSelect;
+export type InsertService = z.infer<typeof insertServiceSchema>;
 
-export type TimeOffRequest = typeof timeOffRequests.$inferSelect;
-export type InsertTimeOffRequest = z.infer<typeof insertTimeOffRequestSchema>;
+export type Stylist = typeof stylists.$inferSelect;
+export type InsertStylist = z.infer<typeof insertStylistSchema>;
 
-export type Document = typeof documents.$inferSelect;
-export type InsertDocument = z.infer<typeof insertDocumentSchema>;
+export type Appointment = typeof appointments.$inferSelect;
+export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 
-export type ScheduleTemplate = typeof scheduleTemplates.$inferSelect;
-export type InsertScheduleTemplate = z.infer<typeof insertScheduleTemplateSchema>;
+export type MessageTemplate = typeof messageTemplates.$inferSelect;
+export type InsertMessageTemplate = z.infer<typeof insertMessageTemplateSchema>;
 
-export type TemplateShift = typeof templateShifts.$inferSelect;
-export type InsertTemplateShift = z.infer<typeof insertTemplateShiftSchema>;
-
-export type Notification = typeof notifications.$inferSelect;
-export type InsertNotification = z.infer<typeof insertNotificationSchema>;
-
-export type Message = typeof messages.$inferSelect;
-export type InsertMessage = z.infer<typeof insertMessageSchema>;
+// Extended types with relations
+export type AppointmentWithDetails = Appointment & {
+  client: Client;
+  stylist: Stylist;
+  service: Service;
+};
