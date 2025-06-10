@@ -288,7 +288,7 @@ export default function Dashboard() {
                               <SelectContent>
                                 {services?.map((service: any) => (
                                   <SelectItem key={service.id} value={service.id.toString()}>
-                                    {service.name} ({service.duration}min - €{service.price})
+                                    {service.name} ({service.duration}min - €{(service.price / 100).toFixed(2)})
                                   </SelectItem>
                                 ))}
                               </SelectContent>
