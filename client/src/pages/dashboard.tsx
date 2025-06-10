@@ -15,12 +15,20 @@ import { apiRequest } from "@/lib/queryClient";
 import { useState } from "react";
 
 const quickAppointmentSchema = z.object({
-  clientId: z.number({ required_error: "Cliente è richiesto" }),
+  clientId: z.number().optional(),
+  clientFirstName: z.string().optional(),
+  clientLastName: z.string().optional(),
+  clientPhone: z.string().optional(),
   stylistId: z.number({ required_error: "Stilista è richiesto" }),
   serviceId: z.number({ required_error: "Servizio è richiesto" }),
   date: z.string().min(1, "Data è richiesta"),
   startTime: z.string().min(1, "Ora inizio è richiesta"),
   endTime: z.string().min(1, "Ora fine è richiesta"),
+}).refine((data) => {
+  return data.clientId || (data.clientFirstName && data.clientLastName);
+}, {
+  message: "Seleziona un cliente esistente o inserisci nome e cognome per un nuovo cliente",
+  path: ["clientId"],
 });
 
 type DashboardStats = {
@@ -33,6 +41,7 @@ type DashboardStats = {
 
 export default function Dashboard() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isNewClient, setIsNewClient] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -66,12 +75,39 @@ export default function Dashboard() {
   });
 
   const createAppointmentMutation = useMutation({
-    mutationFn: (data: z.infer<typeof quickAppointmentSchema>) => 
-      apiRequest("POST", "/api/appointments", data),
+    mutationFn: async (data: z.infer<typeof quickAppointmentSchema>) => {
+      let clientId = data.clientId;
+      
+      // If creating a new client, create the client first
+      if (!clientId && data.clientFirstName && data.clientLastName) {
+        const clientResponse = await apiRequest("POST", "/api/clients", {
+          firstName: data.clientFirstName,
+          lastName: data.clientLastName,
+          phone: data.clientPhone || "",
+          email: "",
+          notes: "",
+        });
+        const newClient = await clientResponse.json();
+        clientId = newClient.id;
+      }
+
+      // Create the appointment with the clientId
+      return apiRequest("POST", "/api/appointments", {
+        clientId,
+        stylistId: data.stylistId,
+        serviceId: data.serviceId,
+        date: data.date,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        notes: "",
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
       setIsDialogOpen(false);
+      setIsNewClient(false);
       form.reset();
       toast({ title: "Appuntamento creato con successo" });
     },
@@ -214,30 +250,97 @@ export default function Dashboard() {
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        name="clientId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Cliente</FormLabel>
-                            <Select onValueChange={(value) => field.onChange(Number(value))}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleziona cliente" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {clients?.map((client: any) => (
-                                  <SelectItem key={client.id} value={client.id.toString()}>
-                                    {client.firstName} {client.lastName}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-4">
+                          <Button
+                            type="button"
+                            variant={!isNewClient ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setIsNewClient(false)}
+                            className={!isNewClient ? "bg-gradient-to-r from-pink-500 to-purple-600" : ""}
+                          >
+                            Cliente Esistente
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={isNewClient ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setIsNewClient(true)}
+                            className={isNewClient ? "bg-gradient-to-r from-pink-500 to-purple-600" : ""}
+                          >
+                            Nuovo Cliente
+                          </Button>
+                        </div>
+
+                        {!isNewClient ? (
+                          <FormField
+                            control={form.control}
+                            name="clientId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Seleziona Cliente</FormLabel>
+                                <Select onValueChange={(value) => field.onChange(Number(value))}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Seleziona cliente esistente" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {clients?.map((client: any) => (
+                                      <SelectItem key={client.id} value={client.id.toString()}>
+                                        {client.firstName} {client.lastName}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        ) : (
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="clientFirstName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Nome</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Nome cliente" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="clientLastName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Cognome</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Cognome cliente" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="clientPhone"
+                              render={({ field }) => (
+                                <FormItem className="col-span-2">
+                                  <FormLabel>Telefono (opzionale)</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Numero di telefono" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                         )}
-                      />
+                      </div>
                       <FormField
                         control={form.control}
                         name="stylistId"
