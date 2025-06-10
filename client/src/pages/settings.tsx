@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, MessageSquare, Edit, Trash2, Settings } from "lucide-react";
+import { Plus, MessageSquare, Edit, Trash2, Settings as SettingsIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -268,7 +268,7 @@ export default function Settings() {
           <Card className="shadow-lg border-0">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Settings className="h-5 w-5" />
+                <SettingsIcon className="h-5 w-5" />
                 <span>Informazioni Salone</span>
               </CardTitle>
               <CardDescription>
