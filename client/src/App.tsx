@@ -16,24 +16,36 @@ import Stylists from "@/pages/stylists";
 import Settings from "@/pages/settings";
 
 function Router() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+      </div>
+    );
+  }
+
   return (
     <Switch>
-      <Route path="/login" component={Login} />
-      <Route path="/" component={Dashboard} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/schedule" component={Schedule} />
-      <Route path="/users" component={Users} />
-      <Route path="/users/new" component={NewUser} />
-      <Route path="/users/change-password" component={ChangePassword} />
-      <Route path="/users/edit" component={EditUser} />
-      <Route path="/users/import" component={ImportUsers} />
-      <Route path="/documents" component={Documents} />
-      <Route path="/requests" component={Requests} />
-      <Route path="/time-off" component={TimeOff} />
-      <Route path="/my-schedule" component={MySchedule} />
-      <Route path="/my-documents" component={MyDocuments} />
-      <Route path="/messages" component={Messages} />
-      <Route component={NotFound} />
+      {!isAuthenticated ? (
+        <>
+          <Route path="/" component={Login} />
+          <Route path="/login" component={Login} />
+          <Route component={() => <Login />} />
+        </>
+      ) : (
+        <>
+          <Route path="/" component={Dashboard} />
+          <Route path="/dashboard" component={Dashboard} />
+          <Route path="/clients" component={Clients} />
+          <Route path="/calendar" component={Calendar} />
+          <Route path="/services" component={Services} />
+          <Route path="/stylists" component={Stylists} />
+          <Route path="/settings" component={Settings} />
+          <Route component={NotFound} />
+        </>
+      )}
     </Switch>
   );
 }

@@ -1,54 +1,37 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useLocation } from "wouter";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
-import { useAuth } from "@/hooks/use-auth";
+import { Input } from "@/components/ui/input";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
+import { Scissors } from "lucide-react";
 
 const formSchema = z.object({
-  username: z.string().min(1, {
-    message: "Username o email è obbligatorio",
-  }),
-  password: z.string().min(1, {
-    message: "Password è obbligatoria",
-  }),
-  remember: z.boolean().default(false),
+  username: z.string().min(1, "Username è richiesto"),
+  password: z.string().min(1, "Password è richiesta"),
 });
 
 export default function Login() {
-  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
-  const [, navigate] = useLocation();
-  const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
 
-  // Se l'utente è già autenticato, reindirizza alla dashboard
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
-    }
-  }, [isAuthenticated, navigate]);
+  // Redirect if already authenticated
+  if (isAuthenticated) {
+    setLocation("/");
+  }
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: "",
       password: "",
-      remember: false,
     },
   });
 
@@ -56,7 +39,6 @@ export default function Login() {
     setIsLoading(true);
     
     try {
-      // Login diretto usando fetch invece di utilizzare la funzione login dal contesto
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -76,7 +58,6 @@ export default function Login() {
       const data = await response.json();
       
       if (data.user) {
-        // Ricarica la pagina per aggiornare lo stato di autenticazione
         window.location.href = '/';
         return;
       }
@@ -94,112 +75,75 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <div className="flex justify-center mb-2">
-            <span className="material-icons text-4xl text-primary">restaurant</span>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-100 p-4">
+      <Card className="w-full max-w-md shadow-2xl border-0">
+        <CardHeader className="space-y-4 text-center">
+          <div className="flex justify-center">
+            <div className="bg-gradient-to-r from-pink-500 to-purple-600 p-4 rounded-full">
+              <Scissors className="h-8 w-8 text-white" />
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 font-condensed">Da Vittorino</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Sistema di Gestione Personale
-          </p>
-        </div>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username o Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Inserisci username o email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input 
-                            type={showPassword ? "text" : "password"} 
-                            placeholder="********" 
-                            {...field} 
-                          />
-                          <button
-                            type="button"
-                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="flex items-center justify-between">
-                  <FormField
-                    control={form.control}
-                    name="remember"
-                    render={({ field }) => (
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="remember"
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                        <label
-                          htmlFor="remember"
-                          className="text-sm font-medium text-gray-700"
-                        >
-                          Ricordami
-                        </label>
-                      </div>
-                    )}
-                  />
-                  
-                  {/* Link per reset password rimosso su richiesta */}
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={isLoading || authLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Accesso in corso...
-                    </>
-                  ) : (
-                    "Accedi"
-                  )}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-        
-        <div className="text-center text-sm text-gray-500">
-          <p>
-            © 2025 Da Vittorino - Tutti i diritti riservati
-          </p>
-        </div>
-      </div>
+          <div>
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+              Salone di Bellezza
+            </CardTitle>
+            <CardDescription className="text-lg mt-2">
+              Accedi alla tua piattaforma di gestione
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-medium">Username</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Inserisci il tuo username" 
+                        className="h-12 text-lg" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-medium">Password</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="password" 
+                        placeholder="Inserisci la tua password" 
+                        className="h-12 text-lg"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button 
+                type="submit" 
+                className="w-full h-12 text-lg bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white border-0 shadow-lg" 
+                disabled={isLoading}
+              >
+                {isLoading ? "Accesso in corso..." : "Accedi"}
+              </Button>
+            </form>
+          </Form>
+          <div className="mt-6 text-center text-sm text-gray-500">
+            Credenziali di default: admin / admin123
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
