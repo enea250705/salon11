@@ -133,6 +133,26 @@ export default function Calendar() {
     },
   });
 
+  const triggerRemindersMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/reminders");
+      return response;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Test Promemoria",
+        description: "Controllo promemoria WhatsApp avviato - controlla i log del server",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Errore",
+        description: "Errore durante il test dei promemoria",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: AppointmentForm) => {
     createAppointmentMutation.mutate(data);
   };
@@ -398,6 +418,15 @@ export default function Calendar() {
                 </div>
                 <Button variant="outline" size="sm" onClick={navigateToday}>
                   Oggi
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => triggerRemindersMutation.mutate()}
+                  disabled={triggerRemindersMutation.isPending}
+                  className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                >
+                  {triggerRemindersMutation.isPending ? "Invio..." : "Test WhatsApp"}
                 </Button>
               </div>
             </div>

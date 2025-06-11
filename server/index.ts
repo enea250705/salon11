@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { reminderScheduler } from "./services/reminderScheduler";
 import session from "express-session";
 
 // Extend session data type
@@ -75,6 +76,9 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
+  // Start WhatsApp reminder scheduler
+  reminderScheduler.startScheduler();
+
   server.listen({
     port,
     host: "0.0.0.0",
