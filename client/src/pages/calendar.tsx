@@ -18,6 +18,7 @@ import { it } from "date-fns/locale";
 
 const appointmentSchema = z.object({
   clientName: z.string().min(1, "Nome cliente è richiesto"),
+  clientPhone: z.string().min(1, "Numero di telefono è richiesto"),
   stylistId: z.number({ required_error: "Stilista è richiesto" }),
   serviceId: z.number({ required_error: "Servizio è richiesto" }),
   date: z.string().min(1, "Data è richiesta"),
@@ -38,6 +39,7 @@ export default function Calendar() {
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
       clientName: "",
+      clientPhone: "",
       date: format(selectedDate, "yyyy-MM-dd"),
       startHour: 9,
       startMinute: 0,
@@ -85,7 +87,7 @@ export default function Calendar() {
       const clientResponse = await apiRequest("POST", "/api/clients", {
         firstName,
         lastName,
-        phone: "",
+        phone: data.clientPhone,
         email: "",
         notes: "",
       });
@@ -273,6 +275,19 @@ export default function Calendar() {
                         <FormLabel>Nome Cliente</FormLabel>
                         <FormControl>
                           <Input placeholder="Inserisci nome cliente" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="clientPhone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Numero di Telefono</FormLabel>
+                        <FormControl>
+                          <Input placeholder="+39 123 456 7890" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
