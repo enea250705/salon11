@@ -2,6 +2,8 @@
 
 Un sistema completo per la gestione di saloni di bellezza e parrucchieri, con funzionalità avanzate di prenotazione, gestione clienti e promemoria automatici.
 
+🚀 **Deploy automatico attivo su Cloudflare Pages!**
+
 ## 🌟 Caratteristiche Principali
 
 ### 🔐 **Autenticazione Sicura**
