@@ -87,16 +87,7 @@ export const messageTemplates = pgTable("message_templates", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Session storage table for authentication
-export const sessions = pgTable(
-  "sessions",
-  {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
-  },
-  (table) => [index("IDX_session_expire").on(table.expire)],
-);
+// Session storage is handled by connect-pg-simple in its own table
 
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({

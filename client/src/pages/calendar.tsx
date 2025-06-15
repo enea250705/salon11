@@ -10,11 +10,24 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Calendar as CalendarIcon, Clock, User, Scissors, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, Clock, User, Scissors, ChevronLeft, ChevronRight, GripVertical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { format, addDays, subDays, startOfWeek, addWeeks, subWeeks, startOfMonth, endOfMonth, addMonths, subMonths, eachDayOfInterval, isSameMonth, isSameDay, isToday } from "date-fns";
+import { format, addDays, subDays, startOfWeek, addWeeks, subWeeks, startOfMonth, endOfMonth, addMonths, subMonths, eachDayOfInterval, isSameMonth, isSameDay, isToday, endOfWeek } from "date-fns";
 import { it } from "date-fns/locale";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  useDraggable,
+  useDroppable,
+} from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 
 const appointmentSchema = z.object({
   clientName: z.string().min(1, "Nome cliente è richiesto"),
@@ -30,10 +43,26 @@ type AppointmentForm = z.infer<typeof appointmentSchema>;
 
 export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<"month" | "day">("month");
+  const [viewMode, setViewMode] = useState<"month" | "week" | "day">("month");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [activeAppointment, setActiveAppointment] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Drag and drop sensors optimized for touch devices
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    })
+  );
 
   const form = useForm<AppointmentForm>({
     resolver: zodResolver(appointmentSchema),
@@ -50,6 +79,8 @@ export default function Calendar() {
   const { data: appointments, isLoading } = useQuery<any[]>({
     queryKey: viewMode === 'month' 
       ? ["/api/appointments", "month", format(selectedDate, "yyyy-MM")]
+      : viewMode === 'week'
+      ? ["/api/appointments", "week", format(selectedDate, "yyyy-MM-dd")]
       : ["/api/appointments", "day", format(selectedDate, "yyyy-MM-dd")],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -57,6 +88,9 @@ export default function Calendar() {
       if (viewMode === 'month') {
         params.set('startDate', format(startOfMonth(selectedDate), "yyyy-MM-dd"));
         params.set('endDate', format(endOfMonth(selectedDate), "yyyy-MM-dd"));
+      } else if (viewMode === 'week') {
+        params.set('startDate', format(startOfWeek(selectedDate, { weekStartsOn: 1 }), "yyyy-MM-dd"));
+        params.set('endDate', format(endOfWeek(selectedDate, { weekStartsOn: 1 }), "yyyy-MM-dd"));
       } else {
         params.set('date', format(selectedDate, "yyyy-MM-dd"));
       }
@@ -133,6 +167,22 @@ export default function Calendar() {
     },
   });
 
+  const updateAppointmentMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) =>
+      apiRequest("PUT", `/api/appointments/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
+      toast({ title: "Appuntamento aggiornato con successo" });
+    },
+    onError: () => {
+      toast({ 
+        title: "Errore", 
+        description: "Impossibile aggiornare l'appuntamento",
+        variant: "destructive" 
+      });
+    },
+  });
+
   const triggerRemindersMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest("POST", "/api/reminders");
@@ -157,11 +207,71 @@ export default function Calendar() {
     createAppointmentMutation.mutate(data);
   };
 
+  // Drag and drop handlers
+  const handleDragStart = (event: DragStartEvent) => {
+    const appointment = appointments?.find(apt => apt.id.toString() === event.active.id);
+    setActiveAppointment(appointment);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveAppointment(null);
+
+    if (!over || !active) return;
+
+    const appointmentId = parseInt(active.id.toString());
+    const appointment = appointments?.find(apt => apt.id === appointmentId);
+    
+    if (!appointment) return;
+
+    // Parse the drop target (format: "date-YYYY-MM-DD" or "time-YYYY-MM-DD-HH:MM")
+    const dropTarget = over.id.toString();
+    
+    if (dropTarget.startsWith('date-')) {
+      // Dropped on a day - keep same time, change date
+      const newDate = dropTarget.replace('date-', '');
+      if (newDate !== appointment.date) {
+        updateAppointmentMutation.mutate({
+          id: appointmentId,
+          data: { date: newDate }
+        });
+      }
+    } else if (dropTarget.startsWith('time-')) {
+      // Dropped on a specific time slot
+      const parts = dropTarget.replace('time-', '').split('-');
+      const newDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+      const newTime = `${parts[3]}:${parts[4]}`;
+      
+      if (newDate !== appointment.date || newTime !== appointment.startTime) {
+        // Calculate new end time based on service duration
+        const service = services?.find(s => s.id === appointment.serviceId);
+        const duration = service?.duration || 30;
+        const [hours, minutes] = newTime.split(':').map(Number);
+        const startMinutes = hours * 60 + minutes;
+        const endMinutes = startMinutes + duration;
+        const endHours = Math.floor(endMinutes / 60);
+        const endMins = endMinutes % 60;
+        const endTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+
+        updateAppointmentMutation.mutate({
+          id: appointmentId,
+          data: { 
+            date: newDate,
+            startTime: newTime,
+            endTime: endTime
+          }
+        });
+      }
+    }
+  };
+
   // Navigation functions
   const navigateToday = () => setSelectedDate(new Date());
   const navigatePrevious = () => {
     if (viewMode === "day") {
       setSelectedDate(subDays(selectedDate, 1));
+    } else if (viewMode === "week") {
+      setSelectedDate(subWeeks(selectedDate, 1));
     } else if (viewMode === "month") {
       setSelectedDate(subMonths(selectedDate, 1));
     }
@@ -169,6 +279,8 @@ export default function Calendar() {
   const navigateNext = () => {
     if (viewMode === "day") {
       setSelectedDate(addDays(selectedDate, 1));
+    } else if (viewMode === "week") {
+      setSelectedDate(addWeeks(selectedDate, 1));
     } else if (viewMode === "month") {
       setSelectedDate(addMonths(selectedDate, 1));
     }
@@ -188,7 +300,11 @@ export default function Calendar() {
   const calendarEnd = addDays(calendarStart, 41); // 6 weeks
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
-  // Generate time slots for the day view
+  // Generate week days for weekly view
+  const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
+  const weekDays = eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) });
+
+  // Generate time slots for the day/week view
   const timeSlots = Array.from({ length: 10 }, (_, i) => {
     const hour = 9 + i; // Start from 9 AM
     return `${hour.toString().padStart(2, '0')}:00`;
@@ -197,9 +313,109 @@ export default function Calendar() {
   // Filter appointments for the selected date
   const dayAppointments = appointments?.filter(app => app.date === format(selectedDate, "yyyy-MM-dd")) || [];
 
+  // Draggable appointment component
+  const DraggableAppointment = ({ appointment, className = "" }: { appointment: any; className?: string }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      isDragging,
+    } = useDraggable({
+      id: appointment.id.toString(),
+    });
+
+    const style = {
+      transform: CSS.Translate.toString(transform),
+      opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        {...listeners}
+        {...attributes}
+        className={`
+          dnd-appointment flex items-center justify-between p-2 bg-gradient-to-r from-pink-50 to-purple-50 
+          rounded-lg border cursor-move touch-manipulation select-none
+          hover:from-pink-100 hover:to-purple-100 transition-colors
+          ${isDragging ? 'dnd-dragging shadow-lg z-50' : ''}
+          ${className}
+        `}
+      >
+        <div className="flex items-center space-x-2">
+          <GripVertical className="h-4 w-4 text-gray-400" />
+          <div className="flex-1">
+            <div className="font-semibold text-gray-900 text-sm">
+              {appointment.client.firstName} {appointment.client.lastName}
+            </div>
+            <div className="text-xs text-gray-600">
+              {appointment.service.name} • {appointment.stylist.name}
+            </div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="font-semibold text-pink-600 text-sm">
+            {appointment.startTime.slice(0, 5)}
+          </div>
+          <div className="text-xs text-gray-500">
+            {appointment.service.duration}min
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Droppable time slot component
+  const DroppableTimeSlot = ({ date, time, children }: { date: string; time: string; children: React.ReactNode }) => {
+    const dropId = `time-${date}-${time.replace(':', '-')}`;
+    const { isOver, setNodeRef } = useDroppable({
+      id: dropId,
+    });
+
+    return (
+      <div
+        ref={setNodeRef}
+        className={`
+          time-slot min-h-[60px] p-1 border-b border-gray-100 transition-colors
+          ${isOver ? 'dnd-droppable-over bg-pink-50 border-pink-200' : 'hover:bg-gray-50'}
+        `}
+      >
+        {children}
+      </div>
+    );
+  };
+
+  // Droppable day component
+  const DroppableDay = ({ date, children, className = "" }: { date: string; children: React.ReactNode; className?: string }) => {
+    const dropId = `date-${date}`;
+    const { isOver, setNodeRef } = useDroppable({
+      id: dropId,
+    });
+
+    return (
+      <div
+        ref={setNodeRef}
+        className={`
+          calendar-grid min-h-[80px] p-2 border rounded-lg transition-colors
+          ${isOver ? 'dnd-droppable-over ring-2 ring-pink-300 bg-pink-50' : ''}
+          ${className}
+        `}
+      >
+        {children}
+      </div>
+    );
+  };
+
   return (
-    <Layout>
-      <div className="space-y-6">
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <Layout>
+        <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -390,6 +606,8 @@ export default function Calendar() {
                 <h2 className="text-xl font-semibold">
                   {viewMode === 'month' 
                     ? format(selectedDate, "MMMM yyyy", { locale: it })
+                    : viewMode === 'week'
+                    ? `${format(weekStart, "d MMM", { locale: it })} - ${format(addDays(weekStart, 6), "d MMM yyyy", { locale: it })}`
                     : format(selectedDate, "EEEE, d MMMM yyyy", { locale: it })
                   }
                 </h2>
@@ -406,6 +624,14 @@ export default function Calendar() {
                     className="h-8"
                   >
                     Mese
+                  </Button>
+                  <Button
+                    variant={viewMode === 'week' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('week')}
+                    className="h-8"
+                  >
+                    Settimana
                   </Button>
                   <Button
                     variant={viewMode === 'day' ? 'default' : 'ghost'}
@@ -454,88 +680,151 @@ export default function Calendar() {
                     const isCurrentMonth = isSameMonth(day, selectedDate);
                     const isSelected = isSameDay(day, selectedDate);
                     const isCurrentDay = isToday(day);
+                    const dateString = format(day, "yyyy-MM-dd");
                     
                     return (
-                      <div
+                      <DroppableDay
                         key={index}
-                        onClick={() => {
-                          setSelectedDate(day);
-                          setViewMode('day');
-                        }}
+                        date={dateString}
                         className={`
-                          min-h-[80px] p-2 border rounded-lg cursor-pointer transition-colors
+                          cursor-pointer transition-colors
                           ${isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 text-gray-400'}
                           ${isSelected ? 'ring-2 ring-pink-500' : ''}
                           ${isCurrentDay ? 'bg-pink-50 border-pink-200' : 'border-gray-200'}
                         `}
                       >
-                        <div className={`text-sm font-medium mb-1 ${
-                          isCurrentDay ? 'text-pink-600' : 
-                          isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
-                        }`}>
-                          {format(day, 'd')}
+                        <div
+                          onClick={() => {
+                            setSelectedDate(day);
+                            setViewMode('day');
+                          }}
+                          className="h-full"
+                        >
+                          <div className={`text-sm font-medium mb-1 ${
+                            isCurrentDay ? 'text-pink-600' : 
+                            isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
+                          }`}>
+                            {format(day, 'd')}
+                          </div>
+                          
+                          {/* Draggable appointments */}
+                          <div className="space-y-1">
+                            {dayAppointments.slice(0, 3).map((apt: any, i: number) => (
+                              <DraggableAppointment
+                                key={apt.id}
+                                appointment={apt}
+                                className="text-xs px-1 py-0.5"
+                              />
+                            ))}
+                            {dayAppointments.length > 3 && (
+                              <div className="text-xs text-gray-500">
+                                +{dayAppointments.length - 3} altri
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        
-                        {/* Appointment dots */}
-                        <div className="space-y-1">
-                          {dayAppointments.slice(0, 3).map((apt: any, i: number) => (
-                            <div
-                              key={i}
-                              className="text-xs px-1 py-0.5 bg-gradient-to-r from-pink-100 to-purple-100 text-pink-700 rounded truncate"
-                              title={`${apt.startTime.slice(0, 5)} - ${apt.client.firstName} ${apt.client.lastName}`}
-                            >
-                              {apt.startTime.slice(0, 5)} {apt.client.firstName}
-                            </div>
-                          ))}
-                          {dayAppointments.length > 3 && (
-                            <div className="text-xs text-gray-500">
-                              +{dayAppointments.length - 3} altri
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      </DroppableDay>
                     );
                   })}
                 </div>
               </div>
-            ) : (
-              // Day view
-              !dayAppointments || dayAppointments.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                  <p>Nessun appuntamento per {format(selectedDate, "d MMMM", { locale: it })}</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {dayAppointments.map((appointment: any) => (
-                    <div
-                      key={appointment.id}
-                      className="flex items-center justify-between p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border"
-                    >
-                      <div className="flex-1">
-                        <div className="font-semibold text-gray-900">
-                          {appointment.client.firstName} {appointment.client.lastName}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {appointment.service.name} • {appointment.stylist.name}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-pink-600">
-                          {appointment.startTime.slice(0, 5)}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {appointment.service.duration}min
-                        </div>
+            ) : viewMode === 'week' ? (
+              // Week view with drag and drop
+              <div className="space-y-4">
+                {/* Week Header */}
+                <div className="grid grid-cols-8 gap-1 mb-2">
+                  <div className="p-2 text-center text-sm font-medium text-gray-600">Ora</div>
+                  {weekDays.map((day) => (
+                    <div key={day.toString()} className="p-2 text-center text-sm font-medium text-gray-600">
+                      <div>{format(day, "EEE", { locale: it })}</div>
+                      <div className={`text-lg ${isToday(day) ? 'text-pink-600 font-bold' : ''}`}>
+                        {format(day, "d")}
                       </div>
                     </div>
                   ))}
                 </div>
-              )
+                
+                {/* Week Grid */}
+                <div className="border rounded-lg overflow-hidden">
+                  {timeSlots.map((time) => (
+                    <div key={time} className="grid grid-cols-8 border-b last:border-b-0">
+                      <div className="p-3 bg-gray-50 border-r text-sm font-medium text-gray-600 flex items-center">
+                        {time}
+                      </div>
+                      {weekDays.map((day) => {
+                        const dateString = format(day, "yyyy-MM-dd");
+                        const dayAppointments = getAppointmentsForDate(day);
+                        const timeAppointments = dayAppointments.filter(apt => 
+                          apt.startTime.slice(0, 5) === time
+                        );
+                        
+                        return (
+                          <DroppableTimeSlot
+                            key={`${dateString}-${time}`}
+                            date={dateString}
+                            time={time}
+                          >
+                                                         {timeAppointments.map((appointment: any) => (
+                               <div key={appointment.id} className="mb-1">
+                                 <DraggableAppointment appointment={appointment} />
+                               </div>
+                             ))}
+                          </DroppableTimeSlot>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+                          ) : (
+              // Day view with time slots and drag-and-drop
+              <div className="space-y-4">
+                <div className="border rounded-lg overflow-hidden">
+                  {timeSlots.map((time) => {
+                    const dateString = format(selectedDate, "yyyy-MM-dd");
+                    const timeAppointments = dayAppointments.filter(apt => 
+                      apt.startTime.slice(0, 5) === time
+                    );
+                    
+                    return (
+                      <DroppableTimeSlot
+                        key={time}
+                        date={dateString}
+                        time={time}
+                      >
+                        <div className="flex items-center p-3 border-b last:border-b-0">
+                          <div className="w-16 text-sm font-medium text-gray-600 mr-4">
+                            {time}
+                          </div>
+                          <div className="flex-1 space-y-2">
+                            {timeAppointments.length === 0 ? (
+                              <div className="text-gray-400 text-sm italic">
+                                Nessun appuntamento
+                              </div>
+                            ) : (
+                                                             timeAppointments.map((appointment: any) => (
+                                 <div key={appointment.id}>
+                                   <DraggableAppointment appointment={appointment} />
+                                 </div>
+                               ))
+                            )}
+                          </div>
+                        </div>
+                      </DroppableTimeSlot>
+                    );
+                  })}
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
       </div>
     </Layout>
+    <DragOverlay>
+      {activeAppointment ? (
+        <DraggableAppointment appointment={activeAppointment} className="opacity-90 shadow-lg" />
+      ) : null}
+    </DragOverlay>
+  </DndContext>
   );
 }

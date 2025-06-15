@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/use-auth";
-import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/auth-context";
+
 
 // The same sidebar item type
 type NavItem = {
@@ -12,52 +12,24 @@ type NavItem = {
   role: "all" | "admin" | "employee";
 };
 
-// The same items as sidebar
-const adminItems: NavItem[] = [
+// Salon navigation items
+const salonItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: "dashboard", role: "all" },
-  { href: "/users", label: "Gestione Utenti", icon: "people", role: "admin" },
-  { href: "/schedule", label: "Pianificazione Turni", icon: "event_note", role: "admin" },
-  { href: "/requests", label: "Approvazioni", icon: "approval", badge: 0, role: "admin" },
-  { href: "/documents", label: "Documenti", icon: "description", role: "admin" },
-];
-
-const employeeItems: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: "dashboard", role: "all" },
-  { href: "/my-schedule", label: "I Miei Turni", icon: "calendar_today", role: "employee" },
-  { href: "/time-off", label: "Ferie e Permessi", icon: "beach_access", role: "employee" },
-  { href: "/my-documents", label: "Documenti", icon: "description", role: "employee" },
+  { href: "/calendar", label: "Appuntamenti", icon: "calendar_today", role: "all" },
+  { href: "/clients", label: "Clienti", icon: "people", role: "all" },
+  { href: "/services", label: "Servizi", icon: "content_cut", role: "all" },
+  { href: "/stylists", label: "Stilisti", icon: "person", role: "admin" },
+  { href: "/settings", label: "Impostazioni", icon: "settings", role: "admin" },
 ];
 
 export function FooterNav() {
   const [location] = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
-  const [pendingRequests, setPendingRequests] = useState(0);
   
-  // Update pending requests count
-  useEffect(() => {
-    if (user?.role === "admin" && isAuthenticated) {
-      // Fetch pending requests
-      fetch("/api/time-off-requests", {
-        credentials: "include",
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data)) {
-            setPendingRequests(data.length);
-            
-            // Update badge for requests menu item
-            adminItems.forEach(item => {
-              if (item.href === "/requests") {
-                item.badge = data.length;
-              }
-            });
-          }
-        })
-        .catch((err) => console.error("Error fetching pending requests:", err));
-    }
-  }, [user, isAuthenticated]);
-
-  const items = user?.role === "admin" ? adminItems : employeeItems;
+  const items = salonItems.filter(item => 
+    item.role === "all" || 
+    (item.role === "admin" && user?.role === "admin")
+  );
 
   if (!isAuthenticated) return null;
 
@@ -115,7 +87,7 @@ export function FooterNav() {
         
         <div className="text-center text-xs mt-6 animate-fadeIn" style={{ animationDelay: '0.5s' }}>
           <p className="animate-float relative inline-block px-4 py-2 menu-card">
-            <span className="text-accent font-semibold">&copy; {new Date().getFullYear()} Da Vittorino</span>
+            <span className="text-accent font-semibold">&copy; {new Date().getFullYear()} Gestione Salone</span>
             <span className="block text-xs opacity-70 mt-1">Gestione Personale</span>
           </p>
         </div>

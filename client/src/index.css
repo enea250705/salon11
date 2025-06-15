@@ -405,52 +405,55 @@
     );
   }
   
-  /* Stile carta menu moderno con glassmorphism */
-  .menu-card {
-    background: rgba(255, 252, 245, 0.65);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(180, 120, 80, 0.15);
-    box-shadow: 
-      0 5px 15px rgba(180, 120, 80, 0.08),
-      0 3px 8px rgba(180, 120, 80, 0.05),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.15);
-    padding: 1.75rem;
-    border-radius: 1rem;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  /* Salon card styles */
+  
+  /* Drag and Drop styles for touch devices */
+  .dnd-dragging {
+    cursor: grabbing !important;
+    transform: rotate(5deg);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
   }
   
-  .menu-card::before {
-    content: "";
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(
-      circle at center,
-      rgba(255, 255, 255, 0.1) 0%,
-      rgba(255, 255, 255, 0) 70%
-    );
-    opacity: 0;
-    transform: scale(0.8);
-    transition: opacity 0.8s ease, transform 0.8s ease;
-    pointer-events: none;
+  .dnd-droppable-over {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(147, 51, 234, 0.1));
+    border: 2px dashed rgba(236, 72, 153, 0.3);
+    transform: scale(1.02);
   }
   
-  .menu-card:hover::before {
-    opacity: 1;
-    transform: scale(1);
+  .dnd-appointment {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
   }
   
-  .menu-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 
-      0 15px 25px rgba(180, 120, 80, 0.15),
-      0 5px 10px rgba(180, 120, 80, 0.08),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  /* iPad specific optimizations */
+  @media (max-width: 1024px) {
+    .dnd-appointment {
+      min-height: 44px; /* Apple's recommended touch target size */
+      padding: 12px;
+    }
+    
+    .calendar-grid {
+      gap: 8px;
+    }
+    
+    .week-grid {
+      font-size: 14px;
+    }
+    
+    .time-slot {
+      min-height: 60px;
+      padding: 8px;
+    }
+  }
+  
+  /* Touch feedback */
+  .dnd-appointment:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
   }
   
   .menu-card::after {

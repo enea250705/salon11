@@ -89,7 +89,9 @@ export class DatabaseStorage implements IStorage {
     const pgStore = connectPg(session);
     this.sessionStore = new pgStore({
       pool: pool,
-      createTableIfMissing: false,
+      createTableIfMissing: true,
+      tableName: 'user_sessions', // Use different table name to avoid conflict
+      schemaName: 'public'
     });
     this.initializeDefaultData();
   }

@@ -19,7 +19,8 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Appuntamenti", href: "/calendar", icon: Calendar },
   { name: "Servizi", href: "/services", icon: Scissors },
-  { name: "Staff", href: "/staff", icon: UserCog },
+  { name: "Clienti", href: "/clients", icon: Users },
+  { name: "Stilisti", href: "/stylists", icon: UserCog },
   { name: "Impostazioni", href: "/settings", icon: Settings },
 ];
 

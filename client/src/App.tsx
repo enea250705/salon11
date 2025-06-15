@@ -10,9 +10,9 @@ import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import Calendar from "@/pages/calendar";
+import Clients from "@/pages/clients";
 import Services from "@/pages/services";
 import Stylists from "@/pages/stylists";
-import Staff from "@/pages/staff";
 import Settings from "@/pages/settings";
 
 function Router() {
@@ -39,9 +39,9 @@ function Router() {
           <Route path="/" component={Dashboard} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/calendar" component={Calendar} />
+          <Route path="/clients" component={Clients} />
           <Route path="/services" component={Services} />
           <Route path="/stylists" component={Stylists} />
-          <Route path="/staff" component={Staff} />
           <Route path="/settings" component={Settings} />
           <Route component={NotFound} />
         </>
