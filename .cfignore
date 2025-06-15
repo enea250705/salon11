@@ -1,0 +1,35 @@
+# Cloudflare Pages ignore file
+# Exclude backend files from Pages build
+
+# Backend directories
+api/
+functions/
+server/
+
+# Database files
+*.db
+*.sqlite
+
+# Environment files
+.env*
+
+# Node modules
+node_modules/
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+*.log
+logs/
+
+# Development files
+.vercel/
+.wrangler/
+
+# Test files
+test-*.js
+test-*.mjs
+test-*.cjs
+*cookies.txt 

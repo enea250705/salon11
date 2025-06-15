@@ -28,6 +28,17 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
     rollupOptions: {
+      external: [
+        // Exclude backend dependencies from frontend build
+        '@neondatabase/serverless',
+        'drizzle-orm',
+        'drizzle-orm/neon-serverless',
+        'drizzle-orm/pg-core',
+        'drizzle-zod',
+        'jsonwebtoken',
+        'bcryptjs',
+        'ws'
+      ],
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],

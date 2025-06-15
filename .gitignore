@@ -70,3 +70,8 @@ enea_cookies.txt
 
 # Config files with sensitive data
 wrangler.toml.local
+
+# Backend files (not needed for Pages build)
+api/
+functions/
+server/
