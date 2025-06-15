@@ -35,14 +35,10 @@ jobs:
         cp _redirects dist/
         
     - name: 🚀 Deploy to Cloudflare Pages
-      uses: cloudflare/pages-action@v1
-      with:
-        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        projectName: salon11
-        directory: dist
-        gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-        wranglerVersion: '3'
+      run: npx wrangler pages deploy dist --project-name salon11 --compatibility-date 2024-01-01
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         
     - name: 📊 Deploy Summary
       run: |
